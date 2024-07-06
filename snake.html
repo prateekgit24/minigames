@@ -1,0 +1,59 @@
+<!DOCTYPE html> 
+<html>
+    <head>
+        <title>
+
+        </title>
+        <style>body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+        
+        h1 {
+            margin-top: 20px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(10, 50px);
+            grid-template-rows: repeat(10, 50px);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #000;
+            border-style: collapse ;
+            font-size: 16px;
+        }
+        
+
+        </style>
+    </head>
+    <body><h1>Grid of Numbers from 1 to 100</h1>
+        <div class="grid">
+            <!-- JavaScript will populate this -->
+        </div>
+    
+        <table><tr></tr></table>
+
+    </body>
+    <script>document.addEventListener('DOMContentLoaded', function() {
+        const gridContainer = document.querySelector('.grid');
+    let x=100;
+        while(x--) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.textContent = x+1;
+            gridContainer.appendChild(cell);
+        }
+    });
+    </script>
+</html>
