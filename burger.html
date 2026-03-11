@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burger Boss</title>
+<style>
+    :root {
+        --bg-color: #fce4ec;
+        --panel-bg: #ffffff;
+        --text-color: #333333;
+        --accent-color: #ff4081;
+        --bun: #e6a15c;
+        --patty: #6d4c41;
+        --cheese: #ffd54f;
+        --lettuce: #81c784;
+        --tomato: #e57373;
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: var(--bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-color);
+        user-select: none;
+    }
+
+    #game-container {
+        width: 100%;
+        max-width: 800px;
+        height: 100%;
+        max-height: 700px;
+        background-color: var(--panel-bg);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* --- HEADER (SCORE & TIME) --- */
+    #header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 30px;
+        background-color: var(--accent-color);
+        color: white;
+        font-size: 1.5em;
+        font-weight: bold;
+    }
+
+    #timer {
+        background: rgba(0,0,0,0.2);
+        padding: 5px 15px;
+        border-radius: 20px;
+    }
+
+    .time-low {
+        color: #ffeb3b;
+        animation: pulse 0.5s infinite;
+    }
+
+    /* --- MAIN PLAY AREA --- */
+    #play-area {
+        display: flex;
+        flex-grow: 1;
+        border-bottom: 2px solid #eee;
+    }
+
+    #order-panel {
+        width: 30%;
+        background-color: #f8bbd0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-right: 2px solid #f48fb1;
+    }
+
+    #order-panel h2 {
+        margin-top: 0;
+        font-size: 1.2em;
+        color: #c2185b;
+        text-align: center;
+    }
+
+    #kitchen-panel {
+        width: 70%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding-bottom: 20px;
+        background: linear-gradient(to bottom, #ffffff 50%, #f5f5f5 100%);
+    }
+
+    /* --- BURGER VISUALS --- */
+    .stack-area {
+        display: flex;
+        flex-direction: column-reverse; /* Stack from bottom up */
+        align-items: center;
+        width: 200px;
+        min-height: 250px;
+        justify-content: flex-start;
+    }
+
+    .ingredient {
+        width: 120px;
+        height: 20px;
+        margin-top: -5px; /* Overlap slightly */
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        z-index: 1;
+        transition: transform 0.1s;
+    }
+
+    .ing-bun-bottom { background-color: var(--bun); height: 30px; border-radius: 10px 10px 20px 20px; }
+    .ing-bun-top { background-color: var(--bun); height: 40px; border-radius: 40px 40px 10px 10px; }
+    .ing-patty { background-color: var(--patty); height: 25px; border-radius: 15px; width: 130px;}
+    .ing-cheese { background-color: var(--cheese); height: 10px; border-radius: 5px; width: 135px; transform: rotate(-2deg); }
+    .ing-lettuce { background-color: var(--lettuce); height: 15px; border-radius: 8px; width: 140px; border: 2px dashed #4caf50; }
+    .ing-tomato { background-color: var(--tomato); height: 15px; border-radius: 10px; width: 110px; }
+
+    /* Animation for dropping ingredients */
+    .drop-in {
+        animation: drop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes drop {
+        0% { transform: translateY(-100px) scale(1.1); opacity: 0; }
+        100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* --- CONTROLS --- */
+    #controls {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background-color: #fafafa;
+    }
+
+    .btn-row {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .ing-btn {
+        padding: 15px 20px;
+        font-size: 1.1em;
+        font-weight: bold;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        transition: transform 0.1s, filter 0.1s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .ing-btn:active { transform: translateY(4px); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+    .ing-btn:hover { filter: brightness(1.1); }
+
+    .btn-bun { background-color: var(--bun); }
+    .btn-patty { background-color: var(--patty); }
+    .btn-cheese { background-color: var(--cheese); color: #333; text-shadow: none;}
+    .btn-lettuce { background-color: var(--lettuce); }
+    .btn-tomato { background-color: var(--tomato); }
+
+    .action-row {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 5px;
+    }
+
+    .action-btn {
+        padding: 15px 30px;
+        font-size: 1.2em;
+        font-weight: bold;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        color: white;
+        text-transform: uppercase;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: transform 0.1s;
+    }
+    
+    .action-btn:active { transform: scale(0.95); }
+
+    .btn-trash { background-color: #9e9e9e; }
+    .btn-serve { background-color: #4caf50; }
+
+    /* --- OVERLAYS --- */
+    #overlay {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        border-radius: 20px;
+    }
+
+    #overlay h1 { font-size: 3em; color: var(--accent-color); margin-bottom: 10px; }
+    #overlay p { font-size: 1.2em; color: #555; margin-bottom: 30px; text-align: center; max-width: 80%;}
+    #start-btn {
+        padding: 15px 40px;
+        font-size: 1.5em;
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(255, 64, 129, 0.4);
+    }
+    #start-btn:hover { transform: scale(1.05); }
+
+    .feedback {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 3em;
+        font-weight: bold;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 50;
+    }
+
+    @keyframes feedbackAnim {
+        0% { transform: translate(-50%, -10%); opacity: 0; }
+        20% { transform: translate(-50%, -50%); opacity: 1; }
+        80% { transform: translate(-50%, -50%); opacity: 1; }
+        100% { transform: translate(-50%, -90%); opacity: 0; }
+    }
+
+</style>
+</head>
+<body>
+
+<div id="game-container">
+    <div id="header">
+        <div>Score: <span id="score">0</span></div>
+        <div id="timer">60s</div>
+    </div>
+
+    <div id="play-area">
+        <!-- The Order -->
+        <div id="order-panel">
+            <h2>Current Order</h2>
+            <div id="order-stack" class="stack-area"></div>
+        </div>
+
+        <!-- The Kitchen Plate -->
+        <div id="kitchen-panel">
+            <div id="player-stack" class="stack-area"></div>
+            <!-- Feedback text (Perfect! / Wrong!) -->
+            <div id="feedback-msg" class="feedback"></div>
+        </div>
+    </div>
+
+    <!-- Ingredient Buttons -->
+    <div id="controls">
+        <div class="btn-row">
+            <button class="ing-btn btn-bun" onclick="addIngredient('bun-top')">Top Bun</button>
+            <button class="ing-btn btn-lettuce" onclick="addIngredient('lettuce')">Lettuce</button>
+            <button class="ing-btn btn-tomato" onclick="addIngredient('tomato')">Tomato</button>
+            <button class="ing-btn btn-cheese" onclick="addIngredient('cheese')">Cheese</button>
+            <button class="ing-btn btn-patty" onclick="addIngredient('patty')">Patty</button>
+            <button class="ing-btn btn-bun" onclick="addIngredient('bun-bottom')">Bottom Bun</button>
+        </div>
+        <div class="action-row">
+            <button class="action-btn btn-trash" onclick="trashBurger()">🗑️ Trash</button>
+            <button class="action-btn btn-serve" onclick="serveBurger()">🔔 Serve!</button>
+        </div>
+    </div>
+
+    <!-- Start / Game Over Screen -->
+    <div id="overlay">
+        <h1 id="overlay-title">Burger Boss</h1>
+        <p id="overlay-desc">Build the burgers exactly as ordered.<br>Serve fast to earn extra time.<br>Don't mess up the recipe!</p>
+        <button id="start-btn" onclick="startGame()">Start Cooking!</button>
+    </div>
+</div>
+
+<script>
+    // --- GAME STATE ---
+    let score = 0;
+    let timeLeft = 60;
+    let timerInterval;
+    let isPlaying = false;
+    
+    let currentOrder = [];
+    let playerBurger = [];
+
+    // Available ingredients to randomize from (excluding buns which are always top/bottom)
+    const fillIngredients = ['patty', 'cheese', 'lettuce', 'tomato'];
+
+    // --- DOM ELEMENTS ---
+    const scoreEl = document.getElementById('score');
+    const timerEl = document.getElementById('timer');
+    const orderStackEl = document.getElementById('order-stack');
+    const playerStackEl = document.getElementById('player-stack');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlay-title');
+    const overlayDesc = document.getElementById('overlay-desc');
+    const startBtn = document.getElementById('start-btn');
+    const feedbackMsg = document.getElementById('feedback-msg');
+
+    // --- GAME LOGIC ---
+
+    function startGame() {
+        score = 0;
+        timeLeft = 60;
+        scoreEl.innerText = score;
+        timerEl.innerText = timeLeft + 's';
+        timerEl.classList.remove('time-low');
+        
+        overlay.style.display = 'none';
+        isPlaying = true;
+        
+        playerBurger = [];
+        renderPlayerBurger();
+        generateNewOrder();
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+        if (!isPlaying) return;
+        
+        timeLeft--;
+        timerEl.innerText = timeLeft + 's';
+
+        if (timeLeft <= 10) {
+            timerEl.classList.add('time-low');
+        } else {
+            timerEl.classList.remove('time-low');
+        }
+
+        if (timeLeft <= 0) {
+            endGame();
+        }
+    }
+
+    function endGame() {
+        isPlaying = false;
+        clearInterval(timerInterval);
+        
+        overlayTitle.innerText = "Time's Up!";
+        overlayDesc.innerText = `You served ${score} perfect burgers!\nAre you ready for another shift?`;
+        startBtn.innerText = "Play Again";
+        overlay.style.display = 'flex';
+    }
+
+    function generateNewOrder() {
+        currentOrder = [];
+        currentOrder.push('bun-bottom');
+        
+        // Randomly add 2 to 4 fillings
+        const numFillings = Math.floor(Math.random() * 3) + 2; 
+        for (let i = 0; i < numFillings; i++) {
+            const randomIng = fillIngredients[Math.floor(Math.random() * fillIngredients.length)];
+            currentOrder.push(randomIng);
+        }
+        
+        currentOrder.push('bun-top');
+        renderOrderBurger();
+    }
+
+    // --- RENDER FUNCTIONS ---
+
+    function renderOrderBurger() {
+        orderStackEl.innerHTML = '';
+        currentOrder.forEach((ing, index) => {
+            const div = document.createElement('div');
+            div.className = `ingredient ing-${ing}`;
+            div.style.zIndex = index; // Ensure bottom overlaps top slightly
+            orderStackEl.appendChild(div);
+        });
+    }
+
+    function renderPlayerBurger(justAdded = false) {
+        playerStackEl.innerHTML = '';
+        playerBurger.forEach((ing, index) => {
+            const div = document.createElement('div');
+            div.className = `ingredient ing-${ing}`;
+            div.style.zIndex = index;
+            
+            // Add animation only to the newest item
+            if (justAdded && index === playerBurger.length - 1) {
+                div.classList.add('drop-in');
+            }
+            
+            playerStackEl.appendChild(div);
+        });
+    }
+
+    // --- PLAYER ACTIONS ---
+
+    function addIngredient(ingredient) {
+        if (!isPlaying) return;
+        
+        // Prevent stacking past the top bun (or making giant unbreakable stacks)
+        if (playerBurger.length > 0 && playerBurger[playerBurger.length - 1] === 'bun-top') {
+            showFeedback("Burger is capped!", "#ff9800");
+            return; 
+        }
+
+        playerBurger.push(ingredient);
+        renderPlayerBurger(true);
+    }
+
+    function trashBurger() {
+        if (!isPlaying) return;
+        playerBurger = [];
+        renderPlayerBurger();
+    }
+
+    function serveBurger() {
+        if (!isPlaying) return;
+
+        if (playerBurger.length === 0) return;
+
+        // Check if arrays are exactly the same
+        const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(playerBurger);
+
+        if (isCorrect) {
+            score++;
+            scoreEl.innerText = score;
+            timeLeft += 3; // Bonus time
+            showFeedback("PERFECT! +3s", "#4caf50");
+            
+            // Clear plate and get new order
+            playerBurger = [];
+            renderPlayerBurger();
+            generateNewOrder();
+        } else {
+            timeLeft -= 5; // Penalty
+            if (timeLeft < 0) timeLeft = 0;
+            showFeedback("WRONG! -5s", "#f44336");
+            updateTimer();
+        }
+    }
+
+    // --- VISUAL FEEDBACK ---
+
+    function showFeedback(text, color) {
+        feedbackMsg.innerText = text;
+        feedbackMsg.style.color = color;
+        feedbackMsg.style.textShadow = "2px 2px 0px white";
+        
+        // Trigger reflow to restart CSS animation
+        feedbackMsg.style.animation = 'none';
+        feedbackMsg.offsetHeight; /* trigger reflow */
+        feedbackMsg.style.animation = 'feedbackAnim 1s ease-out forwards';
+    }
+
+</script>
+</body>
+</html>

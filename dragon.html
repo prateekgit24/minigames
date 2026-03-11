@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Repeller RPG</title>
+    <link rel="icon" href="dragon.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ── Design Tokens ──────────────────────────────────────────── */
+        :root {
+            --bg-dark: #0a0a14;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #f97316;
+            --accent-2: #a855f7;
+            --text-main: #f1f1f1;
+            --text-muted: #9ca3af;
+            --success: #4ade80;
+            --danger: #ef4444;
+            --warning: #eab308;
+            --radius: 16px;
+            --transition: 0.3s ease;
+        }
+
+        /* ── Reset & Base ───────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% -20%, rgba(249, 115, 22, 0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 50% at 80% 100%, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* ── Header ─────────────────────────────────────────────────── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(10, 10, 20, 0.8);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .site-title {
+            font-size: 1.5rem;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .back-btn {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: color var(--transition);
+        }
+
+        .back-btn:hover { color: var(--accent); }
+
+        /* ── Main content ───────────────────────────────────────────── */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* ── Game Container ─────────────────────────────────────────── */
+        .game-wrapper {
+            width: 100%;
+            max-width: 800px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Visual Area ────────────────────────────────────────────── */
+        .visual-area {
+            position: relative;
+            height: 250px;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.5s ease;
+        }
+
+        /* Scene Backgrounds */
+        .visual-area.scene-town { background: linear-gradient(to bottom, #1e3a8a, #06b6d4); }
+        .visual-area.scene-store { background: linear-gradient(to bottom, #78350f, #d97706); }
+        .visual-area.scene-cave { background: linear-gradient(to bottom, #1f2937, #4b5563); }
+        .visual-area.scene-fight { background: linear-gradient(to bottom, #7f1d1d, #b91c1c); }
+
+        #scene-desc {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .sprites-container {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 0 40px;
+            height: 100%;
+            padding-bottom: 20px;
+        }
+
+        .sprite {
+            font-size: 5rem;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            transition: transform 0.3s ease;
+        }
+
+        #player-sprite {
+            transform: scaleX(-1); /* Face right */
+        }
+        
+        #monster-sprite-img {
+            max-height: 150px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+        }
+
+        /* Attack Animation */
+        .anim-attack {
+            animation: attackBump 0.3s ease;
+        }
+        
+        @keyframes attackBump {
+            0% { transform: scaleX(-1) translateX(0); }
+            50% { transform: scaleX(-1) translateX(-30px); }
+            100% { transform: scaleX(-1) translateX(0); }
+        }
+
+        .anim-damage {
+            animation: flashDamage 0.3s ease;
+        }
+
+        @keyframes flashDamage {
+            0% { filter: brightness(1) drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
+            50% { filter: brightness(2) drop-shadow(0 0 20px red); transform: translateX(10px); }
+            100% { filter: brightness(1) drop-shadow(0 10px 10px rgba(0,0,0,0.5)); }
+        }
+
+        /* ── Monster Stats Dropdown ─────────────────────────────────── */
+        .monster-stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--danger);
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        #monster-name {
+            font-weight: 700;
+            color: var(--danger);
+            text-transform: capitalize;
+        }
+
+        .health-bar-bg {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #monster-hp-fill {
+            height: 100%;
+            background: var(--danger);
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        /* ── Player Stats Panel ─────────────────────────────────────── */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-box {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-box:last-child { border-right: none; }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .stat-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .val-hp { color: var(--success); }
+        .val-gold { color: var(--warning); }
+        .val-xp { color: var(--accent-2); }
+        .val-weap { color: var(--text-main); font-size: 1rem !important; }
+
+        /* ── Log Container ──────────────────────────────────────────── */
+        .log-container {
+            height: 150px;
+            overflow-y: auto;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .log-entry { color: var(--text-muted); line-height: 1.4; }
+        .log-entry strong { color: var(--text-main); }
+        .log-damage { color: var(--danger); }
+        .log-heal { color: var(--success); }
+        .log-gold { color: var(--warning); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        /* ── Controls ───────────────────────────────────────────────── */
+        .controls {
+            display: flex;
+            padding: 20px;
+            gap: 15px;
+            background: rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+        }
+
+        .controls button {
+            flex: 1;
+            min-width: 120px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .controls button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(249,115,22,0.3);
+            color: #fff;
+        }
+        
+        .controls button.btn-danger:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            box-shadow: 0 5px 15px rgba(239,68,68,0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <span class="site-title">Dragon Repeller RPG</span>
+        <a href="index.html" class="back-btn">← Back to Hub</a>
+    </header>
+
+    <main>
+        <div class="game-wrapper">
+            
+            <!-- Visualization -->
+            <div class="visual-area scene-town" id="visual-area">
+                <div id="scene-desc">Town Square</div>
+
+                <div class="monster-stats" id="monster-stats">
+                    <div id="monster-name">Slime</div>
+                    <div style="display:flex; justify-content:space-between; font-size: 0.8rem;">
+                        <span>HP</span>
+                        <span id="monster-hp-text">20/20</span>
+                    </div>
+                    <div class="health-bar-bg">
+                        <div id="monster-hp-fill"></div>
+                    </div>
+                </div>
+
+                <div class="sprites-container">
+                    <div class="sprite" id="player-sprite">🛡️</div>
+                    <div class="sprite" id="monster-wrapper" style="display: none;">
+                        <span id="monster-emoji"></span>
+                        <img id="monster-sprite-img" src="" style="display:none;" alt="">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-panel">
+                <div class="stat-box">
+                    <span class="stat-label">Health</span>
+                    <span class="stat-val val-hp" id="health-text">100</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Gold</span>
+                    <span class="stat-val val-gold" id="gold-text">50</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">XP</span>
+                    <span class="stat-val val-xp" id="xp-text">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Weapon</span>
+                    <span class="stat-val val-weap" id="weapon-text">Stick</span>
+                </div>
+            </div>
+
+            <!-- Log -->
+            <div class="log-container" id="log-container">
+                <div class="log-entry">Welcome to Dragon Repeller. You must defeat the dragon that is preventing people from leaving the town.</div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls" id="controls">
+                <button id="btn1">Go to Store</button>
+                <button id="btn2">Go to Cave</button>
+                <button id="btn3" class="btn-danger">Fight Dragon</button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- Game State ---
+        let xp = 0;
+        let health = 100;
+        let maxHealth = 100;
+        let gold = 50;
+        let currentWeapon = 0;
+        let fighting = -1;
+        let currentMonsterHealth = 0;
+        let maxMonsterHealth = 0;
+
+        // --- Data ---
+        const weapons = [
+            { name: "Stick", power: 5 },
+            { name: "Dagger", power: 15, cost: 30 },
+            { name: "Iron Sword", power: 30, cost: 60 },
+            { name: "Greatsword", power: 60, cost: 120 },
+            { name: "Dragon Slayer", power: 120, cost: 250 }
+        ];
+
+        const monsters = [
+            { name: "Slime", level: 2, health: 25, attack: 5, emoji: "🟢" },
+            { name: "Goblin", level: 5, health: 60, attack: 12, emoji: "👺" },
+            { name: "Orc Warlord", level: 10, health: 150, attack: 25, emoji: "👹" },
+            { name: "Dragon", level: 25, health: 400, attack: 60, image: "dragon.jpg" }
+        ];
+
+        // --- DOM Elements ---
+        const healthText = document.getElementById("health-text");
+        const goldText = document.getElementById("gold-text");
+        const xpText = document.getElementById("xp-text");
+        const weaponText = document.getElementById("weapon-text");
+        
+        const visualArea = document.getElementById("visual-area");
+        const sceneDesc = document.getElementById("scene-desc");
+        const monsterStats = document.getElementById("monster-stats");
+        const monsterNameText = document.getElementById("monster-name");
+        const monsterHpText = document.getElementById("monster-hp-text");
+        const monsterHpFill = document.getElementById("monster-hp-fill");
+        const monsterWrapper = document.getElementById("monster-wrapper");
+        const monsterEmoji = document.getElementById("monster-emoji");
+        const monsterImg = document.getElementById("monster-sprite-img");
+        
+        const playerSprite = document.getElementById("player-sprite");
+
+        const logContainer = document.getElementById("log-container");
+
+        const btn1 = document.getElementById("btn1");
+        const btn2 = document.getElementById("btn2");
+        const btn3 = document.getElementById("btn3");
+
+        // --- Utility Functions ---
+        function updateStats() {
+            healthText.innerText = `${health}/${maxHealth}`;
+            goldText.innerText = gold;
+            xpText.innerText = xp;
+            weaponText.innerText = weapons[currentWeapon].name;
+            
+            if(health <= 20) healthText.style.color = 'var(--danger)';
+            else healthText.style.color = 'var(--success)';
+        }
+
+        function log(msg) {
+            const entry = document.createElement("div");
+            entry.className = "log-entry";
+            entry.innerHTML = msg;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function updateMonsterUI() {
+            monsterHpText.innerText = `${currentMonsterHealth}/${maxMonsterHealth}`;
+            const pct = Math.max(0, (currentMonsterHealth / maxMonsterHealth) * 100);
+            monsterHpFill.style.width = `${pct}%`;
+        }
+
+        function changeScene(sceneClass, title) {
+            visualArea.className = `visual-area ${sceneClass}`;
+            sceneDesc.innerText = title;
+            monsterStats.style.display = "none";
+            monsterWrapper.style.display = "none";
+        }
+
+        function setupButtons(b1Text, b1Func, b2Text, b2Func, b3Text, b3Func, isBtn3Danger = false) {
+            btn1.innerText = b1Text; btn1.onclick = b1Func; btn1.style.display = b1Text ? "block" : "none";
+            btn2.innerText = b2Text; btn2.onclick = b2Func; btn2.style.display = b2Text ? "block" : "none";
+            btn3.innerText = b3Text; btn3.onclick = b3Func; btn3.style.display = b3Text ? "block" : "none";
+            
+            if(isBtn3Danger) btn3.classList.add('btn-danger');
+            else btn3.classList.remove('btn-danger');
+        }
+
+        // --- Locations ---
+
+        function goTown() {
+            changeScene("scene-town", "Town Square");
+            playerSprite.innerText = "🛡️";
+            setupButtons(
+                "Go to Store", goStore,
+                "Go to Cave", goCave,
+                "Rest (10 Gold)", restAtInn
+            );
+        }
+
+        function goStore() {
+            changeScene("scene-store", "Weapon Store");
+            playerSprite.innerText = "💰";
+            
+            let nextWeaponText = "Max Weapon Reached";
+            if (currentWeapon < weapons.length - 1) {
+                const nextWeap = weapons[currentWeapon + 1];
+                nextWeaponText = `Buy ${nextWeap.name} (${nextWeap.cost}G)`;
+            }
+
+            setupButtons(
+                "Buy Health Potion (20G)", buyPotion,
+                nextWeaponText, buyWeapon,
+                "Leave Store", goTown
+            );
+        }
+
+        function goCave() {
+            changeScene("scene-cave", "Dark Cave");
+            playerSprite.innerText = "🦇";
+            setupButtons(
+                "Fight Slime", () => startFight(0),
+                "Fight Goblin", () => startFight(1),
+                "Deeper (Bosses)", goDeepCave
+            );
+        }
+
+        function goDeepCave() {
+            setupButtons(
+                "Fight Orc Warlord", () => startFight(2),
+                "Fight Dragon!!!", () => startFight(3),
+                "Flee to Town", goTown,
+                true // dragon button is red
+            );
+        }
+
+        // --- Store Actions ---
+
+        function restAtInn() {
+            if (health >= maxHealth) {
+                log("You're already at full health.");
+                return;
+            }
+            if (gold >= 10) {
+                gold -= 10;
+                health = Math.min(maxHealth, health + 50);
+                log("You rested at the inn. <span class='log-heal'>Recovered 50 HP.</span>");
+                updateStats();
+            } else {
+                log("Not enough gold to rest.");
+            }
+        }
+
+        function buyPotion() {
+            if (gold >= 20) {
+                gold -= 20;
+                maxHealth += 10;
+                health += 20;
+                log("You drank a permanent health potion. <span class='log-heal'>Max HP +10, HP +20.</span>");
+                updateStats();
+            } else {
+                log("Not enough gold for a potion.");
+            }
+        }
+
+        function buyWeapon() {
+            if (currentWeapon < weapons.length - 1) {
+                const nextWeap = weapons[currentWeapon + 1];
+                if (gold >= nextWeap.cost) {
+                    gold -= nextWeap.cost;
+                    currentWeapon++;
+                    log(`You bought the <strong>${nextWeap.name}</strong>! Your attacks are much stronger.`);
+                    updateStats();
+                    goStore(); // refresh buttons
+                } else {
+                    log(`Need ${nextWeap.cost} gold to buy ${nextWeap.name}.`);
+                }
+            } else {
+                log("You already have the strongest weapon!");
+            }
+        }
+
+        // --- Battle Logic ---
+
+        function startFight(monsterIndex) {
+            fighting = monsterIndex;
+            const m = monsters[fighting];
+            
+            currentMonsterHealth = m.health;
+            maxMonsterHealth = m.health;
+            
+            changeScene("scene-fight", "BATTLE!");
+            playerSprite.innerText = "🗡️";
+
+            // Setup monster visual
+            monsterWrapper.style.display = "block";
+            if (m.image) {
+                monsterEmoji.style.display = "none";
+                monsterImg.src = m.image;
+                monsterImg.style.display = "block";
+            } else {
+                monsterImg.style.display = "none";
+                monsterEmoji.innerText = m.emoji;
+                monsterEmoji.style.display = "block";
+            }
+
+            monsterStats.style.display = "flex";
+            monsterNameText.innerText = m.name;
+            updateMonsterUI();
+
+            log(`A wild <strong>${m.name}</strong> approaches!`);
+
+            setupButtons(
+                "Light Attack", () => attack(false),
+                "Heavy Attack", () => attack(true),
+                "Run Away", runAway
+            );
+        }
+
+        function attack(isHeavy) {
+            const m = monsters[fighting];
+            
+            // Player Attack phase
+            playerSprite.classList.add("anim-attack");
+            setTimeout(() => playerSprite.classList.remove("anim-attack"), 300);
+
+            // Calculate Player Damage
+            let baseDmg = weapons[currentWeapon].power;
+            let dmg = baseDmg + Math.floor(Math.random() * (xp + 1));
+            
+            let hitChance = 0.9;
+            if(isHeavy) {
+                dmg = Math.floor(dmg * 1.5);
+                hitChance = 0.6; // Heavy attack misses more easily
+            }
+
+            if (Math.random() <= hitChance) {
+                // Critical hit? 10% chance
+                let isCrit = Math.random() <= 0.1;
+                if(isCrit) dmg = Math.floor(dmg * 1.5);
+
+                currentMonsterHealth -= dmg;
+                monsterWrapper.classList.add("anim-damage");
+                setTimeout(() => monsterWrapper.classList.remove("anim-damage"), 300);
+
+                let critMsg = isCrit ? " <strong>CRITICAL HIT!</strong>" : "";
+                log(`You hit the ${m.name} for <span class='log-damage'>${dmg} damage</span>.${critMsg}`);
+            } else {
+                log(`You missed your attack!`);
+            }
+
+            updateMonsterUI();
+
+            if (currentMonsterHealth <= 0) {
+                winBattle();
+                return;
+            }
+
+            // Monster Attack phase
+            setTimeout(() => {
+                if (currentMonsterHealth > 0 && health > 0) {
+                    monsterAttack(m);
+                }
+            }, 600);
+        }
+
+        function monsterAttack(m) {
+            // Dodge chance based on XP
+            let dodgeChance = Math.min(0.5, (xp * 0.01)); 
+            
+            if (Math.random() <= dodgeChance) {
+                log(`You gracefully evaded the ${m.name}'s attack!`);
+                return;
+            }
+
+            // Variance inside monster attack
+            let mDmg = m.attack + Math.floor(Math.random() * 5) - 2;
+            mDmg = Math.max(1, mDmg);
+
+            health -= mDmg;
+            log(`The ${m.name} strikes back for <span class='log-damage'>${mDmg} damage</span>.`);
+            
+            playerSprite.classList.add("anim-damage");
+            setTimeout(() => playerSprite.classList.remove("anim-damage"), 300);
+
+            updateStats();
+
+            if (health <= 0) {
+                loseGame();
+            }
+        }
+
+        function runAway() {
+            // 50% chance to fail
+            if (Math.random() > 0.5) {
+                log("You successfully ran away!");
+                goTown();
+            } else {
+                log("You failed to run away!");
+                monsterAttack(monsters[fighting]);
+            }
+        }
+
+        function winBattle() {
+            const m = monsters[fighting];
+            let goldWon = Math.floor(m.level * (10 + Math.random() * 5));
+            let xpWon = m.level * 2;
+            
+            gold += goldWon;
+            xp += xpWon;
+            
+            log(`<strong>You defeated the ${m.name}!</strong>`);
+            log(`You gained <span class='log-gold'>${goldWon} Gold</span> and <span class='log-gold'>${xpWon} XP</span>.`);
+            
+            updateStats();
+
+            if (m.name === "Dragon") {
+                winGame();
+            } else {
+                setupButtons("Continue", goTown, "", null, "", null);
+            }
+        }
+
+        function winGame() {
+            changeScene("scene-town", "VICTORY!");
+            playerSprite.innerText = "👑";
+            monsterStats.style.display = "none";
+            monsterWrapper.style.display = "none";
+            log("<strong>CONGRATULATIONS!</strong><br>You have slain the mighty Dragon and saved the town! You are a hero.");
+            setupButtons("Play Again", resetGame, "", null, "", null);
+        }
+
+        function loseGame() {
+            changeScene("scene-fight", "GAME OVER");
+            playerSprite.innerText = "🪦";
+            log("<strong>YOU DIED.</strong><br>The monster was too strong for you.");
+            setupButtons("Respawn", resetGame, "", null, "", null);
+        }
+
+        function resetGame() {
+            xp = 0;
+            health = 100;
+            maxHealth = 100;
+            gold = 50;
+            currentWeapon = 0;
+            fighting = -1;
+            logContainer.innerHTML = '<div class="log-entry">You wrap your bandages and prepare to fight again.</div>';
+            updateStats();
+            goTown();
+        }
+
+        // Init
+        updateStats();
+        goTown();
+
+    </script>
+</body>
+</html>

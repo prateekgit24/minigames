@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ghost in the Server - Complete Campaign</title>
+    <style>
+        :root {
+            --term-bg: #050505;
+            --term-fg: #33ff00;
+            --term-ghost: #ff0033;
+            --term-sys: #00bfff;
+            --panel-bg: #111;
+            --glow: 0 0 5px rgba(51, 255, 0, 0.5);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+
+        /* --- TERMINAL UI --- */
+        #monitor {
+            width: 100vw;
+            max-width: 900px;
+            height: 90vh;
+            background-color: var(--term-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9), 0 0 15px rgba(51, 255, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #monitor::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        #screen {
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--term-fg) var(--term-bg);
+            position: relative;
+            z-index: 3;
+        }
+
+        #screen::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #screen::-webkit-scrollbar-thumb {
+            background-color: var(--term-fg);
+            border-radius: 4px;
+        }
+
+        .line {
+            color: var(--term-fg);
+            text-shadow: var(--glow);
+            margin: 2px 0;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        .ghost-text {
+            color: var(--term-ghost);
+            text-shadow: 0 0 5px rgba(255, 0, 51, 0.5);
+            font-weight: bold;
+        }
+
+        .sys-text {
+            color: var(--term-sys);
+            text-shadow: 0 0 5px rgba(0, 191, 255, 0.5);
+        }
+
+        .dir-text {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .exec-text {
+            color: #ff00ff;
+            font-weight: bold;
+        }
+
+        .success-text {
+            color: #fff;
+            background-color: var(--term-fg);
+            padding: 2px 5px;
+            color: #000;
+            font-weight: bold;
+        }
+
+        #input-container {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        #prompt {
+            color: var(--term-fg);
+            text-shadow: var(--glow);
+            white-space: pre;
+            margin-right: 8px;
+        }
+
+        #cmd-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--term-fg);
+            font-family: inherit;
+            font-size: 1em;
+            text-shadow: var(--glow);
+            outline: none;
+            caret-color: var(--term-fg);
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0)
+            }
+
+            20% {
+                transform: translate(-2px, 2px)
+            }
+
+            40% {
+                transform: translate(-2px, -2px)
+            }
+
+            60% {
+                transform: translate(2px, 2px)
+            }
+
+            80% {
+                transform: translate(2px, -2px)
+            }
+
+            100% {
+                transform: translate(0)
+            }
+        }
+
+        .glitching {
+            animation: glitch 0.2s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="monitor">
+        <div id="screen">
+            <div id="output"></div>
+            <div id="input-container" style="display: none;">
+                <span id="prompt"></span>
+                <input type="text" id="cmd-input" autocomplete="off" spellcheck="false">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME ENGINE STATE ---
+        let currentLevelIndex = 0;
+        let fs = {};
+        let passwords = {};
+        let currentUser = "guest";
+        let currentHost = "local";
+        let cwd = "/";
+        let inputMode = "command"; // 'command', 'password', 'ssh_password'
+        let pendingUser = "";
+        let pendingHost = "";
+        let commandHistory = [];
+        let historyIndex = -1;
+        let isTransitioning = false;
+
+        // --- DOM ELEMENTS ---
+        const outputDiv = document.getElementById("output");
+        const inputContainer = document.getElementById("input-container");
+        const cmdInput = document.getElementById("cmd-input");
+        const promptSpan = document.getElementById("prompt");
+        const screenDiv = document.getElementById("screen");
+
+        // --- LEVEL DATA ---
+        const levels = [
+            {
+                title: "Level 1: The Careless Intern",
+                instruction: "Retrieve the compromised database password belonging to 'employee'. Submit the password using: submit [password]",
+                setup: () => {
+                    currentUser = "guest"; currentHost = "local"; cwd = "/home/employee";
+                    fs = {
+                        "local": {
+                            "/": { type: "dir", owner: "root", dirs: ["home"], files: [] },
+                            "/home": { type: "dir", owner: "root", dirs: ["employee"], files: [] },
+                            "/home/employee": { type: "dir", owner: "guest", dirs: [], files: ["notes.txt", "db_credentials.txt"] },
+                            "/home/employee/notes.txt": { type: "file", owner: "guest", content: "Don't forget to buy milk.\nMeeting at 3 PM." },
+                            "/home/employee/db_credentials.txt": { type: "file", owner: "guest", content: "DB_USER=admin\nDB_PASS=solar_flare99" }
+                        }
+                    };
+                },
+                checkCommand: (cmd, args) => {
+                    if (cmd === "submit" && args[0] === "solar_flare99") levelComplete();
+                    else if (cmd === "submit") printLine("Incorrect password.", "ghost-text");
+                }
+            },
+            {
+                title: "Level 2: Invisible Ink",
+                instruction: "A rogue node IP is concealed within the web server directory (/var/www/html). Find it and submit the IP using: submit [IP]",
+                setup: () => {
+                    currentUser = "guest"; currentHost = "local"; cwd = "/var/www/html";
+                    fs = {
+                        "local": {
+                            "/": { type: "dir", owner: "root", dirs: ["var"], files: [] },
+                            "/var": { type: "dir", owner: "root", dirs: ["www"], files: [] },
+                            "/var/www": { type: "dir", owner: "root", dirs: ["html"], files: [] },
+                            "/var/www/html": { type: "dir", owner: "guest", dirs: [], files: ["index.html", ".config_backup"] },
+                            "/var/www/html/index.html": { type: "file", owner: "guest", content: "<h1>Welcome to our site</h1>" },
+                            "/var/www/html/.config_backup": { type: "file", owner: "guest", content: "Rogue Node IP: 10.0.0.45\nDo not delete." }
+                        }
+                    };
+                },
+                checkCommand: (cmd, args) => {
+                    if (cmd === "submit" && args[0] === "10.0.0.45") levelComplete();
+                    else if (cmd === "submit") printLine("Incorrect IP.", "ghost-text");
+                }
+            },
+            {
+                title: "Level 3: Stepping Up",
+                instruction: "The 'dev' user possesses a critical blueprint. Investigate recent system activity to gain access to their account.",
+                setup: () => {
+                    currentUser = "guest"; currentHost = "local"; cwd = "/tmp";
+                    passwords = { "dev": "coffee123" };
+                    fs = {
+                        "local": {
+                            "/": { type: "dir", owner: "root", dirs: ["tmp", "home"], files: [] },
+                            "/tmp": { type: "dir", owner: "guest", dirs: [], files: ["system.log"] },
+                            "/home": { type: "dir", owner: "root", dirs: ["dev", "guest"], files: [] },
+                            "/home/guest": { type: "dir", owner: "guest", dirs: [], files: [] },
+                            "/home/dev": { type: "dir", owner: "dev", dirs: [], files: ["blueprint.txt"] },
+                            "/tmp/system.log": { type: "file", owner: "guest", content: "[12:00] System boot\n[12:05] User 'dev' changed password to 'coffee123'. WARNING: Weak password." },
+                            "/home/dev/blueprint.txt": { type: "file", owner: "dev", content: "TOP SECRET ARCHITECTURE." }
+                        }
+                    };
+                },
+                checkCommand: (cmd, args) => {
+                    if (currentUser === "dev") levelComplete();
+                }
+            },
+            {
+                title: "Level 4: Needle in the Syslog",
+                instruction: "An unauthorized OVERRIDE event was recorded. Parse the authentication logs (/var/log/auth.log) to identify the attacker's username. Submit it using: submit [username]",
+                setup: () => {
+                    currentUser = "guest"; currentHost = "local"; cwd = "/home/guest";
+                    fs = {
+                        "local": {
+                            "/": { type: "dir", owner: "root", dirs: ["var", "home"], files: [] },
+                            "/var": { type: "dir", owner: "root", dirs: ["log"], files: [] },
+                            "/var/log": { type: "dir", owner: "root", dirs: [], files: ["auth.log"] },
+                            "/home": { type: "dir", owner: "root", dirs: ["guest"], files: [] },
+                            "/home/guest": { type: "dir", owner: "guest", dirs: [], files: [] },
+                            "/var/log/auth.log": { type: "file", owner: "guest", content: "Login dev\nLogin admin\nFailed login root\nFailed login root\nLogin guest\nSYSTEM OVERRIDE triggered by user: phantom_0x\nLogin dev\nLogout dev" }
+                        }
+                    };
+                },
+                checkCommand: (cmd, args) => {
+                    if (cmd === "submit" && args[0] === "phantom_0x") levelComplete();
+                    else if (cmd === "submit") printLine("Incorrect username.", "ghost-text");
+                }
+            },
+            {
+                title: "Level 5: The Ghost in the Server",
+                instruction: "The system is infected by a Level 5 Rootkit. Locate the admin's instructions to purge the entity. Root privileges are required.",
+                setup: () => {
+                    currentUser = "guest"; currentHost = "local"; cwd = "/home/guest";
+                    passwords = { "admin": "hunter2", "root": "ghostbuster" };
+                    fs = {
+                        "local": {
+                            "/": { type: "dir", owner: "root", dirs: ["bin", "home", "tmp"], files: [] },
+                            "/bin": { type: "dir", owner: "root", dirs: [], files: ["purge_entity"] },
+                            "/home": { type: "dir", owner: "root", dirs: ["guest", "admin"], files: [] },
+                            "/home/guest": { type: "dir", owner: "guest", dirs: [], files: ["readme.txt"] },
+                            "/home/admin": { type: "dir", owner: "admin", dirs: [], files: ["notes.txt", ".diary"] },
+                            "/tmp": { type: "dir", owner: "guest", dirs: [], files: ["chat_backup.txt"] },
+                            "/bin/purge_entity": { type: "exec", owner: "root", content: "BINARY EXECUTABLE" },
+                            "/home/guest/readme.txt": { type: "file", owner: "guest", content: "Admin password is in /tmp/chat_backup.txt. Switch to admin, read their notes, get root, run /bin/purge_entity." },
+                            "/home/admin/notes.txt": { type: "file", owner: "admin", content: "I split the root password. The first half is: 'ghost'" },
+                            "/home/admin/.diary": { type: "file", owner: "admin", content: "The second half of the root password is: 'buster'. Combine them." },
+                            "/tmp/chat_backup.txt": { type: "file", owner: "guest", content: "<Admin>: My password is 'hunter2'." }
+                        }
+                    };
+                },
+                checkCommand: (cmd, args) => {
+                    // Win condition handled in executeFile() for ./purge_entity
+                }
+            },
+            {
+                title: "Level 6: The Remote Node (Final)",
+                instruction: "The Ghost retreated to a remote node. Track its origin, establish a remote connection, and execute the kill switch by force.",
+                setup: () => {
+                    currentUser = "root"; currentHost = "local"; cwd = "/root";
+                    passwords = { "ghost": "null_byte" }; // For SSH
+                    fs = {
+                        "local": {
+                            "/": { type: "dir", owner: "root", dirs: ["root"], files: [] },
+                            "/root": { type: "dir", owner: "root", dirs: [], files: ["ghost_trace.log"] },
+                            "/root/ghost_trace.log": { type: "file", owner: "root", content: "TRACE SUCCESSFUL.\nEntity escaped to remote node.\nTarget: ssh ghost@192.168.99.1\nPasskey: null_byte\nExecute the kill switch on that node immediately." }
+                        },
+                        "192.168.99.1": {
+                            "/": { type: "dir", owner: "root", dirs: ["opt", "home"], files: [] },
+                            "/home": { type: "dir", owner: "root", dirs: ["ghost"], files: [] },
+                            "/home/ghost": { type: "dir", owner: "ghost", dirs: [], files: [] },
+                            "/opt": { type: "dir", owner: "root", dirs: [], files: ["kill_switch.sh"] },
+                            "/opt/kill_switch.sh": { type: "exec", owner: "ghost", content: "BASH SCRIPT" }
+                        }
+                    };
+                },
+                checkCommand: (cmd, args) => {
+                    // Win condition handled in executeFile() for kill_switch.sh
+                }
+            }
+        ];
+
+        // --- HELPER FUNCTIONS ---
+        function getVFS() { return fs[currentHost]; }
+
+        function updatePrompt() {
+            if (inputMode === "password" || inputMode === "ssh_password") {
+                promptSpan.innerText = "Password: ";
+                cmdInput.type = "password";
+            } else {
+                let hostDisplay = currentHost === "local" ? "server" : currentHost;
+                let displayPath = cwd === `/home/${currentUser}` ? "~" : cwd;
+                let symbol = currentUser === "root" ? "#" : "$";
+                promptSpan.innerText = `${currentUser}@${hostDisplay}:${displayPath}${symbol} `;
+                cmdInput.type = "text";
+            }
+        }
+
+        function printLine(text, className = "line") {
+            const div = document.createElement("div");
+            div.className = className;
+            div.innerHTML = text;
+            outputDiv.appendChild(div);
+            scrollToBottom();
+        }
+
+        async function printTyping(text, className = "line", speed = 30) {
+            const div = document.createElement("div");
+            div.className = className;
+            outputDiv.appendChild(div);
+            for (let i = 0; i < text.length; i++) {
+                if (text.substring(i, i + 4) === "<br>") { div.innerHTML += "<br>"; i += 3; }
+                else { div.innerHTML += text.charAt(i); }
+                scrollToBottom();
+                await new Promise(r => setTimeout(r, speed));
+            }
+        }
+
+        function scrollToBottom() { screenDiv.scrollTop = screenDiv.scrollHeight; }
+
+        function resolvePath(target) {
+            if (!target) return cwd;
+            let parts = target.startsWith('/') ? target.split('/') : cwd.split('/').concat(target.split('/'));
+            let result = [];
+            for (let part of parts) {
+                if (part === '' || part === '.') continue;
+                if (part === '..') { result.pop(); }
+                else { result.push(part); }
+            }
+            return result.length === 0 ? '/' : '/' + result.join('/');
+        }
+
+        function checkPermission(path) {
+            if (currentUser === "root") return true;
+            const node = getVFS()[path];
+            if (!node) return false;
+            if (!node.owner || node.owner === "guest" || node.owner === currentUser) return true;
+            return false;
+        }
+
+        // --- LEVEL MANAGEMENT ---
+        async function loadLevel(index) {
+            if (index >= levels.length) {
+                outputDiv.innerHTML = "";
+                printLine("==================================================", "sys-text");
+                printLine("CAMPAIGN COMPLETE", "success-text");
+                printLine("==================================================", "sys-text");
+                printLine("You have defeated the Ghost. The system is safe.");
+                printLine("CONGRATULATIONS. ALL THREATS NEUTRALIZED.", "success-text");
+                inputContainer.style.display = "none";
+                return;
+            }
+
+            isTransitioning = true;
+            inputContainer.style.display = "none";
+            outputDiv.innerHTML = "";
+
+            const lvl = levels[index];
+
+            lvl.setup();
+            updatePrompt();
+
+            await printTyping("==================================================", "sys-text", 5);
+            await printTyping(`MISSION: ${lvl.title.toUpperCase()}`, "sys-text", 20);
+            await printTyping("==================================================", "sys-text", 5);
+            await printTyping(`OBJECTIVE: ${lvl.instruction}`, "dir-text", 20);
+            await printTyping("==================================================", "sys-text", 5);
+
+            printLine("<br>Environment configured.");
+            printLine("Type 'help' for commands or 'objective' to recall mission details.<br>");
+
+            isTransitioning = false;
+            inputContainer.style.display = "flex";
+            cmdInput.focus();
+        }
+
+        async function levelComplete() {
+            isTransitioning = true;
+            inputContainer.style.display = "none";
+            document.body.classList.add("glitching");
+
+            printLine("<br>");
+            await printTyping(">> TASK ACCOMPLISHED <<", "success-text", 50);
+            await new Promise(r => setTimeout(r, 1000));
+
+            document.body.classList.remove("glitching");
+            currentLevelIndex++;
+            loadLevel(currentLevelIndex);
+        }
+
+        // --- COMMAND LOGIC ---
+        async function handleCommand(rawCmd) {
+            const cmdString = rawCmd.trim();
+            if (!cmdString) return;
+
+            // --- PASSWORD HANDLING ---
+            if (inputMode === "password") {
+                printLine("Password: " + "*".repeat(cmdString.length));
+                if (cmdString === passwords[pendingUser]) {
+                    currentUser = pendingUser;
+                    cwd = `/home/${currentUser}`;
+                    if (!getVFS()[cwd]) cwd = "/";
+                    printLine(`Switching to user ${currentUser}...`, "sys-text");
+                } else {
+                    printLine("su: Authentication failure", "ghost-text");
+                }
+                inputMode = "command";
+                updatePrompt();
+                levels[currentLevelIndex].checkCommand("su"); // Trigger checks
+                return;
+            }
+
+            if (inputMode === "ssh_password") {
+                printLine("Password: " + "*".repeat(cmdString.length));
+                if (cmdString === passwords[pendingUser]) {
+                    currentHost = pendingHost;
+                    currentUser = pendingUser;
+                    cwd = `/home/${currentUser}`;
+                    if (!getVFS()[cwd]) cwd = "/";
+                    printLine(`Connection established to ${currentHost}`, "sys-text");
+                } else {
+                    printLine("Permission denied, please try again.", "ghost-text");
+                }
+                inputMode = "command";
+                updatePrompt();
+                return;
+            }
+
+            // --- NORMAL COMMANDS ---
+            printLine(`${promptSpan.innerText}${cmdString}`);
+            commandHistory.push(cmdString);
+            historyIndex = commandHistory.length;
+
+            const parts = cmdString.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+            const cmd = parts[0];
+            const args = parts.slice(1).map(a => a.replace(/^["']|["']$/g, '')); // Remove quotes
+
+            const vfs = getVFS();
+
+            switch (cmd) {
+                case "help":
+                    printLine("Available commands:");
+                    printLine("  ls [-a] [dir] : List directory contents");
+                    printLine("  cd [dir]      : Change working directory");
+                    printLine("  cat [file]    : Read file contents");
+                    printLine("  grep [word] [file] : Search for a word in a file");
+                    printLine("  pwd           : Print working directory");
+                    printLine("  whoami        : Print current user ID");
+                    printLine("  clear         : Clear terminal screen");
+                    printLine("  su [user]     : Substitute user identity");
+                    printLine("  ssh [user]@[ip]: Connect to remote node");
+                    printLine("  ./[file]      : Execute a binary file");
+                    printLine("  submit [ans]  : Submit flag to clear level");
+                    printLine("  objective     : Display current mission objective");
+                    break;
+
+                case "objective":
+                    printLine("==================================================", "sys-text");
+                    printLine(`MISSION: ${levels[currentLevelIndex].title.toUpperCase()}`, "sys-text");
+                    printLine(`OBJECTIVE: ${levels[currentLevelIndex].instruction}`, "dir-text");
+                    printLine("==================================================", "sys-text");
+                    break;
+
+                case "pwd": printLine(cwd); break;
+                case "whoami": printLine(currentUser); break;
+                case "clear": outputDiv.innerHTML = ""; break;
+                case "submit": levels[currentLevelIndex].checkCommand("submit", args); break;
+
+                case "su":
+                    const targetUser = args[0];
+                    if (!targetUser) printLine("su: missing operand");
+                    else if (!passwords[targetUser]) printLine(`su: user ${targetUser} does not exist`);
+                    else if (targetUser === currentUser) printLine("Already logged in as " + targetUser);
+                    else { pendingUser = targetUser; inputMode = "password"; updatePrompt(); }
+                    break;
+
+                case "ssh":
+                    const targetStr = args[0];
+                    if (!targetStr || !targetStr.includes('@')) {
+                        printLine("usage: ssh user@host");
+                    } else {
+                        const [sUser, sHost] = targetStr.split('@');
+                        if (!fs[sHost]) {
+                            printLine(`ssh: connect to host ${sHost} port 22: Connection refused`);
+                        } else {
+                            printLine(`The authenticity of host '${sHost}' can't be established.`);
+                            pendingUser = sUser;
+                            pendingHost = sHost;
+                            inputMode = "ssh_password";
+                            updatePrompt();
+                        }
+                    }
+                    break;
+
+                case "cd":
+                    const targetDir = args[0] || `/home/${currentUser}`;
+                    const resolvedDir = resolvePath(targetDir);
+                    if (!vfs[resolvedDir] || vfs[resolvedDir].type !== "dir") printLine(`cd: ${targetDir}: No such directory`);
+                    else if (!checkPermission(resolvedDir)) printLine(`cd: ${targetDir}: Permission denied`);
+                    else { cwd = resolvedDir; updatePrompt(); }
+                    break;
+
+                case "ls":
+                    let showHidden = false;
+                    let targetLsDir = cwd;
+                    if (args[0] === "-a") { showHidden = true; if (args[1]) targetLsDir = resolvePath(args[1]); }
+                    else if (args[0]) { targetLsDir = resolvePath(args[0]); }
+
+                    if (!vfs[targetLsDir] || vfs[targetLsDir].type !== "dir") {
+                        printLine(`ls: cannot access '${args[0] || targetLsDir}': No such directory`); break;
+                    }
+                    if (!checkPermission(targetLsDir)) { printLine(`ls: cannot open directory '${targetLsDir}': Permission denied`); break; }
+
+                    const dirNode = vfs[targetLsDir];
+                    let outputStr = "";
+                    if (showHidden) outputStr += `<span class="dir-text">.</span>  <span class="dir-text">..</span>  `;
+
+                    dirNode.dirs.forEach(d => {
+                        if (showHidden || !d.startsWith('.')) outputStr += `<span class="dir-text">${d}/</span>  `;
+                    });
+                    dirNode.files.forEach(f => {
+                        if (showHidden || !f.startsWith('.')) {
+                            let fPath = targetLsDir === "/" ? `/${f}` : `${targetLsDir}/${f}`;
+                            if (vfs[fPath] && vfs[fPath].type === "exec") outputStr += `<span class="exec-text">${f}*</span>  `;
+                            else outputStr += `${f}  `;
+                        }
+                    });
+                    if (outputStr) printLine(outputStr);
+                    break;
+
+                case "cat":
+                    if (!args[0]) { printLine("cat: missing operand"); break; }
+                    const catTarget = resolvePath(args[0]);
+                    if (!vfs[catTarget]) printLine(`cat: ${args[0]}: No such file or directory`);
+                    else if (vfs[catTarget].type === "dir") printLine(`cat: ${args[0]}: Is a directory`);
+                    else if (vfs[catTarget].type === "exec") printLine(`cat: ${args[0]}: Cannot read binary file`);
+                    else if (!checkPermission(catTarget)) printLine(`cat: ${args[0]}: Permission denied`);
+                    else printLine(vfs[catTarget].content.replace(/\n/g, "<br>"));
+                    break;
+
+                case "grep":
+                    if (args.length < 2) { printLine("Usage: grep [search_term] [file]"); break; }
+                    const searchTerm = args[0];
+                    const grepTarget = resolvePath(args[1]);
+                    if (!vfs[grepTarget]) { printLine(`grep: ${args[1]}: No such file or directory`); break; }
+                    if (vfs[grepTarget].type !== "file") { printLine(`grep: ${args[1]}: Not a text file`); break; }
+
+                    const lines = vfs[grepTarget].content.split('\n');
+                    let found = false;
+                    lines.forEach(l => {
+                        if (l.includes(searchTerm)) {
+                            // Highlight the search term
+                            const highlighted = l.replace(new RegExp(searchTerm, 'g'), `<span style="background-color: var(--term-fg); color: black;">${searchTerm}</span>`);
+                            printLine(highlighted);
+                            found = true;
+                        }
+                    });
+                    break;
+
+                default:
+                    if (cmd.startsWith("./") || cmd.startsWith("/")) {
+                        let execTarget = cmd.startsWith("./") ? resolvePath(cmd.substring(2)) : resolvePath(cmd);
+                        if (!vfs[execTarget]) printLine(`bash: ${cmd}: command not found`);
+                        else if (vfs[execTarget].type !== "exec") printLine(`bash: ${cmd}: Permission denied (not executable)`);
+                        else if (!checkPermission(execTarget)) printLine(`bash: ${cmd}: Permission denied`);
+                        else await executeFile(execTarget, args);
+                    } else {
+                        printLine(`bash: ${cmd}: command not found`);
+                    }
+                    break;
+            }
+
+            // Final catch-all level check
+            if (!isTransitioning) levels[currentLevelIndex].checkCommand(cmd, args);
+        }
+
+        async function executeFile(path, args) {
+            if (currentLevelIndex === 4 && path === "/bin/purge_entity") {
+                if (currentUser !== "root") { printLine("FATAL: ROOT PRIVILEGES REQUIRED.", "ghost-text"); return; }
+                inputContainer.style.display = "none";
+                await printTyping("INITIATING SYSTEM PURGE...", "sys-text", 30);
+                await printTyping("ENTITY PURGED.", "success-text", 30);
+                levelComplete();
+            }
+            else if (currentLevelIndex === 5 && path === "/opt/kill_switch.sh") {
+                if (args[0] !== "--force") {
+                    printLine("Usage: ./kill_switch.sh [OPTIONS]");
+                    printLine("  --force    Force termination of attached parasitic processes.");
+                    return;
+                }
+                inputContainer.style.display = "none";
+                document.body.classList.add("glitching");
+                await printTyping("EXECUTING KILL SWITCH WITH LETHAL FORCE...", "sys-text", 50);
+
+                let garbage = "";
+                const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*";
+                for (let i = 0; i < 300; i++) {
+                    garbage += chars.charAt(Math.floor(Math.random() * chars.length));
+                    if (i % 50 === 0) garbage += "<br>";
+                }
+                printLine(garbage, "ghost-text");
+                await new Promise(r => setTimeout(r, 1000));
+                document.body.classList.remove("glitching");
+                levelComplete();
+            }
+            else {
+                printLine(`Executing ${path}...`);
+                printLine("Nothing happened.");
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        cmdInput.addEventListener("keydown", async (e) => {
+            if (e.key === "Enter" && !isTransitioning) {
+                const val = cmdInput.value;
+                cmdInput.value = "";
+                inputContainer.style.display = "none";
+                await handleCommand(val);
+                if (!isTransitioning) {
+                    inputContainer.style.display = "flex";
+                    cmdInput.focus();
+                }
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (historyIndex > 0) { historyIndex--; cmdInput.value = commandHistory[historyIndex]; }
+            } else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (historyIndex < commandHistory.length - 1) { historyIndex++; cmdInput.value = commandHistory[historyIndex]; }
+                else { historyIndex = commandHistory.length; cmdInput.value = ""; }
+            }
+        });
+
+        document.addEventListener("click", () => { if (!isTransitioning) cmdInput.focus(); });
+
+        // --- BOOT ---
+        window.onload = () => { loadLevel(0); };
+
+    </script>
+</body>
+
+</html>

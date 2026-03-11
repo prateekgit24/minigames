@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Simulator: Full Terminal Edition</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --term-bg: rgba(10, 10, 12, 0.98);
+            --term-fg: #d3d7cf;
+            --term-green: #8ae234;
+            --term-blue: #729fcf;
+            --term-red: #ef2929;
+            --term-yellow: #fce94f;
+            --term-cyan: #34e2e2;
+            --term-purple: #ad7fa8;
+            --font-mono: 'Ubuntu Mono', 'Consolas', 'Courier New', monospace;
+            --font-sans: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #1e1e1e;
+            background-image: url('https://images.unsplash.com/photo-1629654291663-b91ad427698f?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            font-family: var(--font-mono);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        /* --- FULL SCREEN TERMINAL WINDOW --- */
+        #window {
+            width: 95vw;
+            max-width: 1400px;
+            height: 90vh;
+            background-color: var(--term-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        #title-bar {
+            height: 38px;
+            background-color: #2b2b2b;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            border-bottom: 1px solid #111;
+            justify-content: space-between;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background-color: #ff5f56;
+        }
+
+        .dot-yellow {
+            background-color: #ffbd2e;
+        }
+
+        .dot-green {
+            background-color: #27c93f;
+        }
+
+        .window-title {
+            color: #a0a0a0;
+            font-size: 0.9em;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- MAIN TERMINAL --- */
+        #terminal {
+            flex-grow: 1;
+            padding: 20px;
+            font-size: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            color: var(--term-fg);
+        }
+
+        #terminal::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #terminal::-webkit-scrollbar-thumb {
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        #terminal::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        .line {
+            margin: 2px 0;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .prompt-user {
+            color: var(--term-green);
+            font-weight: bold;
+        }
+
+        .prompt-dir {
+            color: var(--term-blue);
+            font-weight: bold;
+        }
+
+        .prompt-char {
+            color: var(--term-fg);
+            margin-right: 8px;
+        }
+
+        .error {
+            color: var(--term-red);
+        }
+
+        .success {
+            color: var(--term-green);
+            font-weight: bold;
+        }
+
+        .highlight {
+            color: var(--term-yellow);
+            font-weight: bold;
+        }
+
+        .sys-msg {
+            color: var(--term-cyan);
+            font-weight: bold;
+        }
+
+        .comment {
+            color: #888;
+        }
+
+        #input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        #cmd-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--term-fg);
+            font-family: var(--font-mono);
+            font-size: 16px;
+            outline: none;
+            caret-color: var(--term-fg);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="window">
+        <div id="title-bar">
+            <div class="window-controls">
+                <div class="control-dot dot-red"></div>
+                <div class="control-dot dot-yellow"></div>
+                <div class="control-dot dot-green"></div>
+            </div>
+            <div class="window-title">sysadmin@linux-sim:~</div>
+            <div style="width: 52px;"></div> <!-- Spacer to keep title centered -->
+        </div>
+        <div id="terminal">
+            <div id="output"></div>
+            <div id="input-line">
+                <span class="prompt-user">sysadmin@linux-sim</span>:<span class="prompt-dir"
+                    id="cwd-display">~</span><span class="prompt-char">$</span>
+                <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- VIRTUAL ENVIRONMENT STATE ---
+        let cwd = "/home/sysadmin";
+        let currentUser = "sysadmin";
+        let commandHistory = [];
+        let historyPointer = -1;
+
+        // Advanced VFS
+        let vfs = {
+            "/": { type: "dir", owner: "root", perms: "755", dirs: ["home", "var", "etc", "opt", "tmp", "bin"], files: {} },
+            "/home": { type: "dir", owner: "root", perms: "755", dirs: ["sysadmin"], files: {} },
+            "/home/sysadmin": {
+                type: "dir", owner: "sysadmin", perms: "750", dirs: ["documents"],
+                files: {
+                    "welcome.txt": { content: "Welcome to the Linux Simulator.\nType 'tasks' to see your objectives.", size: 70, perms: "644" }
+                }
+            },
+            "/home/sysadmin/documents": {
+                type: "dir", owner: "sysadmin", perms: "755", dirs: [],
+                files: {
+                    "server_config.conf": { content: "PORT=8080\nHOST=127.0.0.1\nDEBUG=true\n", size: 36, perms: "644" }
+                }
+            },
+            "/var": { type: "dir", owner: "root", perms: "755", dirs: ["log"], files: {} },
+            "/var/log": {
+                type: "dir", owner: "root", perms: "755", dirs: [],
+                files: {
+                    "syslog": { content: "Booting kernel...\nNetwork UP\nService sshd started\nCRITICAL: Disk usage high\nCron jobs loaded.", size: 90, perms: "644" },
+                    "auth.log": { content: "Failed password for root from 192.168.1.1\nAccepted password for sysadmin from 10.0.0.5\nSession opened for sysadmin.", size: 115, perms: "640" }
+                }
+            },
+            "/etc": {
+                type: "dir", owner: "root", perms: "755", dirs: [],
+                files: {
+                    "passwd": { content: "root:x:0:0:root:/root:/bin/bash\nsysadmin:x:1000:1000:sysadmin:/home/sysadmin:/bin/bash", size: 87, perms: "644" }
+                }
+            },
+            "/opt": { type: "dir", owner: "root", perms: "755", dirs: [], files: {} },
+            "/tmp": { type: "dir", owner: "root", perms: "777", dirs: [], files: {} },
+            "/bin": { type: "dir", owner: "root", perms: "755", dirs: [], files: { "bash": { content: "BIN", size: 1024, perms: "755" } } }
+        };
+
+        // Simulated Processes
+        let processes = [
+            { pid: 1, user: "root", cmd: "/sbin/init" },
+            { pid: 401, user: "root", cmd: "sshd" },
+            { pid: 992, user: "sysadmin", cmd: "bash" },
+            { pid: 1337, user: "sysadmin", cmd: "./malware_miner" }
+        ];
+
+        // --- TASK SYSTEM (20 TASKS) ---
+        const tasks = [
+            { id: 1, desc: "Find out what user you are logged in as.", hint: "Use the 'whoami' command.", check: (cmd) => cmd === "whoami" },
+            { id: 2, desc: "Print your current working directory.", hint: "Use 'pwd' (Print Working Directory).", check: (cmd) => cmd === "pwd" },
+            { id: 3, desc: "List the files in your current directory.", hint: "Use the 'ls' command.", check: (cmd) => cmd === "ls" },
+            { id: 4, desc: "Read the contents of 'welcome.txt'.", hint: "Use 'cat welcome.txt'.", check: (cmd, args) => cmd === "cat" && args[0] === "welcome.txt" },
+            { id: 5, desc: "Create an empty file named 'report.txt'.", hint: "Use the 'touch' command.", check: (cmd) => getNode("/home/sysadmin")?.files["report.txt"] !== undefined },
+            { id: 6, desc: "Create a new directory named 'backup'.", hint: "Use the 'mkdir' command.", check: (cmd) => getNode("/home/sysadmin/backup") !== undefined },
+            { id: 7, desc: "Move 'report.txt' into the 'backup' directory.", hint: "Use 'mv report.txt backup/'.", check: () => getNode("/home/sysadmin/backup")?.files["report.txt"] !== undefined },
+            { id: 8, desc: "Copy '/etc/passwd' to your home directory.", hint: "Use 'cp /etc/passwd /home/sysadmin/'.", check: () => getNode("/home/sysadmin")?.files["passwd"] !== undefined },
+            { id: 9, desc: "Navigate (change directory) to '/var/log'.", hint: "Use 'cd /var/log'.", check: () => cwd === "/var/log" },
+            { id: 10, desc: "Search for the word 'CRITICAL' inside 'syslog'.", hint: "Use 'grep CRITICAL syslog'.", check: (cmd, args) => cmd === "grep" && args.includes("CRITICAL") && args.includes("syslog") },
+            { id: 11, desc: "Check the current running processes.", hint: "Use 'ps' or 'top'.", check: (cmd) => cmd === "ps" || cmd === "top" },
+            { id: 12, desc: "A malicious process './malware_miner' is running. Kill it.", hint: "Find its PID from the previous 'ps' command, then use 'kill [PID]'.", check: () => processes.findIndex(p => p.cmd === "./malware_miner") === -1 },
+            { id: 13, desc: "Return to your home directory.", hint: "Use 'cd ~' or just 'cd'.", check: () => cwd === "/home/sysadmin" },
+            { id: 14, desc: "Count the number of lines, words, and characters in 'welcome.txt'.", hint: "Use 'wc welcome.txt'.", check: (cmd, args) => cmd === "wc" && args.includes("welcome.txt") },
+            { id: 15, desc: "Find all files in the system named 'syslog'.", hint: "Use 'find / -name syslog'.", check: (cmd, args) => cmd === "find" && args.includes("syslog") },
+            { id: 16, desc: "Check your disk space usage.", hint: "Use 'df' (usually 'df -h').", check: (cmd) => cmd === "df" },
+            { id: 17, desc: "Check your available system memory.", hint: "Use 'free' (usually 'free -m').", check: (cmd) => cmd === "free" },
+            { id: 18, desc: "Create a compressed archive of your 'documents' folder named 'docs.tar.gz'.", hint: "Use 'tar -czvf docs.tar.gz documents'.", check: () => getNode("/home/sysadmin")?.files["docs.tar.gz"] !== undefined },
+            { id: 19, desc: "Check your network connectivity by pinging 'google.com'.", hint: "Use 'ping google.com'.", check: (cmd, args) => cmd === "ping" && args.includes("google.com") },
+            { id: 20, desc: "Delete the 'backup' directory and everything inside it.", hint: "Use 'rm -rf backup'.", check: () => getNode("/home/sysadmin/backup") === undefined }
+        ];
+
+        let currentTaskIdx = 0;
+
+        // --- UI DOM ELEMENTS ---
+        const outputDiv = document.getElementById("output");
+        const cmdInput = document.getElementById("cmd-input");
+        const cwdDisplay = document.getElementById("cwd-display");
+
+        // --- ENGINE HELPERS ---
+        function updatePrompt() {
+            let displayPath = cwd.startsWith("/home/sysadmin") ? cwd.replace("/home/sysadmin", "~") : cwd;
+            cwdDisplay.innerText = displayPath;
+        }
+
+        function print(text, type = "") {
+            if (text === undefined || text === "") return;
+            const div = document.createElement("div");
+            div.className = "line " + type;
+            div.innerHTML = text; // Allow basic HTML like colors
+            outputDiv.appendChild(div);
+            document.getElementById("terminal").scrollTop = document.getElementById("terminal").scrollHeight;
+        }
+
+        function resolvePath(target) {
+            if (!target) return cwd;
+            if (target === "~") return "/home/sysadmin";
+            if (target.startsWith("~/")) return "/home/sysadmin" + target.substring(1);
+
+            let parts = target.startsWith('/') ? target.split('/') : cwd.split('/').concat(target.split('/'));
+            let result = [];
+            for (let part of parts) {
+                if (part === '' || part === '.') continue;
+                if (part === '..') { result.pop(); }
+                else { result.push(part); }
+            }
+            return result.length === 0 ? '/' : '/' + result.join('/');
+        }
+
+        function getNode(path) {
+            if (path === "/") return vfs["/"];
+            return vfs[path];
+        }
+
+        function recursiveFind(node, path, searchName, results) {
+            if (node.files) {
+                Object.keys(node.files).forEach(f => {
+                    if (f.includes(searchName)) results.push(path === "/" ? `/${f}` : `${path}/${f}`);
+                });
+            }
+            if (node.dirs) {
+                node.dirs.forEach(d => {
+                    let subPath = path === "/" ? `/${d}` : `${path}/${d}`;
+                    let subNode = getNode(subPath);
+                    if (d.includes(searchName)) results.push(subPath);
+                    if (subNode) recursiveFind(subNode, subPath, searchName, results);
+                });
+            }
+        }
+
+        function recursiveDelete(path) {
+            let dirPath = path.substring(0, path.lastIndexOf('/')) || '/';
+            let targetName = path.substring(path.lastIndexOf('/') + 1);
+            let parentDir = getNode(dirPath);
+
+            if (parentDir) {
+                if (parentDir.files && parentDir.files[targetName]) delete parentDir.files[targetName];
+                if (parentDir.dirs && parentDir.dirs.includes(targetName)) {
+                    parentDir.dirs = parentDir.dirs.filter(d => d !== targetName);
+                    // Recursively remove from vfs object
+                    Object.keys(vfs).forEach(k => {
+                        if (k.startsWith(path)) delete vfs[k];
+                    });
+                }
+            }
+        }
+
+        // --- PIPELINE PARSER ---
+        async function runPipeline(rawCmd) {
+            print(`sysadmin@linux-sim:${cwdDisplay.innerText}$ ${rawCmd}`);
+            commandHistory.push(rawCmd);
+            historyPointer = commandHistory.length;
+
+            const pipes = rawCmd.split('|').map(p => p.trim());
+            let currentInput = null;
+
+            for (let i = 0; i < pipes.length; i++) {
+                const parts = pipes[i].match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+                if (parts.length === 0) continue;
+
+                const cmd = parts[0].toLowerCase();
+                const args = parts.slice(1).map(a => a.replace(/^["']|["']$/g, ''));
+
+                currentInput = await executeCommand(cmd, args, currentInput);
+
+                if (currentInput && currentInput.startsWith("ERROR_INTERNAL:")) {
+                    print(currentInput.replace("ERROR_INTERNAL:", ""), "error");
+                    return;
+                }
+            }
+
+            if (currentInput) print(currentInput);
+
+            // Check Task Progression
+            checkTasks(pipes[0]);
+        }
+
+        function checkTasks(rawFirstCmd) {
+            if (currentTaskIdx >= tasks.length) return;
+
+            const parts = rawFirstCmd.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+            const cmd = parts[0]?.toLowerCase();
+            const args = parts.slice(1);
+
+            const currentTask = tasks[currentTaskIdx];
+            if (currentTask.check(cmd, args)) {
+                print(`\n[✔] TASK COMPLETE: ${currentTask.desc}`, "success");
+                currentTaskIdx++;
+                if (currentTaskIdx < tasks.length) {
+                    print(`\n[!] NEW TASK: ${tasks[currentTaskIdx].desc}`, "sys-msg");
+                } else {
+                    print(`\n🎉 ALL TASKS COMPLETE! You are a Linux Master.`, "highlight");
+                }
+            }
+        }
+
+        // --- CORE COMMAND EXECUTION (40+ Commands) ---
+        async function executeCommand(cmd, args, pipedInput) {
+            switch (cmd) {
+                // --- BASIC NAVIGATION ---
+                case "pwd": return cwd;
+                case "whoami": return currentUser;
+                case "clear": outputDiv.innerHTML = ""; return "";
+                case "echo": return args.join(" ");
+                case "history": return commandHistory.map((c, i) => `  ${i + 1}  ${c}`).join("\n");
+
+                case "cd":
+                    const targetDir = args[0] || "~";
+                    const rPath = resolvePath(targetDir);
+                    if (getNode(rPath) && getNode(rPath).type === "dir") { cwd = rPath; updatePrompt(); return ""; }
+                    return `ERROR_INTERNAL:bash: cd: ${targetDir}: No such file or directory`;
+
+                case "ls":
+                    let lsDirStr = args.find(a => !a.startsWith("-")) || cwd;
+                    let lsPath = resolvePath(lsDirStr);
+                    let dirObj = getNode(lsPath);
+
+                    if (!dirObj) return `ERROR_INTERNAL:ls: cannot access '${lsDirStr}': No such file or directory`;
+                    if (dirObj.type !== "dir") return lsDirStr;
+
+                    const isLong = args.some(a => a.includes("l"));
+                    const isAll = args.some(a => a.includes("a"));
+
+                    let out = "";
+                    if (isAll && isLong) out += `drwxr-xr-x 2 root root 4096 .\ndrwxr-xr-x 3 root root 4096 ..\n`;
+                    else if (isAll) out += `<span class="prompt-dir">.</span>  <span class="prompt-dir">..</span>  `;
+
+                    dirObj.dirs.forEach(d => {
+                        if (isLong) out += `drwxr-xr-x 2 ${dirObj.owner} ${dirObj.owner} 4096 Oct 14 12:00 <span class="prompt-dir">${d}</span>\n`;
+                        else out += `<span class="prompt-dir">${d}</span>  `;
+                    });
+                    Object.keys(dirObj.files).forEach(f => {
+                        if (!isAll && f.startsWith(".")) return;
+                        let file = dirObj.files[f];
+                        let p = file.perms;
+                        let permStr = `-rw${p.includes('5') || p.includes('7') ? 'x' : '-'}r--r--`;
+                        let fileClass = file.perms.includes('7') ? "success" : ""; // Green if executable
+
+                        if (isLong) out += `${permStr} 1 ${dirObj.owner} ${dirObj.owner} ${file.size} Oct 14 12:00 <span class="${fileClass}">${f}</span>\n`;
+                        else out += `<span class="${fileClass}">${f}</span>  `;
+                    });
+                    return out.trim();
+
+                case "tree":
+                    return `.\n├── documents\n│   └── server_config.conf\n├── welcome.txt\n\n1 directory, 2 files`;
+
+                // --- FILE OPERATIONS ---
+                case "cat":
+                case "head":
+                case "tail":
+                case "less":
+                case "more":
+                    if (pipedInput) {
+                        if (cmd === "head") return pipedInput.split('\n').slice(0, 10).join('\n');
+                        if (cmd === "tail") return pipedInput.split('\n').slice(-10).join('\n');
+                        return pipedInput;
+                    }
+                    if (!args[0]) return `ERROR_INTERNAL:${cmd}: missing file operand`;
+                    let cPath = resolvePath(args[0]);
+                    let cDir = getNode(cPath.substring(0, cPath.lastIndexOf('/')) || '/');
+                    let cFile = cPath.substring(cPath.lastIndexOf('/') + 1);
+                    if (!cDir || !cDir.files[cFile]) return `ERROR_INTERNAL:${cmd}: ${args[0]}: No such file or directory`;
+                    let content = cDir.files[cFile].content;
+                    if (cmd === "head") return content.split('\n').slice(0, 10).join('\n');
+                    if (cmd === "tail") return content.split('\n').slice(-10).join('\n');
+                    return content;
+
+                case "touch":
+                    if (!args[0]) return `ERROR_INTERNAL:touch: missing file operand`;
+                    let tPath = resolvePath(args[0]);
+                    let tDir = getNode(tPath.substring(0, tPath.lastIndexOf('/')) || '/');
+                    let tFile = tPath.substring(tPath.lastIndexOf('/') + 1);
+                    if (tDir) {
+                        if (!tDir.files[tFile]) tDir.files[tFile] = { content: "", size: 0, perms: "644" };
+                        return "";
+                    }
+                    return `ERROR_INTERNAL:touch: cannot touch '${args[0]}': No such directory`;
+
+                case "mkdir":
+                    if (!args[0]) return `ERROR_INTERNAL:mkdir: missing operand`;
+                    let mPath = resolvePath(args[0]);
+                    let mDir = getNode(mPath.substring(0, mPath.lastIndexOf('/')) || '/');
+                    let mFile = mPath.substring(mPath.lastIndexOf('/') + 1);
+                    if (mDir && !mDir.dirs.includes(mFile)) {
+                        mDir.dirs.push(mFile);
+                        vfs[mPath] = { type: "dir", owner: currentUser, perms: "755", dirs: [], files: {} };
+                        return "";
+                    }
+                    return `ERROR_INTERNAL:mkdir: cannot create directory '${args[0]}'`;
+
+                case "rmdir":
+                    if (!args[0]) return `ERROR_INTERNAL:rmdir: missing operand`;
+                    let rdPath = resolvePath(args[0]);
+                    let rdNode = getNode(rdPath);
+                    if (rdNode && rdNode.dirs.length === 0 && Object.keys(rdNode.files).length === 0) {
+                        recursiveDelete(rdPath);
+                        return "";
+                    }
+                    return `ERROR_INTERNAL:rmdir: failed to remove '${args[0]}': Directory not empty or doesn't exist`;
+
+                case "rm":
+                    if (!args[0]) return `ERROR_INTERNAL:rm: missing operand`;
+                    const isRecursive = args.some(a => a.includes("r"));
+                    let rmTarget = args.find(a => !a.startsWith("-"));
+                    if (!rmTarget) return `ERROR_INTERNAL:rm: missing operand`;
+
+                    let rmPath = resolvePath(rmTarget);
+                    let rmDir = getNode(rmPath.substring(0, rmPath.lastIndexOf('/')) || '/');
+                    let rmFile = rmPath.substring(rmPath.lastIndexOf('/') + 1);
+
+                    if (rmDir && rmDir.files[rmFile]) {
+                        delete rmDir.files[rmFile];
+                        return "";
+                    } else if (getNode(rmPath) && isRecursive) {
+                        recursiveDelete(rmPath);
+                        return "";
+                    }
+                    return `ERROR_INTERNAL:rm: cannot remove '${rmTarget}': No such file or directory`;
+
+                case "cp":
+                case "mv":
+                    if (args.length < 2) return `ERROR_INTERNAL:${cmd}: missing destination file operand`;
+                    let srcPath = resolvePath(args[0]);
+                    let srcDir = getNode(srcPath.substring(0, srcPath.lastIndexOf('/')) || '/');
+                    let srcF = srcPath.substring(srcPath.lastIndexOf('/') + 1);
+
+                    let dstPath = resolvePath(args[1]);
+                    let dstNode = getNode(dstPath);
+                    let dstDir, dstF;
+
+                    // If destination is an existing directory, copy inside it keeping original name
+                    if (dstNode && dstNode.type === "dir") {
+                        dstDir = dstNode;
+                        dstF = srcF;
+                    } else {
+                        dstDir = getNode(dstPath.substring(0, dstPath.lastIndexOf('/')) || '/');
+                        dstF = dstPath.substring(dstPath.lastIndexOf('/') + 1);
+                    }
+
+                    if (!srcDir || !srcDir.files[srcF]) return `ERROR_INTERNAL:${cmd}: cannot stat '${args[0]}': No such file`;
+                    if (!dstDir) return `ERROR_INTERNAL:${cmd}: cannot create file '${args[1]}': No such directory`;
+
+                    dstDir.files[dstF] = JSON.parse(JSON.stringify(srcDir.files[srcF]));
+                    if (cmd === "mv") delete srcDir.files[srcF];
+                    return "";
+
+                // --- TEXT PROCESSING ---
+                case "grep":
+                    let gPattern = args.find(a => !a.startsWith("-"));
+                    let gFiles = args.filter(a => !a.startsWith("-")).slice(1);
+                    let gInput = pipedInput;
+
+                    if (!pipedInput) {
+                        if (gFiles.length === 0) return `ERROR_INTERNAL:Usage: grep [pattern] [file]`;
+                        let gPath = resolvePath(gFiles[0]);
+                        let gDir = getNode(gPath.substring(0, gPath.lastIndexOf('/')) || '/');
+                        let gFile = gPath.substring(gPath.lastIndexOf('/') + 1);
+                        if (!gDir || !gDir.files[gFile]) return `ERROR_INTERNAL:grep: ${gFiles[0]}: No such file`;
+                        gInput = gDir.files[gFile].content;
+                    }
+                    if (!gPattern || !gInput) return "";
+                    let matches = gInput.split('\n').filter(l => l.includes(gPattern));
+                    return matches.map(m => m.replace(new RegExp(gPattern, 'g'), `<span style="background:var(--term-red);color:white">${gPattern}</span>`)).join('\n');
+
+                case "wc":
+                    let wInput = pipedInput;
+                    let wFileName = "";
+                    let wFlags = args.filter(a => a.startsWith('-'));
+                    let wFiles = args.filter(a => !a.startsWith('-'));
+
+                    if (!pipedInput) {
+                        if (wFiles.length === 0) return `ERROR_INTERNAL:wc: missing operand`;
+                        let wPath = resolvePath(wFiles[0]);
+                        let wDir = getNode(wPath.substring(0, wPath.lastIndexOf('/')) || '/');
+                        wFileName = wPath.substring(wPath.lastIndexOf('/') + 1);
+                        if (!wDir || !wDir.files[wFileName]) return `ERROR_INTERNAL:wc: ${wFiles[0]}: No such file`;
+                        wInput = wDir.files[wFileName].content;
+                    }
+
+                    let lines = wInput === "" ? 0 : wInput.split('\n').length;
+                    let words = wInput.split(/\s+/).filter(x => x).length;
+                    let chars = wInput.length;
+
+                    if (wFlags.includes("-l")) return `${lines} ${wFileName}`.trim();
+                    if (wFlags.includes("-w")) return `${words} ${wFileName}`.trim();
+                    if (wFlags.includes("-c")) return `${chars} ${wFileName}`.trim();
+                    return ` ${lines}  ${words} ${chars} ${wFileName}`.trim();
+
+                case "sort": return pipedInput ? pipedInput.split('\n').sort().join('\n') : `ERROR_INTERNAL:sort: missing input`;
+                case "uniq": return pipedInput ? pipedInput.split('\n').filter((v, i, a) => a.indexOf(v) === i).join('\n') : `ERROR_INTERNAL:uniq: missing input`;
+                case "awk": return pipedInput ? `(AWK MOCK) Parsed: ${pipedInput.split('\n').length} lines` : `ERROR_INTERNAL:awk: missing input`;
+                case "sed": return pipedInput ? pipedInput.replace(/a/g, 'A') : `ERROR_INTERNAL:sed: missing input`;
+
+                case "find":
+                    let searchDir = args[0] && !args[0].startsWith("-") ? resolvePath(args[0]) : cwd;
+                    let findName = args.includes("-name") ? args[args.indexOf("-name") + 1] : "";
+                    let results = [];
+                    recursiveFind(getNode(searchDir), searchDir, findName, results);
+                    return results.join('\n') || `find: '${findName}': No such file or directory`;
+
+                // --- SYSTEM & PROCESSES ---
+                case "ps":
+                    let psOut = "  PID TTY          TIME CMD\n";
+                    processes.forEach(p => { psOut += `${p.pid.toString().padStart(5)} ?        00:00:01 ${p.cmd}\n`; });
+                    return psOut.trim();
+
+                case "kill":
+                    if (!args[0]) return `ERROR_INTERNAL:kill: usage: kill [-s sigspec] pid`;
+                    let pidStr = args.find(a => !a.startsWith("-"));
+                    let pid = parseInt(pidStr);
+                    let pIdx = processes.findIndex(p => p.pid === pid);
+                    if (pIdx !== -1) { processes.splice(pIdx, 1); return ""; }
+                    return `ERROR_INTERNAL:bash: kill: (${pidStr}) - No such process`;
+
+                case "top": return `top - 15:00:01 up 14 days,  2:04,  1 user,  load average: 0.12, 0.05, 0.01\nTasks:  85 total,   1 running,  84 sleeping,   0 stopped,   0 zombie\n%Cpu(s):  2.5 us,  0.5 sy,  0.0 ni, 97.0 id,  0.0 wa\n\n  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND\n  401 root      20   0  145000   5000   2000 S   0.0   0.5   0:10.00 sshd\n 1337 sysadmin  20   0  900000 800000   1000 R  99.9  85.0 120:00.00 ./malware_miner`;
+                case "df": return `Filesystem     1K-blocks    Used Available Use% Mounted on\n/dev/vda1       25000000 4500000  20500000  18% /\ntmpfs             512000       0    512000   0% /dev/shm`;
+                case "du": return `12      ./documents\n70      ./welcome.txt\n82      .`;
+                case "free": return `               total        used        free      shared  buff/cache   available\nMem:         2048000     1800000      100000       10000      148000       50000\nSwap:        1024000           0     1024000`;
+                case "date": return new Date().toString();
+                case "uptime": return ` 15:00:01 up 14 days,  2:04,  1 user,  load average: 0.12, 0.05, 0.01`;
+                case "uname": return args.includes("-a") ? `Linux prod-server 5.15.0-generic x86_64 GNU/Linux` : `Linux`;
+
+                // --- PERMISSIONS & ARCHIVES ---
+                case "chmod":
+                    if (args.length < 2) return `ERROR_INTERNAL:chmod: missing operand`;
+                    let chPath = resolvePath(args.find(a => !a.startsWith("+") && !a.startsWith("-") && isNaN(a[0])));
+                    let chDir = getNode(chPath.substring(0, chPath.lastIndexOf('/')) || '/');
+                    let chFile = chPath.substring(chPath.lastIndexOf('/') + 1);
+                    if (chDir && chDir.files[chFile]) {
+                        chDir.files[chFile].perms = "777"; // Mock change
+                        return "";
+                    }
+                    return `ERROR_INTERNAL:chmod: cannot access file: No such file`;
+
+                case "chown": return "(Simulated) Ownership changed.";
+
+                case "tar":
+                case "zip":
+                    if (args.length < 2) return `ERROR_INTERNAL:${cmd}: missing operands`;
+                    let tarPath = resolvePath(args.find(a => a.includes(".")));
+                    let tarDir = getNode(tarPath.substring(0, tarPath.lastIndexOf('/')) || '/');
+                    let tarFile = tarPath.substring(tarPath.lastIndexOf('/') + 1);
+                    if (tarDir) {
+                        tarDir.files[tarFile] = { content: "BINARY ARCHIVE DATA", size: 4500, perms: "644" };
+                        return `${tarFile} archived successfully.`;
+                    }
+                    return `ERROR_INTERNAL:${cmd}: Error creating archive.`;
+
+                case "unzip": return `Archive:  ${args[0]}\n  inflating: extracted_file.txt`;
+
+                // --- NETWORKING ---
+                case "ping":
+                    if (!args[0]) return `ERROR_INTERNAL:ping: usage error: Destination address required`;
+                    return `PING ${args[0]} (93.184.216.34) 56(84) bytes of data.\n64 bytes from 93.184.216.34: icmp_seq=1 ttl=115 time=12.4 ms\n64 bytes from 93.184.216.34: icmp_seq=2 ttl=115 time=12.1 ms\n^C\n--- ${args[0]} ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss`;
+
+                case "curl":
+                case "wget":
+                    if (!args[0]) return `ERROR_INTERNAL:${cmd}: missing URL`;
+                    return `Connecting to ${args[0]}...\nHTTP request sent, awaiting response... 200 OK\nLength: 1256 (1.2K) [text/html]\nSaving to: 'download'\n[==================================>] 1,256       --.-K/s   in 0s`;
+
+                case "ifconfig":
+                case "ip":
+                    return `eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500\n        inet 192.168.1.10  netmask 255.255.255.0  broadcast 192.168.1.255\n        inet6 fe80::215:5dff:fe00:101  prefixlen 64  scopeid 0x20<link>\n        ether 00:15:5d:00:01:01  txqueuelen 1000  (Ethernet)`;
+
+                // --- GAME COMMANDS ---
+                case "man":
+                    if (!args[0]) return "What manual page do you want?";
+                    return `NAME\n       ${args[0]} - user command\nDESCRIPTION\n       This is a simulated version of ${args[0]} for the Linux Simulator.`;
+
+                case "tasks":
+                case "objective":
+                    let tOut = "<span class='sys-msg'>--- SYSTEM OBJECTIVES ---</span>\n";
+                    if (currentTaskIdx < tasks.length) {
+                        tOut += `[ACTIVE] ${tasks[currentTaskIdx].desc}\n\n`;
+                        tOut += `<span class='comment'>Progress: ${currentTaskIdx}/${tasks.length} tasks completed.</span>\n`;
+                        tOut += `<span class='comment'>Type 'help' if you are stuck.</span>`;
+                    } else {
+                        tOut += `[✔] ALL TASKS COMPLETE!`;
+                    }
+                    return tOut;
+
+                case "help":
+                    if (currentTaskIdx < tasks.length) return `<span class='highlight'>[HELP]:</span> ${tasks[currentTaskIdx].hint}`;
+                    return "No active tasks. Explore with standard commands.";
+
+                default:
+                    if (cmd.startsWith("./")) return `bash: ${cmd}: Permission denied`;
+                    return `ERROR_INTERNAL:bash: ${cmd}: command not found`;
+            }
+        }
+
+        // --- INPUT HANDLING ---
+        cmdInput.addEventListener("keydown", async (e) => {
+            if (e.key === "Enter") {
+                const val = cmdInput.value;
+                cmdInput.value = "";
+                if (val.trim() !== "") await runPipeline(val);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (historyPointer > 0) { historyPointer--; cmdInput.value = commandHistory[historyPointer]; }
+            } else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (historyPointer < commandHistory.length - 1) { historyPointer++; cmdInput.value = commandHistory[historyPointer]; }
+                else { historyPointer = commandHistory.length; cmdInput.value = ""; }
+            }
+        });
+
+        document.addEventListener("click", () => cmdInput.focus());
+
+        // Start App
+        window.onload = () => {
+            print(`Linux Simulator OS 2.0 (tty1)\n`, "sys-msg");
+            print(`Last login: ${new Date().toLocaleString()} from 192.168.1.5`);
+            print(`\nType <span class='highlight'>tasks</span> to view your current objective.`);
+            print(`Type <span class='highlight'>help</span> if you get stuck.\n`);
+        };
+
+    </script>
+</body>
+
+</html>
