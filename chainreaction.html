@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chain Reaction</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #050508;
+    --grid-line: #1a1a2e;
+    --p1: #ff2d55;
+    --p2: #00d4ff;
+    --p3: #39ff14;
+    --p4: #ff9f0a;
+    --glow-p1: 0 0 12px #ff2d55, 0 0 30px #ff2d5580;
+    --glow-p2: 0 0 12px #00d4ff, 0 0 30px #00d4ff80;
+    --glow-p3: 0 0 12px #39ff14, 0 0 30px #39ff1480;
+    --glow-p4: 0 0 12px #ff9f0a, 0 0 30px #ff9f0a80;
+    --cell-size: 60px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, #ff2d5508 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 50%, #00d4ff08 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--p1), var(--p2), var(--p3), var(--p4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+    animation: shimmer 3s linear infinite;
+    background-size: 300%;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+
+  #setup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 30px;
+    background: #0d0d1a;
+    border: 1px solid #1e1e3a;
+    border-radius: 12px;
+    min-width: 320px;
+  }
+
+  .setup-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .setup-label {
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: #888;
+    text-transform: uppercase;
+  }
+
+  .num-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  .num-btn {
+    width: 36px; height: 36px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .num-btn.active {
+    border-color: var(--p2);
+    box-shadow: 0 0 10px #00d4ff60;
+    color: var(--p2);
+  }
+
+  .start-btn {
+    padding: 12px 40px;
+    background: transparent;
+    border: 2px solid var(--p2);
+    border-radius: 8px;
+    color: var(--p2);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    box-shadow: 0 0 15px #00d4ff30;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .start-btn:hover {
+    background: #00d4ff20;
+    box-shadow: 0 0 25px #00d4ff60;
+    transform: translateY(-1px);
+  }
+
+  #game { display: none; flex-direction: column; align-items: center; gap: 14px; }
+
+  #hud {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .player-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    opacity: 0.45;
+    transition: all 0.3s;
+  }
+
+  .player-badge.active {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  .badge-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  #board-wrap {
+    position: relative;
+  }
+
+  #board {
+    display: grid;
+    gap: 3px;
+    background: #0a0a14;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid #1a1a2e;
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    background: #0d0d1e;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s;
+    border: 1px solid #1a1a2e;
+    overflow: visible;
+  }
+
+  .cell:hover { background: #13132a; }
+  .cell.busy:hover { filter: brightness(1.2); }
+  .cell.exploding { animation: explode-cell 0.3s ease-out; }
+
+  @keyframes explode-cell {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  .orbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .orb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    animation: orbFloat 1.5s ease-in-out infinite alternate;
+    flex-shrink: 0;
+  }
+
+  @keyframes orbFloat {
+    from { transform: translateY(-2px) scale(1); }
+    to { transform: translateY(2px) scale(1.1); }
+  }
+
+  .orb:nth-child(2) { animation-delay: 0.3s; }
+  .orb:nth-child(3) { animation-delay: 0.6s; }
+
+  .particle {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    animation: particle-fly 0.5s ease-out forwards;
+  }
+
+  @keyframes particle-fly {
+    0% { transform: translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+  }
+
+  #status-bar {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: #666;
+    text-transform: uppercase;
+    min-height: 20px;
+    text-align: center;
+  }
+
+  #status-bar span { font-weight: bold; }
+
+  .bottom-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+  }
+
+  .action-btn {
+    padding: 8px 22px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #666;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover {
+    border-color: #666;
+    color: #aaa;
+  }
+
+  #winner-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #00000099;
+    backdrop-filter: blur(6px);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  #winner-overlay.show { display: flex; }
+
+  #winner-text {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 6vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    animation: winPulse 0.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes winPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.04); }
+  }
+
+  #winner-sub {
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    color: #888;
+    text-transform: uppercase;
+  }
+
+  .play-again-btn {
+    padding: 14px 48px;
+    background: transparent;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .play-again-btn:hover {
+    background: #ffffff20;
+    transform: scale(1.04);
+  }
+
+  @media (max-width: 500px) {
+    :root { --cell-size: 46px; }
+    .orb { width: 12px; height: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Chain Reaction</h1>
+
+<div id="setup">
+  <div class="setup-row">
+    <span class="setup-label">Players</span>
+    <div class="num-btns" id="playerBtns">
+      <button class="num-btn" data-n="2">2</button>
+      <button class="num-btn" data-n="3">3</button>
+      <button class="num-btn active" data-n="4">4</button>
+    </div>
+  </div>
+  <div class="setup-row">
+    <span class="setup-label">Grid Size</span>
+    <div class="num-btns" id="gridBtns">
+      <button class="num-btn" data-g="6x5">6×5</button>
+      <button class="num-btn active" data-g="8x6">8×6</button>
+      <button class="num-btn" data-g="9x7">9×7</button>
+    </div>
+  </div>
+  <button class="start-btn" onclick="startGame()">▶ START GAME</button>
+</div>
+
+<div id="game">
+  <div id="hud"></div>
+  <div id="board-wrap">
+    <div id="board"></div>
+  </div>
+  <div id="status-bar"></div>
+  <div class="bottom-btns">
+    <button class="action-btn" onclick="restartGame()">↺ Restart</button>
+    <button class="action-btn" onclick="backToMenu()">← Menu</button>
+  </div>
+</div>
+
+<div id="winner-overlay">
+  <div id="winner-text"></div>
+  <div id="winner-sub">wins the chain reaction!</div>
+  <button class="play-again-btn" onclick="restartGame()">Play Again</button>
+</div>
+
+<script>
+const COLORS = ['--p1','--p2','--p3','--p4'];
+const COLOR_VALS = ['#ff2d55','#00d4ff','#39ff14','#ff9f0a'];
+const P_NAMES = ['RED','CYAN','GREEN','ORANGE'];
+
+let ROWS = 6, COLS = 8, NUM_PLAYERS = 4;
+let grid, turn, alive, hasPlayed, animating;
+
+/* ---------- SETUP ---------- */
+document.querySelectorAll('#playerBtns .num-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#playerBtns .num-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    NUM_PLAYERS = +b.dataset.n;
+  };
+});
+document.querySelectorAll('#gridBtns .num-btn').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#gridBtns .num-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    [COLS, ROWS] = b.dataset.g.split('x').map(Number);
+  };
+});
+
+function startGame() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+  initGame();
+}
+
+function backToMenu() {
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('winner-overlay').classList.remove('show');
+}
+
+function restartGame() {
+  document.getElementById('winner-overlay').classList.remove('show');
+  initGame();
+}
+
+/* ---------- GAME INIT ---------- */
+function initGame() {
+  grid = Array.from({length: ROWS}, () =>
+    Array.from({length: COLS}, () => ({ owner: -1, orbs: 0 }))
+  );
+  turn = 0;
+  alive = Array(NUM_PLAYERS).fill(true);
+  hasPlayed = Array(NUM_PLAYERS).fill(false);
+  animating = false;
+
+  buildHUD();
+  buildBoard();
+  updateStatus();
+}
+
+function criticalMass(r, c) {
+  let n = 4;
+  if (r === 0 || r === ROWS-1) n--;
+  if (c === 0 || c === COLS-1) n--;
+  return n;
+}
+
+/* ---------- HUD ---------- */
+function buildHUD() {
+  const hud = document.getElementById('hud');
+  hud.innerHTML = '';
+  for (let p = 0; p < NUM_PLAYERS; p++) {
+    const d = document.createElement('div');
+    d.className = 'player-badge' + (p === turn ? ' active' : '');
+    d.id = `badge-${p}`;
+    d.style.borderColor = COLOR_VALS[p] + '60';
+    d.style.background = COLOR_VALS[p] + '12';
+    d.innerHTML = `<div class="badge-dot" style="background:${COLOR_VALS[p]};box-shadow:0 0 6px ${COLOR_VALS[p]}"></div>
+                   <span style="color:${COLOR_VALS[p]}">${P_NAMES[p]}</span>`;
+    hud.appendChild(d);
+  }
+}
+
+function updateHUD() {
+  for (let p = 0; p < NUM_PLAYERS; p++) {
+    const b = document.getElementById(`badge-${p}`);
+    if (!b) continue;
+    b.classList.toggle('active', p === turn);
+    if (!alive[p]) b.style.opacity = '0.15';
+  }
+}
+
+/* ---------- BOARD ---------- */
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.style.gridTemplateColumns = `repeat(${COLS}, var(--cell-size))`;
+  board.innerHTML = '';
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      cell.innerHTML = '<div class="orbs"></div>';
+      cell.onclick = () => handleClick(r, c);
+      board.appendChild(cell);
+    }
+  }
+}
+
+function getCell(r, c) {
+  return document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+function renderCell(r, c) {
+  const state = grid[r][c];
+  const el = getCell(r, c);
+  if (!el) return;
+  const orbsDiv = el.querySelector('.orbs');
+  orbsDiv.innerHTML = '';
+  if (state.orbs > 0) {
+    el.classList.add('busy');
+    const col = COLOR_VALS[state.owner];
+    for (let i = 0; i < state.orbs; i++) {
+      const orb = document.createElement('div');
+      orb.className = 'orb';
+      orb.style.background = col;
+      orb.style.boxShadow = `0 0 8px ${col}, 0 0 16px ${col}60`;
+      orbsDiv.appendChild(orb);
+    }
+  } else {
+    el.classList.remove('busy');
+  }
+}
+
+/* ---------- CLICK ---------- */
+async function handleClick(r, c) {
+  if (animating) return;
+  const state = grid[r][c];
+  if (state.owner !== -1 && state.owner !== turn) return;
+  if (!alive[turn]) { nextTurn(); return; }
+
+  animating = true;
+  addOrb(r, c, turn);
+  hasPlayed[turn] = true;
+  renderCell(r, c);
+
+  await chainReaction();
+
+  checkEliminations();
+  const winner = checkWinner();
+  if (winner !== -1) {
+    showWinner(winner);
+    animating = false;
+    return;
+  }
+
+  nextTurn();
+  animating = false;
+  updateStatus();
+}
+
+function addOrb(r, c, player) {
+  grid[r][c].orbs++;
+  grid[r][c].owner = player;
+}
+
+/* ---------- CHAIN REACTION ---------- */
+async function chainReaction() {
+  let exploded = true;
+  while (exploded) {
+    exploded = false;
+    const toExplode = [];
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        if (grid[r][c].orbs >= criticalMass(r, c))
+          toExplode.push([r, c]);
+
+    if (toExplode.length === 0) break;
+    exploded = true;
+
+    for (const [r, c] of toExplode) {
+      const owner = grid[r][c].owner;
+      const cm = criticalMass(r, c);
+      grid[r][c].orbs -= cm;
+      if (grid[r][c].orbs === 0) grid[r][c].owner = -1;
+
+      spawnParticles(r, c, owner);
+      const el = getCell(r, c);
+      if (el) { el.classList.add('exploding'); setTimeout(() => el.classList.remove('exploding'), 300); }
+
+      const neighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+      for (const [nr, nc] of neighbors) {
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+          grid[nr][nc].orbs++;
+          grid[nr][nc].owner = owner;
+        }
+      }
+    }
+
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        renderCell(r, c);
+
+    await sleep(160);
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/* ---------- PARTICLES ---------- */
+function spawnParticles(r, c, owner) {
+  const el = getCell(r, c);
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const col = COLOR_VALS[owner];
+  for (let i = 0; i < 8; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const angle = (i / 8) * Math.PI * 2;
+    const dist = 40 + Math.random() * 30;
+    p.style.setProperty('--tx', `${Math.cos(angle)*dist}px`);
+    p.style.setProperty('--ty', `${Math.sin(angle)*dist}px`);
+    p.style.left = (cx - 4) + 'px';
+    p.style.top = (cy - 4) + 'px';
+    p.style.background = col;
+    p.style.boxShadow = `0 0 6px ${col}`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 500);
+  }
+}
+
+/* ---------- GAME LOGIC ---------- */
+function nextTurn() {
+  let tries = 0;
+  do {
+    turn = (turn + 1) % NUM_PLAYERS;
+    tries++;
+  } while (!alive[turn] && tries < NUM_PLAYERS);
+  updateHUD();
+}
+
+function checkEliminations() {
+  for (let p = 0; p < NUM_PLAYERS; p++) {
+    if (!alive[p]) continue;
+    if (!hasPlayed[p]) continue;
+    const hasCells = grid.some(row => row.some(c => c.owner === p));
+    if (!hasCells) alive[p] = false;
+  }
+}
+
+function checkWinner() {
+  const remaining = [];
+  for (let p = 0; p < NUM_PLAYERS; p++)
+    if (alive[p]) remaining.push(p);
+
+  if (remaining.length === 1 && hasPlayed.some(Boolean)) return remaining[0];
+
+  // All players must have played at least once for winner check
+  if (!hasPlayed.every((v, i) => !alive[i] || v)) return -1;
+  if (remaining.length === 1) return remaining[0];
+  return -1;
+}
+
+function showWinner(p) {
+  const overlay = document.getElementById('winner-overlay');
+  const wt = document.getElementById('winner-text');
+  wt.textContent = P_NAMES[p];
+  wt.style.color = COLOR_VALS[p];
+  wt.style.textShadow = `0 0 30px ${COLOR_VALS[p]}, 0 0 60px ${COLOR_VALS[p]}80`;
+  overlay.classList.add('show');
+}
+
+function updateStatus() {
+  const bar = document.getElementById('status-bar');
+  bar.innerHTML = `Turn: <span style="color:${COLOR_VALS[turn]}">${P_NAMES[turn]}</span>`;
+  updateHUD();
+}
+</script>
+</body>
+</html>

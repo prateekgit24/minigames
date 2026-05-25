@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REFLEX ARENA — Ultimate Skill Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080810;--bg2:#0f0e1a;--bg3:#16152a;--bg4:#1c1b33;
+  --purple:#7c6fdd;--purple2:#a99ef5;--purple3:#3d3580;
+  --green:#34d399;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--pink:#f472b6;--cyan:#22d3ee;
+  --text:#e8e4ff;--text2:#9990cc;--text3:#4a4480;--border:#2a2840;
+}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+canvas{display:block}
+/* HUB */
+#hub{padding:1.5rem;max-width:760px;margin:0 auto}
+.hub-header{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.hub-title{font-size:2.5rem;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,var(--purple2),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hub-sub{font-size:0.75rem;font-family:'Space Mono',monospace;color:var(--text3);margin-top:4px}
+.categories{display:flex;flex-direction:column;gap:1.5rem}
+.cat-label{font-size:0.65rem;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:0.75rem;padding-left:4px}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.game-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1rem;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden}
+.game-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s;border-radius:14px}
+.game-card:hover{transform:translateY(-3px);border-color:var(--purple)}
+.game-card:hover::before{opacity:1}
+.game-card:active{transform:scale(0.97)}
+.card-emoji{font-size:1.8rem;margin-bottom:0.6rem;display:block}
+.card-name{font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.card-hint{font-size:0.7rem;color:var(--text3);line-height:1.4}
+.card-tag{display:inline-block;font-size:0.55rem;font-family:'Space Mono',monospace;font-weight:700;padding:2px 6px;border-radius:20px;margin-bottom:0.5rem;letter-spacing:0.5px;text-transform:uppercase}
+.tag-reflex{background:#2a1a3a;color:#c084fc}
+.tag-accuracy{background:#0a2a1a;color:#34d399}
+.tag-iq{background:#2a2a0a;color:#fbbf24}
+.tag-skill{background:#2a0a1a;color:#f472b6}
+.tag-control{background:#0a1a2a;color:#60a5fa}
+.scoreboard{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-top:1.5rem}
+.sb-title{font-size:0.65rem;font-family:'Space Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:1rem}
+.sb-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 1rem}
+.sb-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1a1830;font-size:0.8rem}
+.sb-row:last-child{border:none}
+.sb-name{color:var(--text2)}
+.sb-val{font-family:'Space Mono',monospace;color:var(--purple2);font-weight:700}
+/* GAME SCREEN */
+#gameScreen{display:none;padding:1.25rem;max-width:760px;margin:0 auto;min-height:100vh}
+#gameScreen.active{display:block}
+.g-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem}
+.back-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 14px;border-radius:8px;cursor:pointer;font-family:'Space Mono',monospace;font-size:0.7rem;transition:all 0.15s}
+.back-btn:hover{border-color:var(--purple);color:var(--purple2)}
+.g-title-wrap{flex:1}
+.g-title-wrap h2{font-size:1.25rem;font-weight:800;color:var(--text)}
+.g-title-wrap p{font-size:0.65rem;font-family:'Space Mono',monospace;color:var(--text3)}
+.stats-row{display:flex;gap:8px;margin-bottom:1rem}
+.stat-box{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:0.65rem;text-align:center}
+.stat-lbl{font-size:0.55rem;font-family:'Space Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+.stat-val{font-size:1.4rem;font-weight:700;font-family:'Space Mono',monospace;color:var(--purple2)}
+.timer-bar{width:100%;height:4px;background:var(--bg3);border-radius:2px;margin-bottom:1rem;overflow:hidden}
+.timer-fill{height:100%;background:var(--purple);border-radius:2px;transition:width 0.1s linear,background 0.3s}
+.game-area{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.75rem;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden}
+/* BUTTONS */
+.big-btn{background:var(--purple3);border:none;color:#fff;padding:0.9rem 2.5rem;border-radius:12px;font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.15s;border:1px solid var(--purple)}
+.big-btn:hover{background:var(--purple)}
+.big-btn:active{transform:scale(0.96)}
+.big-btn.g{background:#0a4a2a;border-color:var(--green);color:var(--green)}
+.big-btn.r{background:#3a0a0a;border-color:var(--red);color:var(--red)}
+.sm-btn{background:var(--bg3);border:1px solid var(--border);color:var(--purple2);padding:0.55rem 1.1rem;border-radius:9px;cursor:pointer;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;transition:all 0.15s}
+.sm-btn:hover{border-color:var(--purple);background:var(--bg4)}
+.btn-row{display:flex;gap:8px;justify-content:center;margin-top:1.25rem;flex-wrap:wrap}
+/* RESULT */
+.result-score{font-size:4rem;font-weight:900;color:var(--purple2);font-family:'Space Mono',monospace;line-height:1;margin-bottom:4px}
+.result-lbl{font-size:0.7rem;color:var(--text3);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem}
+.result-sub{font-size:0.9rem;color:var(--text2);margin-bottom:0.5rem}
+/* REFLEX */
+.reflex-zone{width:100%;height:260px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.5rem;font-weight:800;user-select:none;transition:background 0.05s;flex-direction:column;gap:0.5rem}
+.rz-wait{background:#1a0f30;color:#5548a0}
+.rz-ready{background:#200808;color:#5a1010}
+.rz-go{background:#082a18;color:var(--green)}
+.rz-done{background:var(--bg3);color:var(--purple2)}
+.rz-early{background:#2a0808;color:var(--red)}
+/* CLICK COUNTER */
+.click-zone{width:100%;height:240px;border-radius:12px;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;border:2px dashed var(--border);transition:border-color 0.1s}
+.click-zone:active{border-color:var(--purple)}
+.click-count{font-size:5rem;font-weight:900;font-family:'Space Mono',monospace;color:var(--purple2);line-height:1}
+/* AIM */
+.aim-zone{width:100%;height:280px;background:var(--bg);border-radius:12px;position:relative;cursor:crosshair;overflow:hidden;border:1px solid var(--border)}
+.target{position:absolute;border-radius:50%;cursor:crosshair;transition:transform 0.05s}
+.miss-dot{position:absolute;width:10px;height:10px;border-radius:50%;pointer-events:none;animation:missPop 0.4s ease-out forwards}
+@keyframes missPop{0%{transform:scale(1);opacity:0.8}100%{transform:scale(3);opacity:0}}
+/* SEQUENCE */
+.seq-grid{display:grid;grid-template-columns:repeat(3,80px);gap:10px;justify-content:center}
+.seq-btn{width:80px;height:80px;border-radius:12px;border:2px solid transparent;cursor:pointer;transition:all 0.1s;font-size:0;display:flex;align-items:center;justify-content:center}
+.seq-btn.lit{filter:brightness(2);border-color:#fff;transform:scale(1.05)}
+.seq-btn.wrong-sq{border-color:var(--red)!important;animation:shake 0.3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+/* MATH */
+.math-q{font-size:2.2rem;font-weight:900;font-family:'Space Mono',monospace;color:var(--text);margin-bottom:1.25rem}
+.math-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:360px}
+.math-opt{background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:0.85rem;border-radius:10px;cursor:pointer;font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;transition:all 0.15s}
+.math-opt:hover:not(:disabled){border-color:var(--purple);background:var(--bg4)}
+.math-opt.correct{border-color:var(--green)!important;background:#062a18!important;color:var(--green)!important}
+.math-opt.wrong{border-color:var(--red)!important;background:#2a0606!important;color:var(--red)!important}
+/* WORD */
+.word-disp{font-size:2.2rem;font-weight:800;letter-spacing:8px;color:var(--purple2);font-family:'Space Mono',monospace;margin-bottom:1.25rem}
+.word-inp{background:var(--bg3);border:1.5px solid var(--border);color:var(--text);padding:0.75rem 1.25rem;border-radius:10px;font-family:'Space Mono',monospace;font-size:1rem;text-align:center;width:100%;max-width:280px;outline:none;transition:border-color 0.15s}
+.word-inp:focus{border-color:var(--purple)}
+.word-inp.ok{border-color:var(--green)}
+.word-inp.bad{border-color:var(--red);animation:shake 0.3s}
+/* TYPING */
+.type-text{font-family:'Space Mono',monospace;font-size:0.9rem;line-height:1.9;color:var(--text3);max-width:520px;text-align:left;white-space:pre-wrap;word-break:break-word;width:100%}
+.type-text .t-done{color:var(--purple2)}
+.type-text .t-cur{background:var(--purple);color:#fff;border-radius:2px}
+.type-text .t-err{background:var(--red);color:#fff;border-radius:2px}
+.type-hidden{position:absolute;opacity:0;width:1px;height:1px}
+/* FRUIT CUT */
+#fruitCanvas{border-radius:12px;max-width:100%;cursor:crosshair}
+/* BUBBLE SHOOTER */
+#bubbleCanvas{border-radius:12px;max-width:100%;cursor:crosshair}
+/* HAND DRAW */
+#drawCanvas{border-radius:12px;max-width:100%;border:1px solid var(--border);cursor:crosshair;touch-action:none}
+/* MISC */
+.instr{font-size:0.8rem;color:var(--text2);line-height:1.6;margin-bottom:1.25rem;font-family:'Space Mono',monospace}
+.combo-badge{position:absolute;top:10px;right:12px;font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--amber);font-weight:700}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeIn 0.3s ease}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.45}}
+.pulse{animation:pulse 1s infinite}
+.progress-ring{width:80px;height:80px;margin:0 auto 1rem}
+.hint{font-size:0.7rem;color:var(--text3);margin-top:0.75rem;font-family:'Space Mono',monospace}
+</style>
+</head>
+<body>
+
+<!-- HUB -->
+<div id="hub">
+  <div class="hub-header">
+    <div class="hub-title">REFLEX ARENA</div>
+    <div class="hub-sub">// 11 games · reflex · accuracy · iq · skill · control</div>
+  </div>
+
+  <div class="categories">
+    <div>
+      <div class="cat-label">⚡ reflex &amp; speed</div>
+      <div class="game-grid">
+        <div class="game-card" onclick="openGame('reflex')">
+          <span class="card-tag tag-reflex">reflex</span>
+          <div class="card-emoji">🟢</div>
+          <div class="card-name">Click When Green</div>
+          <div class="card-hint">React the instant color changes. 5 rounds, track your ms.</div>
+        </div>
+        <div class="game-card" onclick="openGame('clickcount')">
+          <span class="card-tag tag-reflex">speed</span>
+          <div class="card-emoji">🖱️</div>
+          <div class="card-name">Click Counter</div>
+          <div class="card-hint">Max clicks in 10 or 20 seconds. Pure finger speed.</div>
+        </div>
+        <div class="game-card" onclick="openGame('math')">
+          <span class="card-tag tag-iq">iq</span>
+          <div class="card-emoji">🔢</div>
+          <div class="card-name">Math Sprint</div>
+          <div class="card-hint">Speed arithmetic. 15 questions in 60 seconds.</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cat-label">🎯 accuracy &amp; aim</div>
+      <div class="game-grid">
+        <div class="game-card" onclick="openGame('aim')">
+          <span class="card-tag tag-accuracy">accuracy</span>
+          <div class="card-emoji">🎯</div>
+          <div class="card-name">Aim Trainer</div>
+          <div class="card-hint">Hit shrinking targets. Precision meets speed.</div>
+        </div>
+        <div class="game-card" onclick="openGame('fruit')">
+          <span class="card-tag tag-accuracy">timing</span>
+          <div class="card-emoji">🍉</div>
+          <div class="card-name">Fruit Cutter</div>
+          <div class="card-hint">Slice fruit at peak height. Avoid bombs! Timing is everything.</div>
+        </div>
+        <div class="game-card" onclick="openGame('bubble')">
+          <span class="card-tag tag-accuracy">aim</span>
+          <div class="card-emoji">🫧</div>
+          <div class="card-name">Bubble Shooter</div>
+          <div class="card-hint">Aim and fire to match bubble colors. Clear the board!</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cat-label">🧠 memory &amp; iq</div>
+      <div class="game-grid">
+        <div class="game-card" onclick="openGame('sequence')">
+          <span class="card-tag tag-iq">memory</span>
+          <div class="card-emoji">🧩</div>
+          <div class="card-name">Sequence Memory</div>
+          <div class="card-hint">Watch the color pattern, repeat it. Gets longer each round.</div>
+        </div>
+        <div class="game-card" onclick="openGame('word')">
+          <span class="card-tag tag-skill">skill</span>
+          <div class="card-emoji">🔤</div>
+          <div class="card-name">Word Unscramble</div>
+          <div class="card-hint">Decode jumbled words fast. Language & pattern skill.</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="cat-label">✋ control &amp; precision</div>
+      <div class="game-grid">
+        <div class="game-card" onclick="openGame('draw')">
+          <span class="card-tag tag-control">control</span>
+          <div class="card-emoji">✏️</div>
+          <div class="card-name">Hand Control</div>
+          <div class="card-hint">Draw a circle or straight line. Accuracy scored by deviation.</div>
+        </div>
+        <div class="game-card" onclick="openGame('typing')">
+          <span class="card-tag tag-skill">skill</span>
+          <div class="card-emoji">⌨️</div>
+          <div class="card-name">Typing Speed</div>
+          <div class="card-hint">WPM + accuracy. Timer starts on first keypress.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="sb-title">// personal bests this session</div>
+    <div class="sb-grid">
+      <div class="sb-row"><span class="sb-name">🟢 Reaction</span><span class="sb-val" id="hs-reflex">—</span></div>
+      <div class="sb-row"><span class="sb-name">🖱️ Click Count</span><span class="sb-val" id="hs-clickcount">—</span></div>
+      <div class="sb-row"><span class="sb-name">🎯 Aim Trainer</span><span class="sb-val" id="hs-aim">—</span></div>
+      <div class="sb-row"><span class="sb-name">🍉 Fruit Cutter</span><span class="sb-val" id="hs-fruit">—</span></div>
+      <div class="sb-row"><span class="sb-name">🫧 Bubble Shooter</span><span class="sb-val" id="hs-bubble">—</span></div>
+      <div class="sb-row"><span class="sb-name">🧩 Sequence</span><span class="sb-val" id="hs-sequence">—</span></div>
+      <div class="sb-row"><span class="sb-name">🔢 Math Sprint</span><span class="sb-val" id="hs-math">—</span></div>
+      <div class="sb-row"><span class="sb-name">🔤 Word Unscrbl</span><span class="sb-val" id="hs-word">—</span></div>
+      <div class="sb-row"><span class="sb-name">✏️ Hand Control</span><span class="sb-val" id="hs-draw">—</span></div>
+      <div class="sb-row"><span class="sb-name">⌨️ Typing WPM</span><span class="sb-val" id="hs-typing">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="gameScreen">
+  <div class="g-header">
+    <button class="back-btn" onclick="goHub()">← back</button>
+    <div class="g-title-wrap"><h2 id="gs-title"></h2><p id="gs-sub"></p></div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-lbl">Score</div><div class="stat-val" id="gs-score">0</div></div>
+    <div class="stat-box"><div class="stat-lbl">Round</div><div class="stat-val" id="gs-round">—</div></div>
+    <div class="stat-box"><div class="stat-lbl" id="gs-lbl3">Best</div><div class="stat-val" id="gs-stat3">—</div></div>
+  </div>
+  <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+  <div class="game-area" id="gameArea"></div>
+</div>
+
+<script>
+const scores={reflex:null,clickcount:null,aim:null,fruit:null,bubble:null,sequence:null,math:null,word:null,draw:null,typing:null};
+let currentGame=null,gameState={},timers=[];
+function T(fn,ms){const id=setTimeout(fn,ms);timers.push(id);return id}
+function TI(fn,ms){const id=setInterval(fn,ms);timers.push(id);return id}
+function clearTimers(){timers.forEach(id=>{clearTimeout(id);clearInterval(id)});timers=[]}
+
+function goHub(){
+  clearTimers();stopAllAnimations();
+  document.getElementById('hub').style.display='';
+  document.getElementById('gameScreen').style.display='none';
+  updateSB();
+}
+
+function updateSB(){
+  const f={reflex:v=>v+'ms',clickcount:v=>v+' clicks',aim:v=>v+' pts',fruit:v=>v+' pts',bubble:v=>v+' pts',sequence:v=>'lvl '+v,math:v=>v+' pts',word:v=>v+' pts',draw:v=>v+'% acc',typing:v=>v+' wpm'};
+  for(const k in scores)if(scores[k]!==null)document.getElementById('hs-'+k).textContent=f[k](scores[k]);
+}
+
+function openGame(name){
+  clearTimers();stopAllAnimations();
+  currentGame=name;
+  document.getElementById('hub').style.display='none';
+  document.getElementById('gameScreen').style.display='block';
+  const titles={
+    reflex:['🟢 Click When Green','reflex // wait for the signal'],
+    clickcount:['🖱️ Click Counter','speed // max clicks in time'],
+    aim:['🎯 Aim Trainer','accuracy // hit every target'],
+    fruit:['🍉 Fruit Cutter','timing // slice at peak, dodge bombs'],
+    bubble:['🫧 Bubble Shooter','aim // match & clear bubbles'],
+    sequence:['🧩 Sequence Memory','iq // pattern recall under pressure'],
+    math:['🔢 Math Sprint','iq // speed arithmetic'],
+    word:['🔤 Word Unscramble','skill // language & pattern recognition'],
+    draw:['✏️ Hand Control Test','control // precision drawing accuracy'],
+    typing:['⌨️ Typing Speed','skill // wpm + accuracy test']
+  };
+  document.getElementById('gs-title').textContent=titles[name][0];
+  document.getElementById('gs-sub').textContent=titles[name][1];
+  document.getElementById('gs-score').textContent='0';
+  document.getElementById('gs-round').textContent='—';
+  document.getElementById('gs-stat3').textContent='—';
+  document.getElementById('timerFill').style.width='100%';
+  document.getElementById('timerFill').style.background='var(--purple)';
+  gameState={};
+  const inits={reflex:initReflex,clickcount:initClickCount,aim:initAim,fruit:initFruit,bubble:initBubble,sequence:initSequence,math:initMath,word:initWord,draw:initDraw,typing:initTyping};
+  inits[name]();
+}
+
+let animFrames=[];
+function RAF(fn){const id=requestAnimationFrame(fn);animFrames.push(id);return id}
+function stopAllAnimations(){animFrames.forEach(cancelAnimationFrame);animFrames=[]}
+
+// ─── UTILITY ───
+function setScore(v){document.getElementById('gs-score').textContent=v}
+function setRound(v){document.getElementById('gs-round').textContent=v}
+function setStat3(v){document.getElementById('gs-stat3').textContent=v}
+function setLbl3(v){document.getElementById('gs-lbl3').textContent=v}
+function setTimerFill(pct,danger=false){
+  const el=document.getElementById('timerFill');
+  el.style.width=pct+'%';
+  el.style.background=danger?'var(--red)':'var(--purple)';
+}
+function area(){return document.getElementById('gameArea')}
+
+function resultHTML(mainScore,lbl,sub,gameName){
+  return`<div class="fade-in" style="text-align:center">
+    <div class="result-score">${mainScore}</div>
+    <div class="result-lbl">${lbl}</div>
+    <div class="result-sub">${sub}</div>
+    <div class="btn-row">
+      <button class="sm-btn" onclick="openGame('${gameName}')">Play Again</button>
+      <button class="sm-btn" onclick="goHub()">Hub</button>
+    </div></div>`;
+}
+
+// ═══════════════════════════════
+// 1. CLICK WHEN GREEN (REFLEX)
+// ═══════════════════════════════
+function initReflex(){
+  gameState={results:[],phase:'idle',startTime:0,count:0,max:5};
+  setLbl3('Best ms');
+  area().innerHTML=`<div class="instr">5 rounds · click the instant green appears<br>Don't click early or you get a +200ms penalty</div><button class="big-btn" onclick="startReflexRound()">Start Test</button>`;
+}
+function startReflexRound(){
+  clearTimers();
+  if(gameState.count>=gameState.max){finishReflex();return}
+  gameState.phase='wait';
+  area().innerHTML=`<div class="reflex-zone rz-wait pulse" id="rz" onclick="earlyClick()">
+    <span>⏳</span><span style="font-size:0.9rem;font-weight:400;color:var(--text3)">Wait for green...</span>
+  </div>`;
+  const d=1500+Math.random()*2500;
+  T(()=>{
+    if(gameState.phase!=='wait')return;
+    gameState.phase='go';gameState.startTime=performance.now();
+    area().innerHTML=`<div class="reflex-zone rz-go" id="rz" onclick="clickReflex()">
+      <span>🟢</span><span>CLICK NOW!</span>
+    </div>`;
+  },d);
+}
+function earlyClick(){
+  if(gameState.phase!=='wait')return;
+  clearTimers();gameState.phase='early';
+  gameState.results.push(200);gameState.count++;
+  setScore(gameState.count);
+  area().innerHTML=`<div class="reflex-zone rz-early"><span>😤</span><span>Too early! +200ms penalty</span></div>`;
+  if(gameState.count>=gameState.max)T(finishReflex,1400);else T(startReflexRound,1400);
+}
+function clickReflex(){
+  if(gameState.phase!=='go')return;
+  const rt=Math.round(performance.now()-gameState.startTime);
+  gameState.results.push(rt);gameState.count++;
+  const best=Math.min(...gameState.results);
+  setScore(gameState.count);setStat3(best+'ms');
+  const grade=rt<150?'⚡ Lightning!':rt<250?'🔥 Fast!':rt<350?'👍 Good':rt<500?'🙂 OK':'😴 Slow';
+  area().innerHTML=`<div class="reflex-zone rz-done"><span style="font-size:2rem">${rt}ms</span><span style="font-size:0.9rem">${grade}</span></div>`;
+  if(gameState.count>=gameState.max)T(finishReflex,1200);else T(startReflexRound,1200);
+}
+function finishReflex(){
+  const avg=Math.round(gameState.results.reduce((a,b)=>a+b,0)/gameState.results.length);
+  const best=Math.min(...gameState.results);
+  if(!scores.reflex||avg<scores.reflex)scores.reflex=avg;
+  setStat3(best+'ms');
+  area().innerHTML=resultHTML(avg+'ms','average reaction time',
+    `Best: ${best}ms · Rounds: ${gameState.results.map(r=>r+'ms').join(' · ')}`,'reflex');
+}
+
+// ═══════════════════════════════
+// 2. CLICK COUNTER
+// ═══════════════════════════════
+function initClickCount(){
+  gameState={clicks:0,duration:10,active:false,timeLeft:0};
+  setLbl3('CPS');
+  area().innerHTML=`<div>
+    <div class="instr">Click as fast as you can in the time limit!</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:1.25rem">
+      <button class="sm-btn" onclick="gameState.duration=10;document.getElementById('cc-dur').textContent='10s'" id="d10" style="border-color:var(--purple)">10 sec</button>
+      <button class="sm-btn" onclick="gameState.duration=20;document.getElementById('cc-dur').textContent='20s'">20 sec</button>
+    </div>
+    <button class="big-btn" onclick="startClickCount()">Start — <span id="cc-dur">10s</span></button>
+  </div>`;
+}
+function startClickCount(){
+  clearTimers();
+  gameState.clicks=0;gameState.active=true;gameState.timeLeft=gameState.duration;
+  setScore(0);setRound(gameState.duration+'s');
+  area().innerHTML=`<div class="click-zone" id="clickZone" onclick="doClick()">
+    <div style="text-align:center">
+      <div class="click-count" id="ccNum">0</div>
+      <div style="font-size:0.75rem;color:var(--text3);font-family:'Space Mono',monospace">CLICK HERE!</div>
+    </div>
+  </div>`;
+  const ti=TI(()=>{
+    gameState.timeLeft--;
+    setRound(gameState.timeLeft+'s');
+    setTimerFill(gameState.timeLeft/gameState.duration*100,gameState.timeLeft<=3);
+    if(gameState.timeLeft<=0){clearInterval(ti);gameState.active=false;endClickCount();}
+  },1000);
+}
+function doClick(){
+  if(!gameState.active)return;
+  gameState.clicks++;
+  document.getElementById('ccNum').textContent=gameState.clicks;
+  setScore(gameState.clicks);
+  const cps=(gameState.clicks/(gameState.duration-gameState.timeLeft)||0).toFixed(1);
+  setStat3(cps);
+}
+function endClickCount(){
+  const cps=(gameState.clicks/gameState.duration).toFixed(1);
+  if(!scores.clickcount||gameState.clicks>scores.clickcount)scores.clickcount=gameState.clicks;
+  area().innerHTML=resultHTML(gameState.clicks,'total clicks',
+    `${cps} clicks/sec · Duration: ${gameState.duration}s`,'clickcount');
+}
+
+// ═══════════════════════════════
+// 3. AIM TRAINER
+// ═══════════════════════════════
+function initAim(){
+  gameState={score:0,hits:0,misses:0,timeLeft:30,active:false};
+  setLbl3('Accuracy');setRound('30s');
+  area().innerHTML=`<div class="instr">Click targets before they disappear!<br>Targets shrink as your score grows. Misses cost points.</div>
+  <button class="big-btn" onclick="startAim()">Start Shooting</button>`;
+}
+function startAim(){
+  clearTimers();gameState.active=true;gameState.timeLeft=30;
+  area().innerHTML=`<div class="aim-zone" id="aimZone" onclick="aimMiss(event)"><div class="combo-badge" id="aimScore">0 pts</div></div>`;
+  spawnTarget();
+  const ti=TI(()=>{
+    gameState.timeLeft--;setRound(gameState.timeLeft+'s');
+    setTimerFill(gameState.timeLeft/30*100,gameState.timeLeft<=8);
+    if(gameState.timeLeft<=0){clearInterval(ti);gameState.active=false;endAim();}
+  },1000);
+}
+function spawnTarget(){
+  if(!gameState.active)return;
+  const z=document.getElementById('aimZone');if(!z)return;
+  const size=Math.max(20,60-gameState.hits*1.5);
+  const x=Math.random()*(z.clientWidth-size-10)+5;
+  const y=Math.random()*(z.clientHeight-size-10)+5;
+  const hue=Math.random()*360;
+  const t=document.createElement('div');t.className='target';
+  t.style.cssText=`width:${size}px;height:${size}px;left:${x}px;top:${y}px;background:hsl(${hue},80%,60%);box-shadow:0 0 15px hsl(${hue},80%,40%);`;
+  t.onclick=e=>{e.stopPropagation();hitTarget(t);};
+  z.appendChild(t);
+  const life=Math.max(700,2200-gameState.hits*25);
+  T(()=>{if(t.parentNode){t.remove();gameState.misses++;aimUpdateStats();spawnTarget();}},life);
+}
+function hitTarget(el){
+  if(!gameState.active)return;el.remove();
+  gameState.hits++;gameState.score+=10;setScore(gameState.score);
+  document.getElementById('aimScore').textContent=gameState.score+' pts';
+  aimUpdateStats();spawnTarget();
+}
+function aimMiss(e){
+  if(!gameState.active)return;
+  gameState.misses++;gameState.score=Math.max(0,gameState.score-2);setScore(gameState.score);
+  const z=document.getElementById('aimZone');
+  const d=document.createElement('div');d.className='miss-dot';
+  d.style.cssText=`left:${e.offsetX-5}px;top:${e.offsetY-5}px;background:var(--red);`;
+  z.appendChild(d);setTimeout(()=>d.remove(),400);aimUpdateStats();
+}
+function aimUpdateStats(){
+  const t=gameState.hits+gameState.misses;
+  const acc=t>0?Math.round(gameState.hits/t*100):100;setStat3(acc+'%');
+}
+function endAim(){
+  if(!scores.aim||gameState.score>scores.aim)scores.aim=gameState.score;
+  const t=gameState.hits+gameState.misses,acc=t>0?Math.round(gameState.hits/t*100):0;
+  area().innerHTML=resultHTML(gameState.score,'points scored',`${acc}% accuracy · ${gameState.hits} hits · ${gameState.misses} misses`,'aim');
+}
+
+// ═══════════════════════════════
+// 4. FRUIT CUTTER
+// ═══════════════════════════════
+const FRUITS=['🍉','🍊','🍋','🍇','🍓','🍑','🥭','🍍'];
+function initFruit(){
+  gameState={score:0,lives:3,active:false,objects:[],animId:null,spawnTimer:0,frame:0};
+  setLbl3('Lives');setStat3('❤️❤️❤️');setRound('—');
+  area().innerHTML=`<div style="text-align:center">
+    <div class="instr">🔪 Slice fruit at its PEAK height (top of arc).<br>💣 Avoid bombs — clicking them ends the game!<br>Miss 3 fruits = game over.</div>
+    <canvas id="fruitCanvas" width="520" height="300"></canvas>
+    <button class="big-btn" onclick="startFruit()" style="margin-top:1rem">Begin Slicing</button>
+  </div>`;
+  drawFruitIdle();
+}
+function drawFruitIdle(){
+  const cv=document.getElementById('fruitCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#080810';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#2a2840';ctx.font='3rem sans-serif';ctx.textAlign='center';
+  ctx.fillText('🍉 🍊 💣 🍋',260,150);
+  ctx.fillStyle='#4a4480';ctx.font='0.8rem Space Mono,monospace';ctx.fillText('click the canvas during game',260,200);
+}
+function startFruit(){
+  clearTimers();stopAllAnimations();
+  const cv=document.getElementById('fruitCanvas');if(!cv)return;
+  gameState.active=true;gameState.objects=[];gameState.score=0;gameState.lives=3;gameState.frame=0;
+  const ctx=cv.getContext('2d');
+  cv.onclick=e=>{
+    if(!gameState.active)return;
+    const rect=cv.getBoundingClientRect();
+    const scaleX=cv.width/rect.width,scaleY=cv.height/rect.height;
+    const mx=(e.clientX-rect.left)*scaleX,my=(e.clientY-rect.top)*scaleY;
+    checkFruitClick(mx,my);
+  };
+  function spawnObj(){
+    if(!gameState.active)return;
+    const x=50+Math.random()*(cv.width-100);
+    const isBomb=Math.random()<0.2;
+    const vy=-(12+Math.random()*5);
+    gameState.objects.push({x,y:cv.height+30,vy,vx:(Math.random()-0.5)*1.5,emoji:isBomb?'💣':FRUITS[Math.floor(Math.random()*FRUITS.length)],isBomb,atPeak:false,peaked:false,size:44,alpha:1,sliced:false,sliceAnim:0,missed:false});
+    const nextSpawn=900+Math.random()*800;
+    T(spawnObj,nextSpawn);
+  }
+  T(spawnObj,600);
+  function loop(){
+    if(!gameState.active){ctx.fillStyle='#080810';ctx.fillRect(0,0,cv.width,cv.height);return;}
+    ctx.fillStyle='#080810';ctx.fillRect(0,0,cv.width,cv.height);
+    // gravity
+    for(let i=gameState.objects.length-1;i>=0;i--){
+      const o=gameState.objects[i];
+      o.vy+=0.5;o.y+=o.vy;o.x+=o.vx;
+      // peak detection
+      if(!o.peaked&&o.vy>0&&!o.atPeak){o.atPeak=true;}
+      if(o.atPeak&&o.vy>2){o.peaked=true;o.atPeak=false;}
+      // sliced animation
+      if(o.sliced){
+        o.sliceAnim++;o.alpha-=0.06;
+        if(o.alpha<=0){gameState.objects.splice(i,1);continue;}
+      }
+      // missed check
+      if(!o.sliced&&!o.missed&&o.y>cv.height+60){
+        if(!o.isBomb){gameState.lives--;updateFruitUI();}
+        gameState.objects.splice(i,1);
+        if(gameState.lives<=0&&!o.isBomb){gameState.active=false;T(endFruit,200);}
+        continue;
+      }
+      // draw
+      ctx.save();ctx.globalAlpha=o.alpha;
+      ctx.font=`${o.size}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+      // peak highlight ring
+      if(o.atPeak&&!o.sliced&&!o.isBomb){
+        ctx.beginPath();ctx.arc(o.x,o.y,30,0,Math.PI*2);
+        ctx.strokeStyle='rgba(52,211,153,0.7)';ctx.lineWidth=3;ctx.stroke();
+      }
+      if(o.isBomb&&!o.sliced){
+        ctx.beginPath();ctx.arc(o.x,o.y,26,0,Math.PI*2);
+        ctx.strokeStyle='rgba(248,113,113,0.5)';ctx.lineWidth=2;ctx.stroke();
+      }
+      if(o.sliced){
+        ctx.translate(o.x,o.y);ctx.rotate(o.sliceAnim*0.15);
+        ctx.fillText(o.emoji,0,0);
+      } else {
+        ctx.fillText(o.emoji,o.x,o.y);
+      }
+      ctx.restore();
+    }
+    // score HUD
+    ctx.fillStyle='rgba(197,184,255,0.9)';ctx.font='bold 14px Space Mono,monospace';ctx.textAlign='left';
+    ctx.fillText('Score: '+gameState.score,12,24);
+    const lv='❤️'.repeat(Math.max(0,gameState.lives))+'🖤'.repeat(Math.max(0,3-gameState.lives));
+    ctx.textAlign='right';ctx.fillText(lv,cv.width-12,24);
+    gameState.animId=requestAnimationFrame(loop);animFrames.push(gameState.animId);
+  }
+  loop();
+}
+function checkFruitClick(mx,my){
+  for(let i=gameState.objects.length-1;i>=0;i--){
+    const o=gameState.objects[i];if(o.sliced)continue;
+    const dx=mx-o.x,dy=my-o.y;
+    if(Math.sqrt(dx*dx+dy*dy)<o.size/2){
+      if(o.isBomb){gameState.active=false;T(endFruit,300);return;}
+      if(o.atPeak){gameState.score+=20;} // bonus for peak
+      else{gameState.score+=5;}
+      o.sliced=true;setScore(gameState.score);updateFruitUI();return;
+    }
+  }
+}
+function updateFruitUI(){
+  setStat3('❤️'.repeat(Math.max(0,gameState.lives))+'🖤'.repeat(3-Math.max(0,gameState.lives)));setScore(gameState.score);
+}
+function endFruit(){
+  stopAllAnimations();
+  const cv=document.getElementById('fruitCanvas');
+  if(cv){const ctx=cv.getContext('2d');ctx.fillStyle='rgba(8,8,16,0.85)';ctx.fillRect(0,0,cv.width,cv.height);}
+  if(!scores.fruit||gameState.score>scores.fruit)scores.fruit=gameState.score;
+  area().innerHTML=resultHTML(gameState.score,'fruit score','Peak hits = 20pts · Normal = 5pts · Bomb = game over','fruit');
+}
+
+// ═══════════════════════════════
+// 5. BUBBLE SHOOTER
+// ═══════════════════════════════
+const BCOLORS=['#f87171','#60a5fa','#34d399','#fbbf24','#c084fc','#fb923c'];
+function initBubble(){
+  gameState={score:0,active:false,grid:[],shooter:{x:260,angle:-Math.PI/2},current:null,next:null,shooting:false,bullet:null};
+  setLbl3('Cleared');setStat3('0');
+  area().innerHTML=`<div style="text-align:center">
+    <div class="instr">Click to aim and shoot!<br>Match 3+ same-color bubbles to pop them.<br>Clear the board to win!</div>
+    <canvas id="bubbleCanvas" width="520" height="340"></canvas>
+  </div>`;
+  T(()=>setupBubble(),100);
+}
+const BR=22; // bubble radius
+function setupBubble(){
+  const cv=document.getElementById('bubbleCanvas');if(!cv)return;
+  const cols=11,rows=6;
+  gameState.grid=[];
+  for(let r=0;r<rows;r++){
+    const row=[];const count=r%2===0?cols:cols-1;
+    for(let c=0;c<count;c++)row.push({color:BCOLORS[Math.floor(Math.random()*BCOLORS.length)],alive:true});
+    gameState.grid.push(row);
+  }
+  gameState.active=true;gameState.score=0;
+  gameState.current=BCOLORS[Math.floor(Math.random()*BCOLORS.length)];
+  gameState.next=BCOLORS[Math.floor(Math.random()*BCOLORS.length)];
+  gameState.shooter.x=260;
+  cv.onclick=e=>{if(!gameState.active||gameState.shooting)return;shootBubble(cv,e);};
+  cv.onmousemove=e=>{
+    if(!gameState.active)return;
+    const rect=cv.getBoundingClientRect();
+    const mx=(e.clientX-rect.left)*(cv.width/rect.width);
+    const my=(e.clientY-rect.top)*(cv.height/rect.height);
+    const dx=mx-gameState.shooter.x,dy=my-(cv.height-30);
+    gameState.shooter.angle=Math.atan2(dy,dx);
+    if(gameState.shooter.angle>-0.2)gameState.shooter.angle=-0.2;
+    if(gameState.shooter.angle<-Math.PI+0.2)gameState.shooter.angle=-Math.PI+0.2;
+    drawBubbles(cv);
+  };
+  drawBubbles(cv);
+}
+function getBubblePos(r,c){
+  const offset=(r%2===0?0:BR);
+  const x=BR+c*BR*2+offset+20;
+  const y=BR+r*BR*1.75+10;
+  return{x,y};
+}
+function drawBubbles(cv){
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#080810';ctx.fillRect(0,0,cv.width,cv.height);
+  // grid
+  for(let r=0;r<gameState.grid.length;r++){
+    for(let c=0;c<gameState.grid[r].length;c++){
+      const b=gameState.grid[r][c];if(!b.alive)continue;
+      const{x,y}=getBubblePos(r,c);
+      ctx.beginPath();ctx.arc(x,y,BR-2,0,Math.PI*2);
+      ctx.fillStyle=b.color;ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1.5;ctx.stroke();
+    }
+  }
+  // shooting bullet
+  if(gameState.bullet&&gameState.shooting){
+    ctx.beginPath();ctx.arc(gameState.bullet.x,gameState.bullet.y,BR-2,0,Math.PI*2);
+    ctx.fillStyle=gameState.bullet.color;ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=2;ctx.stroke();
+  }
+  // shooter base
+  const sx=gameState.shooter.x,sy=cv.height-30;
+  // aim line
+  ctx.beginPath();ctx.moveTo(sx,sy);
+  ctx.lineTo(sx+Math.cos(gameState.shooter.angle)*60,sy+Math.sin(gameState.shooter.angle)*60);
+  ctx.strokeStyle='rgba(124,111,221,0.5)';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+  // current bubble
+  ctx.beginPath();ctx.arc(sx,sy,BR,0,Math.PI*2);
+  ctx.fillStyle=gameState.current;ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText('NEXT',sx-45,sy+5);
+  ctx.beginPath();ctx.arc(sx-45,sy+20,14,0,Math.PI*2);
+  ctx.fillStyle=gameState.next;ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.stroke();
+  // score
+  ctx.fillStyle='rgba(197,184,255,0.9)';ctx.font='bold 13px Space Mono,monospace';ctx.textAlign='left';
+  ctx.fillText('Score: '+gameState.score,10,cv.height-10);
+}
+function shootBubble(cv,e){
+  const rect=cv.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(cv.width/rect.width);
+  const my=(e.clientY-rect.top)*(cv.height/rect.height);
+  const dx=mx-gameState.shooter.x,dy=my-(cv.height-30);
+  const ang=Math.atan2(dy,dx);
+  const speed=12;
+  gameState.bullet={x:gameState.shooter.x,y:cv.height-30,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,color:gameState.current};
+  gameState.shooting=true;
+  gameState.current=gameState.next;
+  gameState.next=BCOLORS[Math.floor(Math.random()*BCOLORS.length)];
+  moveBullet(cv);
+}
+function moveBullet(cv){
+  if(!gameState.shooting||!gameState.active)return;
+  const b=gameState.bullet;
+  b.x+=b.vx;b.y+=b.vy;
+  if(b.x<=BR||b.x>=cv.width-BR)b.vx*=-1;
+  // check collision with grid
+  let hit=false;
+  for(let r=0;r<gameState.grid.length&&!hit;r++){
+    for(let c=0;c<gameState.grid[r].length&&!hit;c++){
+      const cell=gameState.grid[r][c];if(!cell.alive)continue;
+      const{x,y}=getBubblePos(r,c);
+      const dx=b.x-x,dy=b.y-y;
+      if(Math.sqrt(dx*dx+dy*dy)<BR*2-2){
+        // snap to nearest empty
+        placeBubble(r,c,b.color);hit=true;
+      }
+    }
+  }
+  // hit top
+  if(b.y<=BR+10){
+    const c=Math.round((b.x-20)/(BR*2));
+    if(c>=0&&c<gameState.grid[0].length)placeBubble(0,c,b.color);
+    else{gameState.shooting=false;drawBubbles(cv);}
+    return;
+  }
+  if(!hit){drawBubbles(cv);RAF(()=>moveBullet(cv));}
+}
+function placeBubble(nearR,nearC,color){
+  const cv=document.getElementById('bubbleCanvas');
+  // find an empty spot adjacent
+  let placed=false;
+  outer:for(let r=Math.max(0,nearR-1);r<=Math.min(gameState.grid.length-1,nearR+1)&&!placed;r++){
+    for(let c=0;c<gameState.grid[r].length&&!placed;c++){
+      if(!gameState.grid[r][c].alive){gameState.grid[r][c]={color,alive:true};placed=true;}
+    }
+  }
+  if(!placed&&nearR+1<gameState.grid.length){
+    for(let c=0;c<gameState.grid[nearR+1].length;c++){
+      if(!gameState.grid[nearR+1][c].alive){gameState.grid[nearR+1][c]={color,alive:true};placed=true;break;}
+    }
+  }
+  gameState.shooting=false;
+  popMatches(color);
+  drawBubbles(cv);
+  checkBubbleWin();
+}
+function popMatches(color){
+  let popped=0;
+  // simple: pop all connected same-color groups of 3+
+  for(let r=0;r<gameState.grid.length;r++){
+    for(let c=0;c<gameState.grid[r].length;c++){
+      const b=gameState.grid[r][c];
+      if(!b.alive||b.color!==color)continue;
+      const group=[];floodFill(r,c,color,group);
+      if(group.length>=3){group.forEach(([gr,gc])=>{gameState.grid[gr][gc].alive=false;});popped+=group.length;}
+    }
+  }
+  if(popped>0){gameState.score+=popped*10;setScore(gameState.score);
+    const cleared=gameState.grid.flat().filter(b=>!b.alive).length;setStat3(cleared);}
+}
+function floodFill(r,c,color,group){
+  if(r<0||r>=gameState.grid.length||c<0||c>=gameState.grid[r].length)return;
+  const b=gameState.grid[r][c];
+  if(!b.alive||b.color!==color||group.some(([gr,gc])=>gr===r&&gc===c))return;
+  group.push([r,c]);
+  const neighbors=[[r-1,c],[r+1,c],[r,c-1],[r,c+1],(r%2===0)?[r-1,c-1]:[r-1,c+1],(r%2===0)?[r+1,c-1]:[r+1,c+1]];
+  neighbors.forEach(([nr,nc])=>floodFill(nr,nc,color,group));
+}
+function checkBubbleWin(){
+  const alive=gameState.grid.flat().filter(b=>b.alive).length;
+  if(alive===0){gameState.active=false;
+    if(!scores.bubble||gameState.score>scores.bubble)scores.bubble=gameState.score;
+    area().innerHTML=resultHTML(gameState.score,'bubble score','Board cleared! Amazing!','bubble');
+  }
+}
+
+// ═══════════════════════════════
+// 6. SEQUENCE MEMORY
+// ═══════════════════════════════
+const SQCOLS=['#e03b3b','#5b4fe0','#1a8a5a','#d4a017','#c084fc','#34d399','#f87171','#60a5fa','#fbbf24'];
+function initSequence(){
+  gameState={sequence:[],playerSeq:[],level:0,phase:'idle'};
+  setLbl3('Level');
+  area().innerHTML=`<div class="instr">Watch the flashing color sequence, then repeat it.<br>Gets one step longer each round!</div>
+  <button class="big-btn" onclick="startSeqRound()">Begin</button>`;
+}
+function seqRenderGrid(inputEnabled){
+  const btns=SQCOLS.map((c,i)=>`<div class="seq-btn" id="sb${i}" style="background:${c}22;border-color:${c}44;" onclick="${inputEnabled?`seqPlayerClick(${i})`:''}"></div>`).join('');
+  area().innerHTML=`<div style="margin-bottom:0.75rem;font-size:0.8rem;font-family:'Space Mono',monospace;color:${inputEnabled?'var(--green)':'var(--amber)'};">${inputEnabled?'Your turn — repeat the sequence!':'Watch carefully...'}</div><div class="seq-grid">${btns}</div>`;
+}
+function startSeqRound(){
+  clearTimers();gameState.level++;gameState.sequence.push(Math.floor(Math.random()*9));
+  gameState.playerSeq=[];gameState.phase='show';
+  setRound('lvl '+gameState.level);setStat3(gameState.level);
+  if(!scores.sequence||gameState.level>scores.sequence)scores.sequence=gameState.level;
+  seqRenderGrid(false);playSequence();
+}
+function playSequence(){
+  let i=0;
+  function next(){
+    if(i>=gameState.sequence.length){T(()=>{gameState.phase='input';seqRenderGrid(true);},500);return;}
+    const idx=gameState.sequence[i];
+    T(()=>{
+      const btn=document.getElementById('sb'+idx);
+      if(btn){btn.classList.add('lit');btn.style.background=SQCOLS[idx]+'cc';}
+      T(()=>{if(btn){btn.classList.remove('lit');btn.style.background=SQCOLS[idx]+'22';}i++;T(next,300);},500);
+    },i===0?400:0);
+  }
+  next();
+}
+function seqPlayerClick(idx){
+  if(gameState.phase!=='input')return;
+  const btn=document.getElementById('sb'+idx);
+  btn.style.background=SQCOLS[idx]+'cc';
+  T(()=>{btn.style.background=SQCOLS[idx]+'22';},180);
+  gameState.playerSeq.push(idx);
+  const pos=gameState.playerSeq.length-1;
+  if(gameState.playerSeq[pos]!==gameState.sequence[pos]){
+    btn.classList.add('wrong-sq');
+    T(()=>{gameState.phase='gameover';
+      area().innerHTML=resultHTML(gameState.level,'level reached',`Sequence of ${gameState.level} remembered`,'sequence');
+    },600);return;
+  }
+  if(gameState.playerSeq.length===gameState.sequence.length){
+    setScore(++gameState.score||gameState.level);T(startSeqRound,700);
+  }
+}
+
+// ═══════════════════════════════
+// 7. MATH SPRINT
+// ═══════════════════════════════
+const MQS=[[7,'+',8,15],[13,'-',5,8],[6,'×',7,42],[48,'÷',6,8],[15,'+',27,42],[34,'-',17,17],[9,'×',8,72],[56,'÷',7,8],[23,'+',49,72],[81,'-',36,45],[12,'×',11,132],[144,'÷',12,12],[17,'+',58,75],[92,'-',37,55],[7,'×',13,91],[11,'×',11,121],[35,'+',47,82],[100,'-',63,37],[8,'×',9,72],[63,'÷',9,7],[24,'+',78,102],[150,'-',75,75],[6,'×',12,72],[84,'÷',7,12],[47,'+',36,83],[200,'-',137,63],[25,'×',4,100],[36,'÷',4,9],[45,'+',55,100],[120,'-',45,75]];
+function initMath(){
+  gameState={score:0,round:0,total:15,timeLeft:60,active:false,questions:[]};
+  setLbl3('Time');setRound('0/15');
+  area().innerHTML=`<div class="instr">15 math questions in 60 seconds.<br>Choose the correct answer as fast as possible!</div>
+  <button class="big-btn" onclick="startMath()">Start Quiz</button>`;
+}
+function startMath(){
+  clearTimers();
+  gameState.questions=[...MQS].sort(()=>Math.random()-0.5).slice(0,15);
+  gameState.active=true;gameState.timeLeft=60;
+  const ti=TI(()=>{
+    gameState.timeLeft--;setStat3(gameState.timeLeft+'s');
+    setTimerFill(gameState.timeLeft/60*100,gameState.timeLeft<=15);
+    if(gameState.timeLeft<=0){clearInterval(ti);gameState.active=false;endMath();}
+  },1000);
+  showMathQ();
+}
+function showMathQ(){
+  if(!gameState.active||gameState.round>=gameState.total){clearTimers();endMath();return;}
+  const q=gameState.questions[gameState.round];
+  const correct=q[3];
+  const wrongs=new Set();
+  while(wrongs.size<3){const w=correct+Math.floor(Math.random()*20)-10;if(w!==correct&&w>0)wrongs.add(w);}
+  const opts=[...wrongs,correct].sort(()=>Math.random()-0.5);
+  setRound(`${gameState.round+1}/15`);
+  area().innerHTML=`<div class="math-q">${q[0]} ${q[1]} ${q[2]} = ?</div>
+  <div style="font-size:0.7rem;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:1rem">Q${gameState.round+1} of 15</div>
+  <div class="math-opts">${opts.map(o=>`<button class="math-opt" onclick="answerMath(this,${o},${correct})">${o}</button>`).join('')}</div>`;
+}
+function answerMath(el,val,correct){
+  if(!gameState.active)return;
+  document.querySelectorAll('.math-opt').forEach(b=>b.disabled=true);
+  if(val===correct){el.classList.add('correct');gameState.score+=10;setScore(gameState.score);}
+  else{el.classList.add('wrong');document.querySelectorAll('.math-opt').forEach(b=>{if(parseInt(b.textContent)===correct)b.classList.add('correct');});}
+  gameState.round++;T(showMathQ,550);
+}
+function endMath(){
+  clearTimers();
+  if(!scores.math||gameState.score>scores.math)scores.math=gameState.score;
+  const pct=Math.round(gameState.score/(gameState.total*10)*100);
+  area().innerHTML=resultHTML(gameState.score,`out of ${gameState.total*10} pts`,`${pct}% correct · ${gameState.round} answered`,'math');
+}
+
+// ═══════════════════════════════
+// 8. WORD UNSCRAMBLE
+// ═══════════════════════════════
+const WORDS=[['PYTHON','language'],['JUNGLE','nature'],['CASTLE','building'],['BRIDGE','structure'],['PLANET','space'],['ROCKET','vehicle'],['SHADOW','light'],['FLOWER','nature'],['COFFEE','drink'],['MARKET','place'],['SPRING','season'],['WIZARD','magic'],['PURPLE','color'],['SILVER','metal'],['CANDLE','light'],['BREEZE','wind'],['GARDEN','nature'],['LAUNCH','action'],['RESCUE','action'],['BLANKET','comfort'],['CRYSTAL','mineral'],['DOLPHIN','animal'],['KINGDOM','place'],['THUNDER','weather'],['COMPASS','tool'],['JOURNEY','travel'],['ANCIENT','time'],['FRAMING','structure'],['CLIMATE','science'],['CHAPTER','book']];
+function scramble(w){const a=w.split('');for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}const s=a.join('');return s===w?scramble(w):s;}
+function initWord(){
+  gameState={score:0,round:0,total:10,timeLeft:90,active:false,questions:[...WORDS].sort(()=>Math.random()-0.5).slice(0,10)};
+  setLbl3('Time');setRound('0/10');
+  area().innerHTML=`<div class="instr">10 scrambled words in 90 seconds.<br>Type the correct word and press Enter!</div>
+  <button class="big-btn" onclick="startWord()">Start</button>`;
+}
+function startWord(){
+  clearTimers();gameState.active=true;gameState.timeLeft=90;
+  const ti=TI(()=>{
+    gameState.timeLeft--;setStat3(gameState.timeLeft+'s');
+    setTimerFill(gameState.timeLeft/90*100,gameState.timeLeft<=20);
+    if(gameState.timeLeft<=0){clearInterval(ti);gameState.active=false;endWord();}
+  },1000);
+  showWordQ();
+}
+function showWordQ(){
+  if(!gameState.active||gameState.round>=gameState.total){clearTimers();endWord();return;}
+  const[word,hint]=gameState.questions[gameState.round];
+  gameState.currentWord=word;
+  setRound(`${gameState.round+1}/10`);
+  area().innerHTML=`<div style="font-size:0.65rem;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:0.5rem">[${hint}]</div>
+  <div class="word-disp">${scramble(word)}</div>
+  <input class="word-inp" id="wordInput" placeholder="type answer..." autocomplete="off" autocorrect="off" spellcheck="false">
+  <div class="hint">press Enter to submit</div>`;
+  const inp=document.getElementById('wordInput');
+  inp.focus();inp.addEventListener('keydown',e=>{if(e.key==='Enter')checkWord();});
+}
+function checkWord(){
+  if(!gameState.active)return;
+  const inp=document.getElementById('wordInput');
+  if(inp.value.trim().toUpperCase()===gameState.currentWord){
+    inp.classList.add('ok');gameState.score+=15;setScore(gameState.score);gameState.round++;
+    T(showWordQ,450);
+  }else{inp.classList.add('bad');T(()=>{inp.classList.remove('bad');inp.value='';inp.focus();},400);}
+}
+function endWord(){
+  clearTimers();if(!scores.word||gameState.score>scores.word)scores.word=gameState.score;
+  area().innerHTML=resultHTML(gameState.score,'out of '+(gameState.total*15)+' pts',`${gameState.round} of ${gameState.total} words solved`,'word');
+}
+
+// ═══════════════════════════════
+// 9. HAND CONTROL / DRAW TEST
+// ═══════════════════════════════
+function initDraw(){
+  gameState={mode:'circle',active:false,drawing:false,points:[],phase:'choose'};
+  setLbl3('Accuracy');
+  area().innerHTML=`<div style="text-align:center">
+    <div class="instr">Test your hand control. Draw as accurately as possible.<br>Choose your challenge:</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:1.25rem">
+      <button class="sm-btn" onclick="startDraw('circle')" style="border-color:var(--purple)">⭕ Draw Circle</button>
+      <button class="sm-btn" onclick="startDraw('line')">📏 Draw Straight Line</button>
+      <button class="sm-btn" onclick="startDraw('zigzag')">〰️ Draw Zigzag</button>
+    </div>
+    <canvas id="drawCanvas" width="520" height="300" style="background:var(--bg3)"></canvas>
+  </div>`;
+}
+function startDraw(mode){
+  gameState.mode=mode;gameState.points=[];gameState.drawing=false;gameState.active=true;
+  const cv=document.getElementById('drawCanvas');if(!cv)return;
+  const ctx=cv.getContext('2d');
+  // draw guide
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0f0e1a';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.setLineDash([6,4]);ctx.strokeStyle='rgba(124,111,221,0.3)';ctx.lineWidth=2;
+  if(mode==='circle'){
+    ctx.beginPath();ctx.arc(260,150,100,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle='var(--text3)';ctx.font='0.75rem Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('trace this circle',260,280);
+  } else if(mode==='line'){
+    ctx.beginPath();ctx.moveTo(60,150);ctx.lineTo(460,150);ctx.stroke();
+    ctx.fillStyle='var(--text3)';ctx.font='0.75rem Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('draw a straight line left to right',260,280);
+  } else {
+    ctx.beginPath();
+    for(let x=60;x<=460;x+=100){const isEven=Math.floor((x-60)/100)%2===0;ctx.lineTo(x,isEven?80:220);}
+    ctx.stroke();
+    ctx.fillStyle='var(--text3)';ctx.font='0.75rem Space Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('trace the zigzag pattern',260,280);
+  }
+  ctx.setLineDash([]);
+  cv.onmousedown=e=>{gameState.drawing=true;gameState.points=[];addDrawPoint(cv,e);};
+  cv.onmousemove=e=>{if(gameState.drawing)addDrawPoint(cv,e);};
+  cv.onmouseup=()=>{if(gameState.drawing){gameState.drawing=false;scoreDraw(cv);}};
+  cv.onmouseleave=()=>{if(gameState.drawing){gameState.drawing=false;scoreDraw(cv);}};
+  cv.ontouchstart=e=>{e.preventDefault();gameState.drawing=true;gameState.points=[];addDrawPoint(cv,e.touches[0]);};
+  cv.ontouchmove=e=>{e.preventDefault();if(gameState.drawing)addDrawPoint(cv,e.touches[0]);};
+  cv.ontouchend=()=>{if(gameState.drawing){gameState.drawing=false;scoreDraw(cv);}};
+}
+function addDrawPoint(cv,e){
+  const rect=cv.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(cv.width/rect.width);
+  const y=(e.clientY-rect.top)*(cv.height/rect.height);
+  gameState.points.push({x,y});
+  const ctx=cv.getContext('2d');
+  if(gameState.points.length>1){
+    const p=gameState.points;
+    ctx.beginPath();ctx.moveTo(p[p.length-2].x,p[p.length-2].y);ctx.lineTo(x,y);
+    ctx.strokeStyle='var(--cyan)';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+  }
+}
+function scoreDraw(cv){
+  const pts=gameState.points;if(pts.length<10){return;}
+  const mode=gameState.mode;let acc=0;
+  if(mode==='circle'){
+    const cx=260,cy=150,r=100;
+    const dists=pts.map(p=>Math.abs(Math.sqrt((p.x-cx)**2+(p.y-cy)**2)-r));
+    const avgErr=dists.reduce((a,b)=>a+b,0)/dists.length;
+    acc=Math.max(0,Math.round(100-avgErr*1.5));
+  } else if(mode==='line'){
+    const errs=pts.map(p=>Math.abs(p.y-150));
+    const avgErr=errs.reduce((a,b)=>a+b,0)/errs.length;
+    acc=Math.max(0,Math.round(100-avgErr*2));
+  } else {
+    // zigzag: check deviation from expected path
+    const xRange=pts[pts.length-1].x-pts[0].x;
+    let totalErr=0;
+    pts.forEach(p=>{
+      const seg=Math.floor((p.x-60)/100);const isEven=seg%2===0;
+      const expectedY=isEven?80:220;totalErr+=Math.abs(p.y-expectedY);
+    });
+    acc=Math.max(0,Math.round(100-totalErr/pts.length*0.8));
+  }
+  setStat3(acc+'%');setScore(acc);
+  if(!scores.draw||acc>scores.draw)scores.draw=acc;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle=acc>80?'rgba(52,211,153,0.85)':acc>60?'rgba(251,191,36,0.85)':'rgba(248,113,113,0.85)';
+  ctx.font='bold 2rem Syne,sans-serif';ctx.textAlign='center';ctx.fillText(acc+'%',260,40);
+  ctx.font='0.8rem Space Mono,monospace';ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.fillText(acc>80?'Excellent control!':acc>60?'Good — keep practicing':'Keep practicing!',260,68);
+  T(()=>{
+    area().innerHTML=`<div style="text-align:center">
+      <div class="result-score">${acc}%</div>
+      <div class="result-lbl">hand control accuracy</div>
+      <div class="result-sub">${acc>80?'🎯 Excellent!':acc>60?'👍 Good control':'💪 Keep practicing'} — Mode: ${mode}</div>
+      <div class="btn-row">
+        <button class="sm-btn" onclick="initDraw()">Try Again</button>
+        <button class="sm-btn" onclick="goHub()">Hub</button>
+      </div>
+    </div>`;
+  },2000);
+}
+
+// ═══════════════════════════════
+// 10. TYPING SPEED
+// ═══════════════════════════════
+const PASSAGES=['the quick brown fox jumps over the lazy dog and the dog did not seem to mind at all','coding is the art of telling a computer what to do using a language it can understand clearly','every great developer got there by solving problems they were not yet qualified to solve at all','the universe is under no obligation to make sense to you but you can try to understand it anyway','success is not final failure is not fatal it is the courage to continue that counts most of all','practice makes perfect but nobody is perfect so why practice is a question some people like to ask'];
+function initTyping(){
+  gameState={text:PASSAGES[Math.floor(Math.random()*PASSAGES.length)],typed:'',errors:0,start:null,active:false,finished:false};
+  setLbl3('WPM');
+  area().innerHTML=`<div style="text-align:center;width:100%">
+    <div class="instr">Type the text as fast and accurately as possible.<br>Timer starts on your very first keypress.</div>
+    <button class="big-btn" onclick="startTyping()">Ready</button>
+  </div>`;
+}
+function startTyping(){
+  gameState.active=true;renderTyping();
+  T(()=>{const inp=document.getElementById('typeHid');if(inp)inp.focus();},80);
+}
+function renderTyping(){
+  const text=gameState.text,typed=gameState.typed;
+  let html='';
+  for(let i=0;i<text.length;i++){
+    if(i<typed.length)html+=typed[i]===text[i]?`<span class="t-done">${text[i]}</span>`:`<span class="t-err">${text[i]}</span>`;
+    else if(i===typed.length)html+=`<span class="t-cur">${text[i]==' '?'&nbsp;':text[i]}</span>`;
+    else html+=`<span>${text[i]==' '?'&nbsp;':text[i]}</span>`;
+  }
+  area().innerHTML=`<div class="type-text" onclick="document.getElementById('typeHid').focus()">${html}</div>
+  <input id="typeHid" class="type-hidden" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <div class="hint" style="margin-top:0.75rem">click text if focus lost</div>`;
+  const inp=document.getElementById('typeHid');
+  inp.focus();inp.value=typed;
+  inp.oninput=handleTyping;inp.setSelectionRange(typed.length,typed.length);
+}
+function handleTyping(e){
+  if(!gameState.active||gameState.finished)return;
+  if(!gameState.start)gameState.start=performance.now();
+  gameState.typed=e.target.value.slice(0,gameState.text.length);
+  const elapsed=(performance.now()-gameState.start)/60000;
+  const wpm=elapsed>0?Math.round((gameState.typed.length/5)/elapsed):0;
+  const pct=Math.round(gameState.typed.length/gameState.text.length*100);
+  setScore(wpm);setStat3(wpm);setRound(pct+'%');setTimerFill(pct);
+  if(gameState.typed.length>=gameState.text.length){gameState.finished=true;endTyping(wpm);return;}
+  renderTyping();
+}
+function endTyping(wpm){
+  clearTimers();
+  let errs=0;
+  for(let i=0;i<gameState.typed.length;i++)if(gameState.typed[i]!==gameState.text[i])errs++;
+  const acc=Math.round((gameState.typed.length-errs)/gameState.typed.length*100);
+  if(!scores.typing||wpm>scores.typing)scores.typing=wpm;
+  area().innerHTML=resultHTML(wpm,'words per minute',`${acc}% accuracy · ${errs} error${errs!==1?'s':''}  ${wpm>=80?'🔥 Expert!':wpm>=60?'⚡ Fast!':wpm>=40?'👍 Good':'💪 Keep going'}`,'typing');
+}
+
+// start on hub
+goHub();
+</script>
+</body>
+</html>

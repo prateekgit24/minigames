@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COMBO — Match 3 Puzzle</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;800&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a0533;
+  --bg2: #240a45;
+  --panel: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.12);
+  --text: #fff;
+  --dim: rgba(255,255,255,0.4);
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+
+  /* Gem colors */
+  --c1: #ff4d6d; /* ruby */
+  --c2: #4cc9f0; /* sapphire */
+  --c3: #f9c74f; /* topaz */
+  --c4: #80ed99; /* emerald */
+  --c5: #f4a261; /* amber */
+  --c6: #c77dff; /* amethyst */
+
+  --g1: linear-gradient(135deg, #ff758c, #ff4d6d);
+  --g2: linear-gradient(135deg, #90e0ef, #4cc9f0);
+  --g3: linear-gradient(135deg, #ffd166, #f9c74f);
+  --g4: linear-gradient(135deg, #b7e4c7, #80ed99);
+  --g5: linear-gradient(135deg, #ffb347, #f4a261);
+  --g6: linear-gradient(135deg, #da9bf4, #c77dff);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  font-family: 'Baloo 2', cursive;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 16px 8px 32px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Decorative bg blobs */
+body::before {
+  content: '';
+  position: fixed;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(199,125,255,0.15) 0%, transparent 70%);
+  top: -200px; left: -200px;
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(76,201,240,0.12) 0%, transparent 70%);
+  bottom: -200px; right: -150px;
+  pointer-events: none;
+}
+
+/* ── Header ── */
+header {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  position: relative;
+  z-index: 5;
+}
+
+.logo {
+  font-family: 'Lilita One', cursive;
+  font-size: clamp(2rem, 7vw, 2.8rem);
+  background: linear-gradient(135deg, #f9c74f, #ff4d6d, #c77dff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 8px rgba(249,199,79,0.4));
+  letter-spacing: 0.05em;
+}
+
+.header-stats {
+  display: flex;
+  gap: 10px;
+}
+
+.stat-pill {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 6px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  min-width: 70px;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+.stat-value {
+  font-family: 'Lilita One', cursive;
+  font-size: 1.3rem;
+  color: #fff;
+  line-height: 1.2;
+}
+
+#scoreVal { color: #f9c74f; }
+#movesVal { color: #80ed99; }
+
+/* ── Level bar ── */
+.level-bar-wrap {
+  width: 100%;
+  max-width: 520px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 5;
+}
+
+.level-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--dim);
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+
+.level-info span:first-child { color: #c77dff; }
+
+.progress-track {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c77dff, #4cc9f0);
+  border-radius: 10px;
+  transition: width 0.5s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 0 8px rgba(199,125,255,0.6);
+}
+
+/* ── Game board ── */
+.board-wrap {
+  position: relative;
+  z-index: 5;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  padding: 10px;
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.04) inset;
+}
+
+#board {
+  display: grid;
+  gap: 5px;
+  user-select: none;
+}
+
+/* ── Gems ── */
+.gem {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.25);
+  will-change: transform;
+}
+
+.gem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.gem:hover { transform: scale(1.1); }
+
+.gem.selected {
+  transform: scale(1.15);
+  border-color: rgba(255,255,255,0.9);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 8px 20px rgba(0,0,0,0.4);
+  animation: gemPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes gemPulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 8px 20px rgba(0,0,0,0.4); }
+  50% { box-shadow: 0 0 0 5px rgba(255,255,255,0.3), 0 8px 25px rgba(0,0,0,0.5); }
+}
+
+.gem.matched {
+  animation: gemPop 0.35s cubic-bezier(.36,.07,.19,.97) forwards;
+}
+
+@keyframes gemPop {
+  0% { transform: scale(1); opacity: 1; }
+  40% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.gem.falling {
+  animation: gemFall 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes gemFall {
+  0% { transform: translateY(-40px); opacity: 0.5; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.gem.hint { animation: hintBounce 0.6s ease-in-out 2; }
+@keyframes hintBounce {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.2) rotate(8deg); }
+}
+
+.gem.swap-right { animation: swapR 0.2s ease-in-out; }
+.gem.swap-left  { animation: swapL 0.2s ease-in-out; }
+.gem.swap-down  { animation: swapD 0.2s ease-in-out; }
+.gem.swap-up    { animation: swapU 0.2s ease-in-out; }
+@keyframes swapR { 0%{transform:translateX(0)} 50%{transform:translateX(30px)} 100%{transform:translateX(0)} }
+@keyframes swapL { 0%{transform:translateX(0)} 50%{transform:translateX(-30px)} 100%{transform:translateX(0)} }
+@keyframes swapD { 0%{transform:translateY(0)} 50%{transform:translateY(30px)} 100%{transform:translateY(0)} }
+@keyframes swapU { 0%{transform:translateY(0)} 50%{transform:translateY(-30px)} 100%{transform:translateY(0)} }
+
+/* Gem colors */
+.gem[data-type="1"] { background: var(--g1); box-shadow: 0 4px 14px rgba(255,77,109,0.4); }
+.gem[data-type="2"] { background: var(--g2); box-shadow: 0 4px 14px rgba(76,201,240,0.4); }
+.gem[data-type="3"] { background: var(--g3); box-shadow: 0 4px 14px rgba(249,199,79,0.4); }
+.gem[data-type="4"] { background: var(--g4); box-shadow: 0 4px 14px rgba(128,237,153,0.4); }
+.gem[data-type="5"] { background: var(--g5); box-shadow: 0 4px 14px rgba(244,162,97,0.4); }
+.gem[data-type="6"] { background: var(--g6); box-shadow: 0 4px 14px rgba(199,125,255,0.4); }
+
+/* Special gems */
+.gem.bomb::after { content:'💥'; font-size:18px; }
+.gem.star::after { content:'⭐'; font-size:18px; }
+
+/* ── Floating score popup ── */
+.score-pop {
+  position: absolute;
+  font-family: 'Lilita One', cursive;
+  font-size: 1.5rem;
+  color: #f9c74f;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  pointer-events: none;
+  z-index: 50;
+  animation: scorePop 0.9s forwards;
+}
+@keyframes scorePop {
+  0% { transform: translateY(0) scale(0.5); opacity:1; }
+  60% { transform: translateY(-50px) scale(1.2); opacity:1; }
+  100% { transform: translateY(-90px) scale(1); opacity:0; }
+}
+
+/* Combo text */
+.combo-pop {
+  position: absolute;
+  font-family: 'Lilita One', cursive;
+  font-size: 2.2rem;
+  pointer-events: none;
+  z-index: 51;
+  animation: comboPop 1s forwards;
+  text-shadow: 0 0 20px currentColor;
+}
+@keyframes comboPop {
+  0% { transform: scale(0) rotate(-10deg); opacity:1; }
+  30% { transform: scale(1.3) rotate(5deg); opacity:1; }
+  70% { transform: scale(1) rotate(0); opacity:1; }
+  100% { transform: scale(1.2) rotate(0) translateY(-20px); opacity:0; }
+}
+
+/* ── Overlays ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,2,20,0.88);
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  gap: 18px;
+  padding: 20px;
+}
+
+.overlay-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 36px 40px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.overlay-card .big-emoji { font-size: 4rem; }
+
+.overlay-card h2 {
+  font-family: 'Lilita One', cursive;
+  font-size: 2rem;
+  background: linear-gradient(135deg, #f9c74f, #ff4d6d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.overlay-card p {
+  font-size: 1rem;
+  color: var(--dim);
+  line-height: 1.6;
+}
+
+.overlay-card .score-big {
+  font-family: 'Lilita One', cursive;
+  font-size: 2.5rem;
+  color: #f9c74f;
+}
+
+.btn {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 12px 36px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+  letter-spacing: 0.04em;
+}
+.btn:active { transform: scale(0.95); }
+
+.btn-primary {
+  background: linear-gradient(135deg, #c77dff, #4cc9f0);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(199,125,255,0.5);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(199,125,255,0.6); }
+
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.15); }
+
+/* ── Objectives panel ── */
+.objectives {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 5;
+}
+
+.obj-chip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(6px);
+  transition: border-color 0.3s;
+}
+
+.obj-chip.done {
+  border-color: #80ed99;
+  color: #80ed99;
+}
+
+.obj-gem {
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  display: inline-block;
+}
+
+/* ── Bottom hint bar ── */
+.hint-bar {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  position: relative;
+  z-index: 5;
+}
+
+.hint-bar button {
+  font-family: 'Baloo 2', cursive;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  background: var(--panel);
+  color: var(--dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  backdrop-filter: blur(6px);
+}
+.hint-bar button:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+/* Mobile tweaks */
+@media (max-width: 420px) {
+  .gem { width: 44px; height: 44px; border-radius: 11px; font-size: 18px; }
+  #board { gap: 4px; }
+  .board-wrap { padding: 8px; }
+}
+@media (max-width: 340px) {
+  .gem { width: 38px; height: 38px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">COMBO</div>
+  <div class="header-stats">
+    <div class="stat-pill">
+      <span class="stat-label">Score</span>
+      <span class="stat-value" id="scoreVal">0</span>
+    </div>
+    <div class="stat-pill">
+      <span class="stat-label">Moves</span>
+      <span class="stat-value" id="movesVal">30</span>
+    </div>
+  </div>
+</header>
+
+<!-- Level progress -->
+<div class="level-bar-wrap">
+  <div class="level-info">
+    <span id="levelLabel">LEVEL 1</span>
+    <span id="targetLabel">Goal: 500</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+
+<!-- Game board -->
+<div class="board-wrap">
+  <div id="board"></div>
+</div>
+
+<!-- Objectives -->
+<div class="objectives" id="objectives"></div>
+
+<!-- Hint / shuffle bar -->
+<div class="hint-bar">
+  <button onclick="showHint()">💡 Hint</button>
+  <button onclick="shuffleBoard()">🔀 Shuffle</button>
+</div>
+
+<!-- Start overlay -->
+<div class="overlay" id="startOverlay">
+  <div class="overlay-card">
+    <div class="big-emoji">💎</div>
+    <h2>COMBO</h2>
+    <p>Swap adjacent gems to match 3 or more of the same kind. Chain combos for massive points!</p>
+    <div style="font-size:13px;color:var(--dim);line-height:2">
+      <strong style="color:#fff">Match 3</strong> → 60 pts<br>
+      <strong style="color:#fff">Match 4</strong> → 150 pts + 💥 Bomb<br>
+      <strong style="color:#fff">Match 5</strong> → 300 pts + ⭐ Star<br>
+      <strong style="color:#fff">Combos</strong> → Score multiplier!
+    </div>
+    <button class="btn btn-primary" onclick="startGame()">PLAY NOW</button>
+  </div>
+</div>
+
+<!-- Game over overlay -->
+<div class="overlay" id="gameOverOverlay" style="display:none">
+  <div class="overlay-card">
+    <div class="big-emoji" id="overEmoji">😢</div>
+    <h2 id="overTitle">Time's Up!</h2>
+    <p id="overMsg">You ran out of moves!</p>
+    <div class="score-big" id="finalScore">0</div>
+    <button class="btn btn-primary" onclick="startGame()">PLAY AGAIN</button>
+    <button class="btn btn-secondary" onclick="nextLevel()">NEXT LEVEL</button>
+  </div>
+</div>
+
+<!-- Level complete overlay -->
+<div class="overlay" id="levelOverlay" style="display:none">
+  <div class="overlay-card">
+    <div class="big-emoji">🎉</div>
+    <h2>Level Clear!</h2>
+    <p id="levelMsg">Amazing combo chains!</p>
+    <div class="score-big" id="levelScore">0</div>
+    <button class="btn btn-primary" onclick="nextLevel()">NEXT LEVEL →</button>
+  </div>
+</div>
+
+<script>
+// ── Constants ──
+const COLS = 8, ROWS = 8;
+const GEMS = 6;
+const GEM_EMOJIS = ['','♦','◆','★','●','▲','⬟'];
+
+// Level config
+const LEVELS = [
+  { target: 500,  moves: 30, cols: 8, rows: 8 },
+  { target: 1000, moves: 28, cols: 8, rows: 8 },
+  { target: 1800, moves: 26, cols: 8, rows: 8 },
+  { target: 3000, moves: 24, cols: 8, rows: 8 },
+  { target: 5000, moves: 22, cols: 8, rows: 8 },
+];
+
+// ── State ──
+let grid = [], selected = null, score = 0, moves = 0;
+let busy = false, level = 0, comboCount = 0;
+let objectives = {}, objectiveTargets = {};
+
+// Objective gem colors per level
+const OBJ_SETS = [
+  [{type:1,count:10},{type:3,count:8}],
+  [{type:2,count:12},{type:4,count:10}],
+  [{type:5,count:14},{type:6,count:12}],
+  [{type:1,count:15},{type:2,count:15},{type:3,count:10}],
+  [{type:4,count:18},{type:5,count:18},{type:6,count:15}],
+];
+
+const GEM_COLORS = ['','#ff4d6d','#4cc9f0','#f9c74f','#80ed99','#f4a261','#c77dff'];
+
+// ── Init ──
+function startGame() {
+  level = 0;
+  score = 0;
+  document.getElementById('startOverlay').style.display = 'none';
+  document.getElementById('gameOverOverlay').style.display = 'none';
+  document.getElementById('levelOverlay').style.display = 'none';
+  loadLevel();
+}
+
+function loadLevel() {
+  const cfg = LEVELS[Math.min(level, LEVELS.length-1)];
+  moves = cfg.moves;
+  comboCount = 0;
+  selected = null;
+  busy = false;
+
+  // Objectives
+  const objSet = OBJ_SETS[Math.min(level, OBJ_SETS.length-1)];
+  objectives = {}; objectiveTargets = {};
+  objSet.forEach(o => { objectives[o.type] = 0; objectiveTargets[o.type] = o.count; });
+
+  document.getElementById('levelLabel').textContent = `LEVEL ${level+1}`;
+  document.getElementById('targetLabel').textContent = `Goal: ${cfg.target}`;
+  updateUI();
+  buildGrid(cfg.rows, cfg.cols);
+  renderObjectives();
+  renderBoard();
+  updateProgress();
+}
+
+function nextLevel() {
+  level++;
+  document.getElementById('levelOverlay').style.display = 'none';
+  document.getElementById('gameOverOverlay').style.display = 'none';
+  score = 0;
+  loadLevel();
+}
+
+// ── Grid ──
+function buildGrid(rows, cols) {
+  grid = [];
+  for (let r = 0; r < rows; r++) {
+    grid[r] = [];
+    for (let c = 0; c < cols; c++) {
+      grid[r][c] = randomGem(r, c);
+    }
+  }
+  // Ensure no initial matches
+  let safe = 0;
+  while (hasMatches() && safe++ < 100) scrambleGrid();
+}
+
+function randomGem(r, c) {
+  let t;
+  do { t = Math.floor(Math.random() * GEMS) + 1; } while (
+    (c >= 2 && grid[r][c-1]?.type === t && grid[r][c-2]?.type === t) ||
+    (r >= 2 && grid[r-1]?.[c]?.type === t && grid[r-2]?.[c]?.type === t)
+  );
+  return { type: t, special: null };
+}
+
+function scrambleGrid() {
+  const rows = grid.length, cols = grid[0].length;
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      grid[r][c].type = Math.floor(Math.random()*GEMS)+1;
+}
+
+// ── Render ──
+function renderBoard() {
+  const board = document.getElementById('board');
+  const rows = grid.length, cols = grid[0].length;
+  board.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+  board.innerHTML = '';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const gem = document.createElement('div');
+      gem.className = 'gem';
+      gem.dataset.r = r; gem.dataset.c = c;
+      const cell = grid[r][c];
+      if (!cell) continue;
+      gem.dataset.type = cell.type;
+      gem.textContent = cell.special === 'bomb' ? '💥' : cell.special === 'star' ? '⭐' : GEM_EMOJIS[cell.type];
+      gem.addEventListener('click', () => onGemClick(r, c));
+      // Touch drag
+      gem.addEventListener('touchstart', onTouchStart, {passive:true});
+      gem.addEventListener('touchend', onTouchEnd, {passive:true});
+      board.appendChild(gem);
+    }
+  }
+}
+
+function getGemEl(r, c) {
+  return document.querySelector(`.gem[data-r="${r}"][data-c="${c}"]`);
+}
+
+function updateGemEl(r, c) {
+  const el = getGemEl(r, c);
+  if (!el || !grid[r]?.[c]) return;
+  const cell = grid[r][c];
+  el.dataset.type = cell.type;
+  el.textContent = cell.special === 'bomb' ? '💥' : cell.special === 'star' ? '⭐' : GEM_EMOJIS[cell.type];
+}
+
+function renderObjectives() {
+  const wrap = document.getElementById('objectives');
+  wrap.innerHTML = '';
+  Object.keys(objectiveTargets).forEach(type => {
+    const chip = document.createElement('div');
+    chip.className = 'obj-chip' + (objectives[type] >= objectiveTargets[type] ? ' done' : '');
+    chip.id = `obj-${type}`;
+    const dot = document.createElement('div');
+    dot.className = 'obj-gem';
+    dot.style.background = GEM_COLORS[type];
+    const label = document.createElement('span');
+    label.textContent = `${Math.min(objectives[type], objectiveTargets[type])} / ${objectiveTargets[type]}`;
+    chip.appendChild(dot);
+    chip.appendChild(label);
+    wrap.appendChild(chip);
+  });
+}
+
+function updateProgress() {
+  const cfg = LEVELS[Math.min(level, LEVELS.length-1)];
+  const pct = Math.min(100, (score / cfg.target) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function updateUI() {
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('movesVal').textContent = moves;
+  updateProgress();
+}
+
+// ── Interaction ──
+function onGemClick(r, c) {
+  if (busy) return;
+  if (selected === null) {
+    selected = {r, c};
+    getGemEl(r, c)?.classList.add('selected');
+  } else {
+    if (selected.r === r && selected.c === c) {
+      getGemEl(r, c)?.classList.remove('selected');
+      selected = null;
+      return;
+    }
+    const dr = Math.abs(r - selected.r), dc = Math.abs(c - selected.c);
+    if (dr + dc === 1) {
+      // adjacent swap
+      getGemEl(selected.r, selected.c)?.classList.remove('selected');
+      trySwap(selected.r, selected.c, r, c);
+      selected = null;
+    } else {
+      // re-select
+      getGemEl(selected.r, selected.c)?.classList.remove('selected');
+      selected = {r, c};
+      getGemEl(r, c)?.classList.add('selected');
+    }
+  }
+}
+
+// Touch drag
+let touchStart = null;
+function onTouchStart(e) {
+  const el = e.currentTarget;
+  touchStart = { r: +el.dataset.r, c: +el.dataset.c, x: e.touches[0].clientX, y: e.touches[0].clientY };
+}
+function onTouchEnd(e) {
+  if (!touchStart || busy) return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  const {r, c} = touchStart;
+  if (Math.abs(dx) < 15 && Math.abs(dy) < 15) { onGemClick(r, c); return; }
+  if (Math.abs(dx) > Math.abs(dy)) {
+    trySwap(r, c, r, c + (dx > 0 ? 1 : -1));
+  } else {
+    trySwap(r, c, r + (dy > 0 ? 1 : -1), c);
+  }
+  if (selected) { getGemEl(selected.r, selected.c)?.classList.remove('selected'); selected = null; }
+  touchStart = null;
+}
+
+async function trySwap(r1, c1, r2, c2) {
+  if (busy) return;
+  if (r2 < 0 || r2 >= grid.length || c2 < 0 || c2 >= grid[0].length) return;
+
+  busy = true;
+  comboCount = 0;
+
+  // Animate swap
+  animateSwap(r1, c1, r2, c2);
+  swap(r1, c1, r2, c2);
+
+  await delay(220);
+
+  const matched = findMatches();
+  if (matched.length === 0) {
+    // Invalid — swap back
+    swap(r1, c1, r2, c2);
+    animateSwap(r2, c2, r1, c1);
+    await delay(220);
+    busy = false;
+    return;
+  }
+
+  moves--;
+  updateUI();
+  await processMatches(matched);
+
+  // Check level complete
+  const cfg = LEVELS[Math.min(level, LEVELS.length-1)];
+  if (score >= cfg.target && objectivesMet()) {
+    await delay(300);
+    showLevelComplete();
+    busy = false;
+    return;
+  }
+
+  if (moves <= 0) {
+    await delay(300);
+    showGameOver(score >= cfg.target);
+    busy = false;
+    return;
+  }
+
+  // Ensure board has moves
+  if (!hasValidMoves()) shuffleBoard();
+
+  busy = false;
+}
+
+function animateSwap(r1, c1, r2, c2) {
+  const e1 = getGemEl(r1, c1), e2 = getGemEl(r2, c2);
+  if (!e1 || !e2) return;
+  if (c2 > c1) { e1.classList.add('swap-right'); e2.classList.add('swap-left'); }
+  else if (c2 < c1) { e1.classList.add('swap-left'); e2.classList.add('swap-right'); }
+  else if (r2 > r1) { e1.classList.add('swap-down'); e2.classList.add('swap-up'); }
+  else { e1.classList.add('swap-up'); e2.classList.add('swap-down'); }
+  setTimeout(() => {
+    e1.classList.remove('swap-right','swap-left','swap-down','swap-up');
+    e2.classList.remove('swap-right','swap-left','swap-down','swap-up');
+  }, 220);
+}
+
+function swap(r1, c1, r2, c2) {
+  [grid[r1][c1], grid[r2][c2]] = [grid[r2][c2], grid[r1][c1]];
+  updateGemEl(r1, c1);
+  updateGemEl(r2, c2);
+}
+
+// ── Match logic ──
+function findMatches() {
+  const rows = grid.length, cols = grid[0].length;
+  const matched = new Set();
+
+  // Horizontal
+  for (let r = 0; r < rows; r++) {
+    let run = 1;
+    for (let c = 1; c <= cols; c++) {
+      if (c < cols && grid[r][c].type === grid[r][c-1].type && grid[r][c].type !== 0) {
+        run++;
+      } else {
+        if (run >= 3) for (let k = c-run; k < c; k++) matched.add(`${r},${k}`);
+        run = 1;
+      }
+    }
+  }
+
+  // Vertical
+  for (let c = 0; c < cols; c++) {
+    let run = 1;
+    for (let r = 1; r <= rows; r++) {
+      if (r < rows && grid[r][c].type === grid[r-1][c].type && grid[r][c].type !== 0) {
+        run++;
+      } else {
+        if (run >= 3) for (let k = r-run; k < r; k++) matched.add(`${k},${c}`);
+        run = 1;
+      }
+    }
+  }
+
+  return [...matched].map(s => { const [r,c] = s.split(',').map(Number); return {r,c}; });
+}
+
+function hasMatches() { return findMatches().length > 0; }
+
+async function processMatches(matched) {
+  comboCount++;
+
+  // Score: base per gem * combo multiplier
+  const baseScore = matched.length >= 5 ? 300 : matched.length === 4 ? 150 : 60;
+  const comboMult = comboCount;
+  const gained = baseScore * matched.length * comboMult;
+  score += gained;
+
+  // Track objectives
+  matched.forEach(({r, c}) => {
+    const t = grid[r][c].type;
+    if (objectives[t] !== undefined) objectives[t]++;
+  });
+
+  // Determine specials (based on match size group)
+  // Group connected matches
+  const specials = [];
+  const counted = new Set(matched.map(m=>`${m.r},${m.c}`));
+  if (matched.length >= 5) {
+    const center = matched[Math.floor(matched.length/2)];
+    specials.push({r:center.r, c:center.c, type: grid[center.r][center.c].type, special:'star'});
+  } else if (matched.length === 4) {
+    const center = matched[Math.floor(matched.length/2)];
+    specials.push({r:center.r, c:center.c, type: grid[center.r][center.c].type, special:'bomb'});
+  }
+
+  // Animate matched gems
+  matched.forEach(({r,c}) => getGemEl(r,c)?.classList.add('matched'));
+  showScorePop(matched, gained, comboCount);
+  await delay(350);
+
+  // Remove matched
+  matched.forEach(({r,c}) => { grid[r][c] = {type:0, special:null}; });
+
+  // Apply specials
+  specials.forEach(s => { grid[s.r][s.c] = {type:s.type, special:s.special}; });
+
+  // Drop gems
+  await dropGems();
+
+  // Refill
+  await refillGrid();
+
+  // Check cascades
+  const nextMatched = findMatches();
+  if (nextMatched.length > 0) {
+    await delay(100);
+    await processMatches(nextMatched);
+  } else {
+    comboCount = 0;
+  }
+
+  updateUI();
+  renderObjectives();
+  updateProgress();
+}
+
+async function dropGems() {
+  const rows = grid.length, cols = grid[0].length;
+  let dropped = false;
+  for (let c = 0; c < cols; c++) {
+    let empty = rows - 1;
+    for (let r = rows - 1; r >= 0; r--) {
+      if (grid[r][c].type !== 0) {
+        if (r !== empty) {
+          grid[empty][c] = grid[r][c];
+          grid[r][c] = {type:0, special:null};
+          dropped = true;
+        }
+        empty--;
+      }
+    }
+  }
+  if (dropped) {
+    renderBoard();
+    document.querySelectorAll('.gem').forEach(el => {
+      if (grid[+el.dataset.r][+el.dataset.c]?.type) el.classList.add('falling');
+    });
+    await delay(320);
+  }
+}
+
+async function refillGrid() {
+  const rows = grid.length, cols = grid[0].length;
+  let filled = false;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c].type === 0) {
+        grid[r][c] = { type: Math.floor(Math.random()*GEMS)+1, special: null };
+        filled = true;
+      }
+    }
+  }
+  if (filled) {
+    renderBoard();
+    document.querySelectorAll('.gem').forEach(el => el.classList.add('falling'));
+    await delay(320);
+  }
+}
+
+// ── Score popup ──
+function showScorePop(cells, pts, combo) {
+  const boardEl = document.querySelector('.board-wrap');
+  const rect = boardEl.getBoundingClientRect();
+  const midCell = cells[Math.floor(cells.length/2)];
+  const el = getGemEl(midCell.r, midCell.c);
+  if (!el) return;
+  const er = el.getBoundingClientRect();
+
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = `+${pts}`;
+  pop.style.left = (er.left - rect.left + er.width/2) + 'px';
+  pop.style.top = (er.top - rect.top) + 'px';
+  pop.style.transform = 'translateX(-50%)';
+  boardEl.style.position = 'relative';
+  boardEl.appendChild(pop);
+  pop.addEventListener('animationend', () => pop.remove());
+
+  if (combo >= 2) {
+    const cpop = document.createElement('div');
+    cpop.className = 'combo-pop';
+    const colors = ['#ff4d6d','#f9c74f','#80ed99','#c77dff','#4cc9f0'];
+    cpop.style.color = colors[Math.min(combo-2, colors.length-1)];
+    cpop.textContent = combo >= 5 ? `${combo}x ULTRA!` : combo >= 4 ? `${combo}x MEGA!` : combo >= 3 ? `${combo}x GREAT!` : `${combo}x COMBO!`;
+    cpop.style.left = (er.left - rect.left + er.width/2) + 'px';
+    cpop.style.top = (er.top - rect.top - 30) + 'px';
+    cpop.style.transform = 'translateX(-50%)';
+    boardEl.appendChild(cpop);
+    cpop.addEventListener('animationend', () => cpop.remove());
+  }
+}
+
+// ── Hint ──
+function showHint() {
+  if (busy) return;
+  const rows = grid.length, cols = grid[0].length;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (c+1 < cols) {
+        swap(r,c,r,c+1);
+        if (hasMatches()) {
+          swap(r,c,r,c+1);
+          getGemEl(r,c)?.classList.add('hint');
+          getGemEl(r,c+1)?.classList.add('hint');
+          setTimeout(()=>{getGemEl(r,c)?.classList.remove('hint');getGemEl(r,c+1)?.classList.remove('hint');},1200);
+          return;
+        }
+        swap(r,c,r,c+1);
+      }
+      if (r+1 < rows) {
+        swap(r,c,r+1,c);
+        if (hasMatches()) {
+          swap(r,c,r+1,c);
+          getGemEl(r,c)?.classList.add('hint');
+          getGemEl(r+1,c)?.classList.add('hint');
+          setTimeout(()=>{getGemEl(r,c)?.classList.remove('hint');getGemEl(r+1,c)?.classList.remove('hint');},1200);
+          return;
+        }
+        swap(r,c,r+1,c);
+      }
+    }
+  }
+}
+
+// ── Shuffle ──
+function shuffleBoard() {
+  if (busy) return;
+  const rows = grid.length, cols = grid[0].length;
+  const flat = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) flat.push(grid[r][c].type);
+  for (let i = flat.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [flat[i],flat[j]] = [flat[j],flat[i]];
+  }
+  let k = 0;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { grid[r][c] = {type:flat[k++],special:null}; }
+  renderBoard();
+}
+
+function hasValidMoves() {
+  const rows = grid.length, cols = grid[0].length;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (c+1 < cols) { swap(r,c,r,c+1); const ok=hasMatches(); swap(r,c,r,c+1); if(ok) return true; }
+      if (r+1 < rows) { swap(r,c,r+1,c); const ok=hasMatches(); swap(r,c,r+1,c); if(ok) return true; }
+    }
+  }
+  return false;
+}
+
+function objectivesMet() {
+  return Object.keys(objectiveTargets).every(t => (objectives[t]||0) >= objectiveTargets[t]);
+}
+
+// ── End screens ──
+function showLevelComplete() {
+  document.getElementById('levelScore').textContent = score;
+  document.getElementById('levelMsg').textContent = comboCount >= 3 ? `${comboCount}x COMBO MASTER! 🔥` : 'Great matching!';
+  document.getElementById('levelOverlay').style.display = 'flex';
+}
+
+function showGameOver(won) {
+  document.getElementById('overEmoji').textContent = won ? '🏆' : '💔';
+  document.getElementById('overTitle').textContent = won ? 'You Win!' : 'Out of Moves!';
+  document.getElementById('overMsg').textContent = won ? 'Goal reached! Can you do better?' : 'No moves left. Try again!';
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('gameOverOverlay').style.display = 'flex';
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

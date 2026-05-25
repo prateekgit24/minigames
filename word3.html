@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEXICON — Daily Word Puzzle</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg: #f5f0e8; --bg2: #ede7d9; --paper: #faf7f2;
+  --ink: #1c1810; --ink2: #4a4035; --ink3: #8a7a6a;
+  --accent: #c0392b; --gold: #b8860b; --green: #2d6a4f; --orange: #d4640a;
+  --tile-bg: #fdfcf9; --tile-border: #d4c9b8; --shadow: rgba(28,24,16,0.12);
+  --cyber-bg: #04060f; --cyber-green: #00ff9f; --cyber-red: #ff3054; --cyber-gold: #ffd700;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--ink); font-family:'Crimson Pro',Georgia,serif;
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  padding:20px 16px 60px; position:relative; overflow-x:hidden;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c4b89a' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+/* HEADER */
+header { text-align:center; margin-bottom:18px; }
+.masthead { font-family:'Playfair Display',serif; font-size:clamp(2.4rem,7vw,4rem); font-weight:900; letter-spacing:.18em; line-height:1; }
+.masthead-sub { display:flex; align-items:center; gap:12px; margin-top:4px; justify-content:center; }
+.rule { flex:1; max-width:80px; height:2px; background:linear-gradient(90deg,transparent,var(--ink3)); }
+.rule.r { background:linear-gradient(90deg,var(--ink3),transparent); }
+.tagline { font-size:.68rem; letter-spacing:.32em; color:var(--ink3); text-transform:uppercase; font-style:italic; }
+#datebar { display:flex; gap:16px; align-items:center; font-size:.75rem; letter-spacing:.1em; color:var(--ink3); margin-bottom:14px; flex-wrap:wrap; justify-content:center; }
+#datebar strong { color:var(--ink2); }
+/* NAME MODAL */
+#name-modal { display:none; position:fixed; inset:0; background:rgba(245,240,232,.96); backdrop-filter:blur(6px); z-index:900; align-items:center; justify-content:center; flex-direction:column; gap:20px; padding:24px; text-align:center; }
+#name-modal.show { display:flex; }
+.modal-title { font-family:'Playfair Display',serif; font-size:clamp(1.6rem,5vw,2.4rem); font-weight:900; }
+.modal-sub { color:var(--ink3); font-style:italic; font-size:1rem; }
+.name-input-wrap { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+input[type=text] { padding:10px 18px; border:2px solid var(--tile-border); border-radius:4px; background:var(--paper); font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--ink); text-align:center; outline:none; width:220px; transition:border-color .2s; }
+input[type=text]:focus { border-color:var(--ink2); }
+/* SCOREBAR */
+#scorebar { display:flex; gap:0; margin-bottom:16px; max-width:520px; width:100%; background:var(--paper); border:1px solid var(--tile-border); border-radius:6px; overflow:hidden; box-shadow:0 2px 8px var(--shadow); }
+.sb-item { flex:1; text-align:center; padding:8px 6px; border-right:1px solid var(--tile-border); }
+.sb-item:last-child { border-right:none; }
+.sb-label { font-size:.58rem; letter-spacing:.28em; color:var(--ink3); text-transform:uppercase; display:block; }
+.sb-val { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; display:block; line-height:1.1; color:var(--accent); }
+.sb-val.green { color:var(--green); }
+.sb-val.gold  { color:var(--gold); }
+/* PROGRESS */
+#prog-wrap { width:100%; max-width:520px; height:5px; background:var(--bg2); border-radius:3px; margin-bottom:14px; }
+#prog-bar { height:100%; border-radius:3px; width:0%; background:linear-gradient(90deg,var(--green),var(--gold)); transition:width .5s ease; }
+/* CARD */
+.card { background:var(--paper); border:1px solid var(--tile-border); border-radius:6px; box-shadow:0 4px 20px var(--shadow),inset 0 1px 0 rgba(255,255,255,.8); padding:22px 24px; width:100%; max-width:520px; margin-bottom:14px; position:relative; }
+.card::before { content:''; position:absolute; top:5px;left:5px;right:5px;bottom:5px; border:1px solid rgba(212,201,184,.4); border-radius:3px; pointer-events:none; }
+.sec-label { font-size:.6rem; letter-spacing:.33em; color:var(--ink3); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+.sec-label::after { content:''; flex:1; height:1px; background:var(--tile-border); }
+.word-counter { font-size:.68rem; letter-spacing:.15em; color:var(--ink3); text-transform:uppercase; margin-bottom:4px; }
+.word-dots { display:flex; gap:6px; margin-bottom:14px; }
+.wdot { width:10px;height:10px;border-radius:50%; background:var(--tile-border); transition:all .3s; }
+.wdot.done { background:var(--green); }
+.wdot.fail { background:var(--accent); }
+.wdot.current { background:var(--gold); box-shadow:0 0 0 2px #b8860b40; }
+#clue-text { font-family:'Playfair Display',serif; font-size:clamp(.95rem,2.5vw,1.15rem); font-style:italic; color:var(--ink2); line-height:1.6; margin-bottom:10px; }
+.meta-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+.meta-pill { background:var(--bg2); border:1px solid var(--tile-border); border-radius:20px; padding:2px 10px; font-size:.72rem; color:var(--ink3); }
+.mistake-row { display:flex; align-items:center; gap:8px; margin-top:10px; }
+.mistake-label { font-size:.62rem; letter-spacing:.2em; color:var(--ink3); text-transform:uppercase; }
+.mistake-hearts { display:flex; gap:4px; }
+.heart { font-size:1rem; transition:all .3s; }
+.heart.lost { filter:grayscale(1); opacity:.3; transform:scale(.85); }
+/* ANSWER ROW */
+#answer-row { display:flex; gap:7px; justify-content:center; flex-wrap:wrap; margin:18px 0 6px; }
+.ans-tile { width:48px;height:56px; background:var(--tile-bg); border:2px solid var(--tile-border); border-radius:5px; display:flex;align-items:center;justify-content:center; font-family:'Playfair Display',serif; font-size:1.5rem;font-weight:700;color:var(--ink); cursor:pointer; transition:all .15s; box-shadow:0 2px 5px var(--shadow); }
+.ans-tile.empty { border-style:dashed; border-color:#cfc5b2; box-shadow:none; }
+.ans-tile.filled { background:var(--ink); color:var(--paper); border-color:var(--ink); transform:translateY(-2px); box-shadow:0 4px 12px rgba(28,24,16,.22); }
+.ans-tile.correct { background:var(--green); border-color:var(--green); color:#fff; animation:pop .4s ease; }
+.ans-tile.wrong { background:var(--accent); border-color:var(--accent); color:#fff; animation:shake .4s ease; }
+@keyframes pop { 0%{transform:scale(1) translateY(-2px)} 50%{transform:scale(1.18) translateY(-4px)} 100%{transform:scale(1) translateY(-2px)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+/* LETTER BANK */
+#letter-bank { display:flex; gap:7px; justify-content:center; flex-wrap:wrap; margin-bottom:6px; }
+.letter-tile { width:44px;height:52px; background:var(--bg2); border:2px solid var(--tile-border); border-radius:5px; display:flex;align-items:center;justify-content:center; font-family:'Playfair Display',serif; font-size:1.3rem;font-weight:700;color:var(--ink); cursor:pointer; transition:all .15s; box-shadow:0 2px 4px var(--shadow); }
+.letter-tile:hover:not(.used) { background:var(--ink); color:var(--paper); transform:translateY(-3px); box-shadow:0 6px 14px rgba(28,24,16,.22); }
+.letter-tile.used { opacity:.2; cursor:default; transform:none; box-shadow:none; }
+#hint-box { display:none; background:#fffbf0; border:1px solid var(--gold); border-radius:4px; padding:8px 14px; font-style:italic; color:var(--gold); font-size:.88rem; margin:8px 0; text-align:center; }
+#feedback { min-height:22px; text-align:center; font-family:'Playfair Display',serif; font-style:italic; font-size:.95rem; color:var(--green); margin:4px 0; transition:all .3s; }
+#feedback.error { color:var(--accent); }
+#feedback.warn  { color:var(--orange); }
+/* BUTTONS */
+.btn-row { display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
+.btn { font-family:'Crimson Pro',serif; font-size:.82rem; letter-spacing:.12em; text-transform:uppercase; padding:9px 20px; border-radius:3px; cursor:pointer; transition:all .18s; border:1.5px solid; }
+.btn-primary { background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.btn-primary:hover:not(:disabled) { background:var(--accent); border-color:var(--accent); transform:translateY(-1px); }
+.btn-secondary { background:transparent; color:var(--ink2); border-color:var(--tile-border); }
+.btn-secondary:hover:not(:disabled) { border-color:var(--ink2); background:var(--bg2); }
+.btn-hint { background:transparent; color:var(--gold); border-color:var(--gold); font-style:italic; }
+.btn-hint:hover:not(:disabled) { background:#b8860b18; }
+.btn:disabled { opacity:.35; cursor:default; }
+/* SOLVED LOG */
+#solved-log { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:4px; }
+.solved-chip { background:var(--paper); border:1px solid var(--tile-border); border-radius:3px; padding:3px 14px; font-family:'Playfair Display',serif; font-size:.92rem; font-weight:700; color:var(--green); letter-spacing:.06em; animation:chipIn .35s ease; }
+.solved-chip.fail { color:var(--accent); text-decoration:line-through; }
+@keyframes chipIn { from{opacity:0;transform:scale(.85) translateY(5px)} to{opacity:1;transform:none} }
+/* WORD FLASH */
+#word-complete-flash { display:none; position:fixed; inset:0; background:rgba(245,240,232,.88); backdrop-filter:blur(4px); z-index:800; align-items:center; justify-content:center; flex-direction:column; gap:10px; text-align:center; }
+#word-complete-flash.show { display:flex; }
+.flash-word { font-family:'Playfair Display',serif; font-size:clamp(2rem,7vw,3.2rem); font-weight:900; color:var(--green); }
+.flash-def { font-style:italic; color:var(--ink3); font-size:.95rem; max-width:360px; line-height:1.5; }
+.flash-pts { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--gold); }
+
+/* ═══════════════════════════════════
+   FUTURISTIC END CARD
+   ═══════════════════════════════════ */
+#end-card { display:none; width:100%; max-width:560px; margin-bottom:14px; }
+#end-card.show { display:block; }
+
+.cyber-panel {
+  background:var(--cyber-bg);
+  border:1px solid rgba(0,255,255,.2);
+  border-radius:8px; position:relative; overflow:hidden;
+  box-shadow:0 0 50px rgba(0,255,255,.06),0 20px 60px rgba(0,0,0,.5);
+}
+.cyber-panel::before {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,255,.012) 2px,rgba(0,255,255,.012) 4px);
+  pointer-events:none; z-index:0;
+}
+.cyber-panel::after {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(0,255,255,.04) 0%, transparent 70%);
+  pointer-events:none; z-index:0;
+}
+
+/* corner brackets */
+.cc { position:absolute; width:20px; height:20px; pointer-events:none; z-index:3; }
+.cc::before,.cc::after { content:''; position:absolute; background:#0ff; }
+.cc::before { width:100%; height:1.5px; top:0; left:0; }
+.cc::after  { width:1.5px; height:100%; top:0; left:0; }
+.cc-tl { top:0; left:0; }
+.cc-tr { top:0; right:0; transform:scaleX(-1); }
+.cc-bl { bottom:0; left:0; transform:scaleY(-1); }
+.cc-br { bottom:0; right:0; transform:scale(-1,-1); }
+
+.cyber-inner { position:relative; z-index:1; padding:28px 24px 26px; }
+
+/* scan line that sweeps */
+.cyber-scan {
+  position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,255,.4),transparent);
+  animation:scan 4s linear infinite; z-index:2; pointer-events:none;
+}
+@keyframes scan { 0%{top:-2px} 100%{top:100%} }
+
+.cyber-topline { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:6px; }
+.cyber-puzzle-id { font-family:'Share Tech Mono',monospace; font-size:.7rem; letter-spacing:.22em; color:rgba(0,255,255,.7); text-transform:uppercase; }
+.cyber-date { font-family:'Share Tech Mono',monospace; font-size:.66rem; color:rgba(0,255,255,.45); }
+
+/* title */
+.cyber-title { text-align:center; margin-bottom:22px; }
+.cyber-title-text { font-family:'Playfair Display',serif; font-size:clamp(2rem,7vw,3.2rem); font-weight:900; letter-spacing:.06em; line-height:1; display:block; }
+.cyber-title-sub { font-family:'Share Tech Mono',monospace; font-size:.65rem; letter-spacing:.22em; color:rgba(0,255,255,.55); margin-top:8px; text-transform:uppercase; display:block; }
+
+/* stat grid */
+.cyber-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px; }
+.cstat { background:rgba(0,255,255,.04); border:1px solid rgba(0,255,255,.12); border-radius:4px; padding:12px 6px; text-align:center; position:relative; overflow:hidden; }
+.cstat::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,255,255,.05),transparent); pointer-events:none; }
+.cstat-val { font-family:'Share Tech Mono',monospace; font-size:1.7rem; display:block; line-height:1; position:relative; }
+.cstat-lbl { font-family:'Share Tech Mono',monospace; font-size:.55rem; letter-spacing:.2em; color:rgba(0,255,255,.6); text-transform:uppercase; display:block; margin-top:4px; position:relative; }
+
+/* emoji row */
+.cyber-emoji-row { text-align:center; font-size:1.5rem; letter-spacing:.1em; margin-bottom:18px; padding:12px 0; border-top:1px solid rgba(0,255,255,.12); border-bottom:1px solid rgba(0,255,255,.12); }
+
+/* word rows */
+.cyber-words { display:flex; flex-direction:column; gap:5px; margin-bottom:20px; }
+.cyber-word-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:4px; padding:8px 12px; transition:background .2s; }
+.cyber-word-row:hover { background:rgba(255,255,255,.06); }
+.cwr-num { font-family:'Share Tech Mono',monospace; font-size:.62rem; color:rgba(0,255,255,.5); min-width:20px; }
+.cwr-word { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; flex:1; letter-spacing:.06em; }
+.cwr-badge { font-family:'Share Tech Mono',monospace; font-size:.62rem; letter-spacing:.06em; padding:3px 10px; border-radius:2px; text-transform:uppercase; white-space:nowrap; }
+.cwr-ok   { background:rgba(0,255,159,.12); border:1px solid rgba(0,255,159,.45); color:var(--cyber-green); }
+.cwr-fail { background:rgba(255,48,84,.1);  border:1px solid rgba(255,48,84,.4);  color:var(--cyber-red); }
+.cwr-skip { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); color:rgba(255,255,255,.25); }
+
+/* share section */
+.cyber-share-label { font-family:'Share Tech Mono',monospace; font-size:.62rem; letter-spacing:.2em; color:rgba(0,255,255,.6); text-transform:uppercase; margin-bottom:8px; }
+#share-preview { background:rgba(0,255,255,.03); border:1px solid rgba(0,255,255,.18); border-radius:4px; padding:14px 16px; font-family:'Share Tech Mono',monospace; font-size:.72rem; color:rgba(0,255,255,.8); white-space:pre-wrap; line-height:1.85; letter-spacing:.04em; margin-bottom:16px; cursor:text; user-select:text; }
+
+/* cyber buttons */
+.cyber-btn-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.cyber-btn { font-family:'Share Tech Mono',monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; padding:12px 24px; border-radius:3px; cursor:pointer; transition:all .18s; position:relative; overflow:hidden; }
+.cyber-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.06),transparent); pointer-events:none; }
+.cyber-btn-copy { background:rgba(0,255,159,.08); border:1.5px solid rgba(0,255,159,.6); color:var(--cyber-green); box-shadow:0 0 16px rgba(0,255,159,.1); }
+.cyber-btn-copy:hover { background:rgba(0,255,159,.18); box-shadow:0 0 28px rgba(0,255,159,.3); transform:translateY(-2px); }
+.cyber-btn-copy.copied { background:rgba(0,255,159,.25); border-color:var(--cyber-green); box-shadow:0 0 36px rgba(0,255,159,.5); }
+.cyber-btn-name { background:rgba(0,255,255,.06); border:1.5px solid rgba(0,255,255,.35); color:rgba(0,255,255,.8); }
+.cyber-btn-name:hover { background:rgba(0,255,255,.14); border-color:rgba(0,255,255,.7); transform:translateY(-2px); }
+.cyber-tomorrow { font-family:'Share Tech Mono',monospace; font-size:.6rem; letter-spacing:.18em; color:rgba(0,255,255,.3); text-align:center; margin-top:16px; text-transform:uppercase; }
+
+/* perfect glow */
+@keyframes perfectGlow { 0%,100%{box-shadow:0 0 50px rgba(0,255,159,.08),0 20px 60px rgba(0,0,0,.5);} 50%{box-shadow:0 0 80px rgba(0,255,159,.2),0 20px 60px rgba(0,0,0,.5);} }
+.cyber-panel.perfect { animation:perfectGlow 2.5s ease-in-out infinite; }
+
+@media(max-width:480px){
+  .card{padding:14px;} .ans-tile{width:40px;height:48px;font-size:1.2rem;} .letter-tile{width:38px;height:46px;font-size:1.2rem;} .cstat-val{font-size:1.3rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="masthead">LEXICON</div>
+  <div class="masthead-sub">
+    <div class="rule"></div>
+    <div class="tagline">Daily Word Puzzle</div>
+    <div class="rule r"></div>
+  </div>
+</header>
+
+<div id="datebar">
+  <span id="date-display"></span><span>·</span>
+  <span>Puzzle <strong id="puzzle-num">#1</strong></span><span>·</span>
+  <span id="player-name-display" style="color:var(--ink2);font-weight:600"></span>
+</div>
+
+<div id="scorebar">
+  <div class="sb-item"><span class="sb-label">Score</span><span class="sb-val" id="sb-score">0</span></div>
+  <div class="sb-item"><span class="sb-label">Word</span><span class="sb-val green" id="sb-word">1/5</span></div>
+  <div class="sb-item"><span class="sb-label">Streak</span><span class="sb-val gold" id="sb-streak">🔥 0</span></div>
+  <div class="sb-item"><span class="sb-label">Lives</span><span class="sb-val" id="sb-lives" style="color:var(--accent)">♥ 5</span></div>
+  <div class="sb-item"><span class="sb-label">Hints</span><span class="sb-val gold" id="sb-hints">✦ 3</span></div>
+</div>
+
+<div id="prog-wrap"><div id="prog-bar"></div></div>
+
+<div class="card" id="main-card">
+  <div class="word-counter" id="word-counter">Word 1 of 5</div>
+  <div class="word-dots" id="word-dots"></div>
+  <div class="sec-label">Definition</div>
+  <div id="clue-text"></div>
+  <div class="meta-row">
+    <div class="meta-pill" id="meta-len"></div>
+    <div class="meta-pill" id="meta-cat"></div>
+    <div class="meta-pill" id="meta-pts"></div>
+  </div>
+  <div class="mistake-row">
+    <span class="mistake-label">Lives</span>
+    <div class="mistake-hearts" id="hearts"></div>
+    <span id="hint-count-label" style="margin-left:auto;font-size:.65rem;letter-spacing:.2em;color:var(--gold);text-transform:uppercase"></span>
+  </div>
+  <div id="answer-row"></div>
+  <div id="hint-box"></div>
+  <div class="sec-label" style="margin-top:10px">Scrambled Letters</div>
+  <div id="letter-bank"></div>
+  <div id="feedback"></div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="clearAnswer()">Clear</button>
+    <button class="btn btn-hint" id="hint-btn" onclick="useHint()">✦ Hint</button>
+    <button class="btn btn-primary" id="check-btn" onclick="checkAnswer()">Check →</button>
+  </div>
+</div>
+
+<div class="card" id="log-card" style="display:none">
+  <div class="sec-label">Today's Words</div>
+  <div id="solved-log"></div>
+</div>
+
+<!-- FUTURISTIC END CARD -->
+<div id="end-card">
+  <div class="cyber-panel" id="cyber-panel">
+    <div class="cyber-scan"></div>
+    <div class="cc cc-tl"></div><div class="cc cc-tr"></div>
+    <div class="cc cc-bl"></div><div class="cc cc-br"></div>
+    <div class="cyber-inner">
+      <div class="cyber-topline">
+        <span class="cyber-puzzle-id" id="ec-puzzle-id">LEXICON // PUZZLE #001</span>
+        <span class="cyber-date" id="ec-date"></span>
+      </div>
+      <div class="cyber-title">
+        <span class="cyber-title-text" id="ec-title"></span>
+        <span class="cyber-title-sub" id="ec-sub"></span>
+      </div>
+      <div class="cyber-stats">
+        <div class="cstat"><span class="cstat-val" id="ec-score" style="color:var(--cyber-gold)">0</span><span class="cstat-lbl">Score</span></div>
+        <div class="cstat"><span class="cstat-val" id="ec-solved" style="color:var(--cyber-green)">0/5</span><span class="cstat-lbl">Solved</span></div>
+        <div class="cstat"><span class="cstat-val" id="ec-lives" style="color:var(--cyber-red)">0</span><span class="cstat-lbl">Lives Left</span></div>
+      </div>
+      <div class="cyber-emoji-row" id="ec-emoji"></div>
+      <div class="cyber-words" id="ec-words"></div>
+      <div class="cyber-share-label">// Share your result</div>
+      <div id="share-preview"></div>
+      <div class="cyber-btn-row">
+        <button class="cyber-btn cyber-btn-copy" id="copy-btn" onclick="shareResult()">[ Copy &amp; Share ]</button>
+        <button class="cyber-btn cyber-btn-name" onclick="changeNamePrompt()">[ Change Name ]</button>
+      </div>
+      <div class="cyber-tomorrow">— New puzzle unlocks at midnight —</div>
+    </div>
+  </div>
+</div>
+
+<div id="word-complete-flash">
+  <div class="flash-word" id="flash-word"></div>
+  <div class="flash-def" id="flash-def"></div>
+  <div class="flash-pts" id="flash-pts"></div>
+</div>
+
+<div id="name-modal" class="show">
+  <div class="modal-title">Welcome to LEXICON</div>
+  <div class="modal-sub">Daily word puzzle · 5 words · 5 lives · 3 hints</div>
+  <div style="font-size:.9rem;color:var(--ink3);font-style:italic;max-width:320px;text-align:center;line-height:1.6">
+    Enter your name to share your daily score with friends!
+  </div>
+  <div class="name-input-wrap">
+    <input type="text" id="name-input" placeholder="Your name…" maxlength="20"/>
+    <button class="btn btn-primary" onclick="saveName()">Let's Play →</button>
+  </div>
+</div>
+
+<script>
+const ALL_WORDS=[
+  {word:"PONDER",  def:"To think deeply and carefully about something.",                   cat:"Verb",      pts:6},
+  {word:"VIBRANT", def:"Full of energy; bright and striking in appearance.",               cat:"Adjective", pts:7},
+  {word:"ENIGMA",  def:"Something mysterious and puzzling; a riddle.",                     cat:"Noun",      pts:6},
+  {word:"WHIMSY",  def:"Playfully fanciful or quaint behaviour.",                          cat:"Noun",      pts:6},
+  {word:"ELUSIVE", def:"Difficult to find, catch, or achieve.",                            cat:"Adjective", pts:7},
+  {word:"FRUGAL",  def:"Economical with money or resources; not wasteful.",                cat:"Adjective", pts:6},
+  {word:"CANDOR",  def:"Openness and honesty in expression; frankness.",                   cat:"Noun",      pts:6},
+  {word:"ZEPHYR",  def:"A soft, gentle warm breeze.",                                      cat:"Noun",      pts:6},
+  {word:"PLACID",  def:"Not easily upset or excited; calm and peaceful.",                  cat:"Adjective", pts:6},
+  {word:"ENNUI",   def:"Listlessness and dissatisfaction from lack of excitement.",        cat:"Noun",      pts:5},
+  {word:"WISTFUL", def:"Having a feeling of vague regretful longing.",                     cat:"Adjective", pts:7},
+  {word:"FERVENT", def:"Having or displaying passionate intensity.",                       cat:"Adjective", pts:7},
+  {word:"STOIC",   def:"Enduring hardship without showing feeling.",                       cat:"Adjective", pts:5},
+  {word:"BENIGN",  def:"Gentle and kindly; not harmful.",                                  cat:"Adjective", pts:6},
+  {word:"SOLACE",  def:"Comfort in a time of distress or sadness.",                        cat:"Noun",      pts:6},
+  {word:"VALOR",   def:"Great courage in the face of danger.",                             cat:"Noun",      pts:5},
+  {word:"QUAINT",  def:"Attractively unusual or old-fashioned.",                           cat:"Adjective", pts:6},
+  {word:"FOLLY",   def:"Lack of good sense; a foolish act.",                               cat:"Noun",      pts:5},
+  {word:"LUCID",   def:"Clear and easily understood; mentally sound.",                     cat:"Adjective", pts:5},
+  {word:"BRASH",   def:"Boldly assertive or presumptuous in manner.",                      cat:"Adjective", pts:5},
+  {word:"CLAMOR",  def:"A loud and confused noise; an uproar.",                            cat:"Noun",      pts:6},
+  {word:"FLAUNT",  def:"Display something ostentatiously to impress.",                     cat:"Verb",      pts:6},
+  {word:"GARISH",  def:"Obtrusively bright and showy; gaudy.",                             cat:"Adjective", pts:6},
+  {word:"HASTEN",  def:"To move or act hurriedly.",                                        cat:"Verb",      pts:6},
+  {word:"INEPT",   def:"Having or showing no skill; clumsy.",                              cat:"Adjective", pts:5},
+  {word:"JOVIAL",  def:"Cheerful and friendly; full of good humour.",                      cat:"Adjective", pts:6},
+  {word:"KINDLE",  def:"To light or set on fire; to arouse a feeling.",                    cat:"Verb",      pts:6},
+  {word:"LANGUID", def:"Slow and relaxed due to tiredness or weakness.",                   cat:"Adjective", pts:7},
+  {word:"MELLOW",  def:"Pleasantly smooth and soft; gentle and relaxed.",                  cat:"Adjective", pts:6},
+  {word:"NASCENT", def:"Just coming into existence and beginning to develop.",             cat:"Adjective", pts:7},
+  {word:"PRUDENT", def:"Acting with care and thought for the future.",                     cat:"Adjective", pts:7},
+  {word:"QUIVER",  def:"A slight trembling movement or sound.",                            cat:"Verb",      pts:6},
+  {word:"RAUCOUS", def:"Making a disturbing harsh noise.",                                 cat:"Adjective", pts:7},
+  {word:"SERENE",  def:"Calm, peaceful and untroubled.",                                   cat:"Adjective", pts:6},
+  {word:"TAWDRY",  def:"Showy but cheap and of poor quality.",                             cat:"Adjective", pts:6},
+  {word:"UMBRAGE", def:"Offence or annoyance at something said or done.",                  cat:"Noun",      pts:7},
+  {word:"VIVID",   def:"Producing strong, clear mental images.",                           cat:"Adjective", pts:5},
+  {word:"WANDER",  def:"To walk or move in a leisurely or aimless way.",                   cat:"Verb",      pts:6},
+  {word:"YEARN",   def:"To have an intense feeling of longing for something.",             cat:"Verb",      pts:5},
+  {word:"ZENITH",  def:"The highest point; the peak of power or success.",                 cat:"Noun",      pts:6},
+  {word:"ADROIT",  def:"Clever or skillful in using hands or mind.",                       cat:"Adjective", pts:6},
+  {word:"BLISS",   def:"Perfect happiness; great joy.",                                    cat:"Noun",      pts:5},
+  {word:"CHIDE",   def:"To scold or rebuke someone.",                                      cat:"Verb",      pts:5},
+  {word:"DAWDLE",  def:"To waste time; move slowly.",                                      cat:"Verb",      pts:6},
+  {word:"EERIE",   def:"Strange and frightening; inspiring superstitious fear.",           cat:"Adjective", pts:5},
+  {word:"FURTIVE", def:"Attempting to avoid notice; secretive.",                           cat:"Adjective", pts:7},
+  {word:"GALLANT", def:"Brave, noble, or courteous.",                                      cat:"Adjective", pts:7},
+  {word:"HAPLESS", def:"Unfortunate; deserving or inciting pity.",                         cat:"Adjective", pts:7},
+  {word:"INSIPID", def:"Lacking flavour; dull and uninteresting.",                         cat:"Adjective", pts:7},
+  {word:"JAUNTY",  def:"Having a lively, cheerful, and self-confident manner.",            cat:"Adjective", pts:6},
+  {word:"KNAVE",   def:"A dishonest or unscrupulous man; a rogue.",                        cat:"Noun",      pts:5},
+  {word:"LAMENT",  def:"A passionate expression of grief or sorrow.",                      cat:"Noun",      pts:6},
+  {word:"MEAGER",  def:"Lacking in quantity or quality; scanty.",                          cat:"Adjective", pts:6},
+  {word:"NIMBLE",  def:"Quick and light in movement or action; agile.",                    cat:"Adjective", pts:6},
+  {word:"OMINOUS", def:"Giving the impression something bad is about to happen.",          cat:"Adjective", pts:7},
+  {word:"PALLID",  def:"Pale, especially because of poor health.",                         cat:"Adjective", pts:6},
+  {word:"QUELL",   def:"To put an end to, typically by force.",                            cat:"Verb",      pts:5},
+  {word:"REVERE",  def:"To feel deep respect or admiration for something.",                cat:"Verb",      pts:6},
+  {word:"SORDID",  def:"Dirty or squalid; morally ignoble.",                              cat:"Adjective", pts:6},
+  {word:"TORPID",  def:"Mentally or physically inactive; sluggish.",                       cat:"Adjective", pts:6},
+  {word:"UNCANNY", def:"Strange or mysterious in an unsettling way.",                      cat:"Adjective", pts:7},
+  {word:"VEXING",  def:"Causing annoyance or worry.",                                      cat:"Adjective", pts:6},
+  {word:"WARY",    def:"Feeling or showing caution about possible dangers.",               cat:"Adjective", pts:4},
+  {word:"EXOTIC",  def:"Originating from a distant country; strikingly unusual.",          cat:"Adjective", pts:6},
+  {word:"PLACATE", def:"To make less angry or hostile; to appease.",                       cat:"Verb",      pts:7},
+  {word:"FUTILE",  def:"Producing no result; pointless.",                                  cat:"Adjective", pts:6},
+  {word:"LAVISH",  def:"Sumptuously rich, elaborate, or luxurious.",                       cat:"Adjective", pts:6},
+  {word:"MEANDER", def:"Follow a winding course; wander aimlessly.",                       cat:"Verb",      pts:7},
+  {word:"OPAQUE",  def:"Not able to be seen through; not transparent.",                    cat:"Adjective", pts:6},
+  {word:"PERIL",   def:"Serious and immediate danger.",                                    cat:"Noun",      pts:5},
+  {word:"RAMBLE",  def:"Walk for pleasure; talk at length.",                               cat:"Verb",      pts:6},
+  {word:"SCORN",   def:"Open contempt or disdain for someone.",                            cat:"Noun",      pts:5},
+  {word:"TEPID",   def:"Lukewarm; showing little enthusiasm.",                             cat:"Adjective", pts:5},
+  {word:"VAGUE",   def:"Not clearly expressed or understood; imprecise.",                  cat:"Adjective", pts:5},
+  {word:"WRATH",   def:"Extreme anger; divine punishment.",                                cat:"Noun",      pts:5},
+  {word:"YIELD",   def:"To produce or give way; to concede.",                              cat:"Verb",      pts:5},
+  {word:"ZEAL",    def:"Great energy or enthusiasm in pursuit of a goal.",                 cat:"Noun",      pts:4},
+  {word:"ARDENT",  def:"Very enthusiastic or passionate.",                                 cat:"Adjective", pts:6},
+  {word:"BANTER",  def:"The playful and friendly exchange of remarks.",                    cat:"Noun",      pts:6},
+  {word:"CONCISE", def:"Giving much information clearly in few words.",                    cat:"Adjective", pts:7},
+  {word:"EMBARK",  def:"Begin a course of action; go on board a ship.",                    cat:"Verb",      pts:6},
+  {word:"FLIMSY",  def:"Insubstantial and easily damaged; unconvincing.",                  cat:"Adjective", pts:6},
+  {word:"GLEAM",   def:"Shine brightly, especially with reflected light.",                 cat:"Verb",      pts:5},
+  {word:"HUMBLE",  def:"Having a modest opinion of oneself.",                              cat:"Adjective", pts:6},
+  {word:"IGNITE",  def:"Catch fire or cause to catch fire.",                               cat:"Verb",      pts:6},
+  {word:"LOFTY",   def:"Of imposing height; noble in character.",                          cat:"Adjective", pts:5},
+  {word:"MEDDLE",  def:"Interfere in something not one's concern.",                        cat:"Verb",      pts:6},
+  {word:"NOTION",  def:"A conception of or belief about something.",                       cat:"Noun",      pts:6},
+  {word:"PLIGHT",  def:"A dangerous, difficult, or unpleasant situation.",                 cat:"Noun",      pts:6},
+  {word:"QUIRKY",  def:"Having peculiar or unexpected traits.",                            cat:"Adjective", pts:6},
+  {word:"REVEL",   def:"Enjoy oneself in a lively and noisy way.",                         cat:"Verb",      pts:5},
+  {word:"SOMBER",  def:"Dark and dull; oppressively solemn.",                              cat:"Adjective", pts:6},
+  {word:"TRITE",   def:"Overused and of little import; not fresh.",                        cat:"Adjective", pts:5},
+  {word:"VENTURE", def:"A risky or daring journey or undertaking.",                        cat:"Noun",      pts:7},
+  {word:"WHINE",   def:"A long high-pitched complaint.",                                   cat:"Verb",      pts:5},
+  {word:"ZANY",    def:"Amusingly unconventional and idiosyncratic.",                      cat:"Adjective", pts:4},
+  {word:"SAVVY",   def:"Shrewd and having practical knowledge.",                           cat:"Adjective", pts:5},
+  {word:"GLOOMY",  def:"Darkly lit; causing despondency.",                                 cat:"Adjective", pts:6},
+  {word:"ABSURD",  def:"Wildly unreasonable, illogical, or inappropriate.",                cat:"Adjective", pts:6},
+  {word:"DIVINE",  def:"Of or like God; delightful.",                                      cat:"Adjective", pts:6},
+  {word:"FICKLE",  def:"Changing frequently, especially in loyalties.",                    cat:"Adjective", pts:6},
+  {word:"HERALD",  def:"A messenger; to be a sign of things to come.",                     cat:"Noun",      pts:6},
+  {word:"INNATE",  def:"Inborn; natural; not acquired.",                                   cat:"Adjective", pts:6},
+  {word:"MARVEL",  def:"To be filled with wonder or astonishment.",                        cat:"Verb",      pts:6},
+  {word:"NUDGE",   def:"To prod gently; a slight push.",                                   cat:"Verb",      pts:5},
+  {word:"ORACLE",  def:"A medium for divine guidance; a wise prophet.",                    cat:"Noun",      pts:6},
+  {word:"PATRON",  def:"A person who supports an artist or cause.",                        cat:"Noun",      pts:6},
+  {word:"RUSTIC",  def:"Having the simple charm of the countryside.",                      cat:"Adjective", pts:6},
+  {word:"THRIVE",  def:"To prosper; to grow or develop vigorously.",                       cat:"Verb",      pts:6},
+  {word:"VANISH",  def:"To disappear suddenly and completely.",                            cat:"Verb",      pts:6},
+  {word:"YEOMAN",  def:"A diligent and dependable worker.",                                cat:"Noun",      pts:6},
+];
+
+/* === DAILY SEED === */
+function getDayKey(){const d=new Date();return`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+function getDayNumber(){const e=new Date('2025-01-01'),n=new Date();n.setHours(0,0,0,0);return Math.floor((n-e)/86400000)+1;}
+function seededRandom(seed){let s=seed;return function(){s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;};}
+function getDailyWords(){
+  const dk=getDayKey();let seed=0;
+  for(let i=0;i<dk.length;i++)seed=(seed*31+dk.charCodeAt(i))|0;
+  seed=Math.abs(seed)+12345;
+  const rng=seededRandom(seed),pool=[...ALL_WORDS];
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
+  return pool.slice(0,5);
+}
+
+/* === STATE === */
+const SITE_URL=window.location.href.split('?')[0];
+const MAX_MISTAKES=5, MAX_HINTS=3, WORDS_PER_DAY=5;
+let playerName='',dailyWords=[],wordIdx=0,score=0,streak=0;
+let mistakesLeft=MAX_MISTAKES,hintsLeft=MAX_HINTS,hintLevel=0;
+let answerArr=[],scrambled=[],wordSolved=false,wordResults=[];
+let dayKey=getDayKey(),animating=false;
+
+/* === STORAGE === */
+function loadState(){try{const r=localStorage.getItem('lexicon_v3');return r?JSON.parse(r):null;}catch(e){return null;}}
+function saveState(){
+  localStorage.setItem('lexicon_v3',JSON.stringify({playerName,dayKey,wordIdx,score,streak,mistakesLeft,hintsLeft,hintLevel,answerArr,scrambled,wordSolved,wordResults}));
+}
+
+/* === INIT === */
+window.onload=function(){
+  dailyWords=getDailyWords();
+  const now=new Date();
+  document.getElementById('date-display').textContent=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('puzzle-num').textContent='#'+getDayNumber();
+  const state=loadState();
+  if(state&&state.dayKey===dayKey){
+    playerName=state.playerName||'';wordIdx=state.wordIdx||0;score=state.score||0;streak=state.streak||0;
+    mistakesLeft=state.mistakesLeft??MAX_MISTAKES;hintsLeft=state.hintsLeft??MAX_HINTS;hintLevel=state.hintLevel||0;
+    answerArr=state.answerArr||[];scrambled=state.scrambled||[];wordSolved=state.wordSolved||false;wordResults=state.wordResults||[];
+    if(playerName){document.getElementById('name-modal').classList.remove('show');document.getElementById('player-name-display').textContent=playerName;}
+    rebuildSolvedLog();updateScorebar();
+    if(wordIdx>=WORDS_PER_DAY||wordResults.length>=WORDS_PER_DAY)showEndCard();
+    else loadWord(true);
+  }else{
+    const savedName=state?state.playerName:'';
+    if(savedName)document.getElementById('name-input').value=savedName;
+  }
+  document.getElementById('name-input').addEventListener('keydown',e=>{if(e.key==='Enter')saveName();});
+};
+
+function saveName(){
+  const val=document.getElementById('name-input').value.trim();
+  if(!val){document.getElementById('name-input').placeholder='Please enter a name!';return;}
+  playerName=val;
+  document.getElementById('name-modal').classList.remove('show');
+  document.getElementById('player-name-display').textContent=playerName;
+  saveState();
+  if(wordIdx===0&&!wordSolved)loadWord(false);
+}
+function changeNamePrompt(){document.getElementById('name-input').value=playerName;document.getElementById('name-modal').classList.add('show');}
+
+/* === LOAD WORD === */
+function loadWord(restore=false){
+  const entry=dailyWords[wordIdx];
+  wordSolved=false;hintLevel=0;
+  if(!restore){
+    answerArr=Array(entry.word.length).fill(null);
+    scrambled=shuffleDet(entry.word.split(''),wordIdx);
+    let t=0;while(scrambled.join('')===entry.word&&t<20){scrambled=shuffleDet(entry.word.split(''),wordIdx+t+1);t++;}
+    saveState();
+  }
+  document.getElementById('main-card').style.display='block';
+  document.getElementById('end-card').style.display='none';
+  document.getElementById('clue-text').textContent=entry.def;
+  document.getElementById('meta-len').textContent=entry.word.length+' letters';
+  document.getElementById('meta-cat').textContent=entry.cat;
+  document.getElementById('meta-pts').textContent=entry.pts+' pts';
+  document.getElementById('hint-box').style.display='none';
+  setFeedback('');
+  document.getElementById('check-btn').disabled=false;
+  document.getElementById('hint-btn').disabled=hintsLeft===0;
+  document.getElementById('hint-count-label').textContent=`✦ ${hintsLeft} hint${hintsLeft!==1?'s':''} left`;
+  updateWordDots();updateHearts();renderAnswerRow();renderLetterBank();updateScorebar();updateProgress();
+  document.getElementById('word-counter').textContent=`Word ${wordIdx+1} of ${WORDS_PER_DAY}`;
+}
+
+function shuffleDet(arr,seed){
+  const a=[...arr],rng=seededRandom(Math.abs(seed*9973+1234567));
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+/* === RENDER === */
+function renderAnswerRow(){
+  const row=document.getElementById('answer-row');row.innerHTML='';
+  const entry=dailyWords[wordIdx];
+  for(let i=0;i<entry.word.length;i++){
+    const t=document.createElement('div'),val=answerArr[i];
+    t.className=val?'ans-tile filled':'ans-tile empty';
+    if(val)t.textContent=val.split(':')[0];
+    t.dataset.pos=i;t.onclick=()=>{if(!wordSolved)removeLetter(i);};
+    row.appendChild(t);
+  }
+}
+function renderLetterBank(){
+  const bank=document.getElementById('letter-bank');bank.innerHTML='';
+  const used=answerArr.filter(Boolean).map(v=>v.split(':')[1]);
+  scrambled.forEach((l,i)=>{
+    const t=document.createElement('div');
+    t.className='letter-tile'+(used.includes(String(i))?' used':'');
+    t.textContent=l;t.dataset.idx=i;t.onclick=()=>{if(!wordSolved)pickLetter(i);};
+    bank.appendChild(t);
+  });
+}
+function updateBankUsed(){
+  const used=answerArr.filter(Boolean).map(v=>v.split(':')[1]);
+  document.querySelectorAll('.letter-tile').forEach(t=>t.classList.toggle('used',used.includes(t.dataset.idx)));
+}
+function updateWordDots(){
+  const dots=document.getElementById('word-dots');dots.innerHTML='';
+  for(let i=0;i<WORDS_PER_DAY;i++){
+    const d=document.createElement('div');
+    if(i<wordResults.length)d.className='wdot '+(wordResults[i].solved?'done':'fail');
+    else if(i===wordIdx)d.className='wdot current';
+    else d.className='wdot';
+    dots.appendChild(d);
+  }
+}
+function updateHearts(){
+  const h=document.getElementById('hearts');h.innerHTML='';
+  for(let i=0;i<MAX_MISTAKES;i++){const s=document.createElement('span');s.className='heart'+(i>=mistakesLeft?' lost':'');s.textContent='♥';h.appendChild(s);}
+}
+function updateProgress(){document.getElementById('prog-bar').style.width=(wordIdx/WORDS_PER_DAY*100)+'%';}
+function updateScorebar(){
+  document.getElementById('sb-score').textContent=score;
+  document.getElementById('sb-word').textContent=(Math.min(wordIdx+1,WORDS_PER_DAY))+'/'+WORDS_PER_DAY;
+  document.getElementById('sb-streak').textContent='🔥 '+streak;
+  document.getElementById('sb-lives').textContent='♥ '+mistakesLeft;
+  document.getElementById('sb-hints').textContent='✦ '+hintsLeft;
+}
+
+/* === ACTIONS === */
+function pickLetter(i){
+  if(wordSolved||animating)return;
+  const sk=scrambled[i]+':'+i;if(answerArr.includes(sk))return;
+  const e=answerArr.indexOf(null);if(e===-1)return;
+  answerArr[e]=sk;renderAnswerRow();updateBankUsed();saveState();
+  if(!answerArr.includes(null))setTimeout(checkAnswer,100);
+}
+function removeLetter(pos){
+  if(wordSolved||animating)return;if(answerArr[pos]===null)return;
+  answerArr[pos]=null;renderAnswerRow();updateBankUsed();setFeedback('');saveState();
+}
+function clearAnswer(){
+  if(wordSolved||animating)return;
+  answerArr=Array(dailyWords[wordIdx].word.length).fill(null);
+  renderAnswerRow();updateBankUsed();setFeedback('');saveState();
+}
+function checkAnswer(){
+  if(wordSolved||animating)return;
+  const guess=answerArr.map(v=>v?v.split(':')[0]:'').join('');
+  if(guess.length<dailyWords[wordIdx].word.length){setFeedback('Place all the letters first!','warn');return;}
+  const entry=dailyWords[wordIdx],correct=guess===entry.word;
+  const tiles=document.querySelectorAll('.ans-tile');
+  if(correct){
+    animating=true;
+    tiles.forEach((t,i)=>setTimeout(()=>t.classList.add('correct'),i*55));
+    const pts=Math.max(1,entry.pts-(hintLevel*2)+(streak>0?1:0));
+    score+=pts;streak++;wordSolved=true;
+    wordResults.push({word:entry.word,solved:true,pts,def:entry.def});
+    addSolvedChip(entry.word,true);
+    document.getElementById('check-btn').disabled=true;
+    updateScorebar();saveState();
+    setFeedback(`✓ Correct! +${pts} pts${streak>1?' · '+streak+'🔥':''}`, 'ok');
+    setTimeout(()=>{animating=false;showWordFlash(entry.word,entry.def,pts);},600);
+  }else{
+    tiles.forEach(t=>t.classList.add('wrong'));
+    setTimeout(()=>tiles.forEach(t=>t.classList.remove('wrong')),450);
+    mistakesLeft--;  // GLOBAL: shared across all 5 words
+    streak=0;updateHearts();updateScorebar();saveState();
+    if(mistakesLeft===0){
+      wordSolved=true;
+      wordResults.push({word:entry.word,solved:false,pts:0,def:entry.def});
+      addSolvedChip(entry.word,false);
+      // Mark remaining words as skipped
+      for(let r=wordIdx+1;r<WORDS_PER_DAY;r++)wordResults.push({word:dailyWords[r].word,solved:false,pts:0,skipped:true});
+      document.getElementById('check-btn').disabled=true;
+      setFeedback('No lives left — game over!','error');
+      saveState();setTimeout(()=>finishDay(),2000);
+    }else{
+      setFeedback(`Wrong! ${mistakesLeft} life${mistakesLeft!==1?'s':''} left (shared across all words)`,'error');
+      answerArr=Array(entry.word.length).fill(null);
+      setTimeout(()=>{renderAnswerRow();updateBankUsed();},450);
+    }
+  }
+}
+function useHint(){
+  if(wordSolved||hintsLeft===0)return;
+  hintsLeft--;hintLevel++;
+  const entry=dailyWords[wordIdx],hb=document.getElementById('hint-box');
+  let msg;
+  if(hintLevel===1){
+    msg=`First letter: <strong>${entry.word[0]}</strong>`;
+    if(answerArr[0]===null){const fi=scrambled.findIndex((l,i)=>l===entry.word[0]&&!answerArr.includes(l+':'+i));if(fi!==-1){answerArr[0]=entry.word[0]+':'+fi;renderAnswerRow();updateBankUsed();}}
+  }else if(hintLevel===2){
+    const last=entry.word.length-1;msg=`Last letter: <strong>${entry.word[last]}</strong>`;
+  }else{
+    msg=`Category: <strong>${entry.cat}</strong> · ${entry.word.length} letters`;
+  }
+  hb.innerHTML=`✦ Hint ${hintLevel}: ${msg}`;hb.style.display='block';
+  document.getElementById('hint-btn').disabled=hintsLeft===0;
+  document.getElementById('hint-count-label').textContent=`✦ ${hintsLeft} hint${hintsLeft!==1?'s':''} left`;
+  updateScorebar();saveState();
+}
+
+/* === FLASH + NEXT === */
+function showWordFlash(word,def,pts){
+  const fl=document.getElementById('word-complete-flash');
+  document.getElementById('flash-word').textContent=word;
+  document.getElementById('flash-def').textContent=def;
+  document.getElementById('flash-pts').textContent=`+${pts} points`;
+  fl.classList.add('show');
+  setTimeout(()=>{fl.classList.remove('show');moveToNextWord();},1800);
+}
+function moveToNextWord(){
+  wordIdx++;hintLevel=0;
+  document.getElementById('hint-box').style.display='none';
+  setFeedback('');saveState();
+  if(wordIdx>=WORDS_PER_DAY)finishDay();else loadWord(false);
+}
+
+/* === FINISH === */
+function finishDay(){
+  document.getElementById('prog-bar').style.width='100%';
+  document.getElementById('main-card').style.display='none';
+  saveState();showEndCard();
+}
+
+/* === END CARD === */
+function showEndCard(){
+  document.getElementById('end-card').style.display='block';
+  document.getElementById('main-card').style.display='none';
+  const solved=wordResults.filter(w=>w.solved).length;
+  const now=new Date(),dn=getDayNumber();
+  if(solved===5)document.getElementById('cyber-panel').classList.add('perfect');
+  document.getElementById('ec-puzzle-id').textContent=`LEXICON // PUZZLE #${String(dn).padStart(3,'0')}`;
+  document.getElementById('ec-date').textContent=now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}).toUpperCase();
+  let titleText,titleColor,subText;
+  if(solved===5){titleText='PERFECT RUN';titleColor='var(--cyber-green)';subText='ALL FIVE WORDS CONQUERED';}
+  else if(solved===4){titleText='OUTSTANDING';titleColor='var(--cyber-gold)';subText='FOUR WORDS SOLVED';}
+  else if(solved===3){titleText='WELL DONE';titleColor='#7ecfff';subText='THREE OF FIVE SOLVED';}
+  else if(solved>=1){titleText='KEEP AT IT';titleColor='#ff9f50';subText=solved+' OF 5 WORDS SOLVED';}
+  else{titleText='GAME OVER';titleColor='var(--cyber-red)';subText='NO WORDS SOLVED TODAY';}
+  const te=document.getElementById('ec-title');
+  te.textContent=titleText;te.style.color=titleColor;te.style.textShadow=`0 0 24px ${titleColor}70`;
+  document.getElementById('ec-sub').textContent=subText;
+  document.getElementById('ec-score').textContent=score;
+  document.getElementById('ec-solved').textContent=`${solved}/5`;
+  document.getElementById('ec-lives').textContent=mistakesLeft;
+  const emojiRow=wordResults.map(w=>w.solved?'🟩':w.skipped?'⬛':'🟥').join(' ');
+  document.getElementById('ec-emoji').textContent=emojiRow;
+  const ecWords=document.getElementById('ec-words');ecWords.innerHTML='';
+  wordResults.forEach((r,i)=>{
+    const row=document.createElement('div');row.className='cyber-word-row';
+    const badge=r.solved?`<span class="cwr-badge cwr-ok">✓ +${r.pts}pts</span>`:
+      r.skipped?`<span class="cwr-badge cwr-skip">skipped</span>`:
+      `<span class="cwr-badge cwr-fail">✗ failed</span>`;
+    row.innerHTML=`<span class="cwr-num">W${i+1}</span><span class="cwr-word" style="color:${r.solved?'var(--cyber-green)':r.skipped?'rgba(255,255,255,.2)':'var(--cyber-red)'}">${r.word}</span>${badge}`;
+    ecWords.appendChild(row);
+  });
+  buildShareText(solved,dn,emojiRow);
+}
+
+function buildShareText(solved,dn,emojiRow){
+  const now=new Date(),dateStr=now.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const name=playerName||'Anonymous',livesUsed=MAX_MISTAKES-mistakesLeft,hintsUsed=MAX_HINTS-hintsLeft;
+  const shareText=
+`📚 LEXICON Daily — Puzzle #${dn}
+${dateStr}
+
+👤 ${name}
+${emojiRow}
+✅ ${solved}/${WORDS_PER_DAY} words solved
+🏆 Score: ${score} pts
+💔 Lives used: ${livesUsed}/5
+✦ Hints used: ${hintsUsed}/3
+
+Play at: ${SITE_URL}`;
+  document.getElementById('share-preview').textContent=shareText;
+}
+
+/* === COPY (robust triple-method) === */
+function shareResult(){
+  const text=document.getElementById('share-preview').textContent;
+  const btn=document.getElementById('copy-btn');
+  function onSuccess(){
+    btn.textContent='[ ✓ Copied! ]';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='[ Copy & Share ]';btn.classList.remove('copied');},2800);
+  }
+  function fallback(){
+    // Method 2: execCommand
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;top:-9999px;left:-9999px;opacity:0;';
+    document.body.appendChild(ta);ta.focus();ta.select();
+    try{if(document.execCommand('copy')){onSuccess();}else{selectPreview();}}
+    catch(e){selectPreview();}
+    document.body.removeChild(ta);
+  }
+  function selectPreview(){
+    // Method 3: select text in preview box for manual copy
+    const el=document.getElementById('share-preview');
+    const range=document.createRange();range.selectNodeContents(el);
+    const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+    btn.textContent='[ Selected — Ctrl+C to copy ]';
+    setTimeout(()=>{btn.textContent='[ Copy & Share ]';},3500);
+  }
+  // Method 1: modern clipboard API
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(onSuccess).catch(fallback);
+  }else{fallback();}
+}
+
+/* === SOLVED LOG === */
+function addSolvedChip(word,ok){
+  const log=document.getElementById('solved-log');
+  document.getElementById('log-card').style.display='block';
+  const chip=document.createElement('div');chip.className='solved-chip'+(!ok?' fail':'');chip.textContent=word;log.appendChild(chip);
+}
+function rebuildSolvedLog(){
+  const log=document.getElementById('solved-log');log.innerHTML='';
+  if(wordResults.length>0){
+    document.getElementById('log-card').style.display='block';
+    wordResults.forEach(r=>{const chip=document.createElement('div');chip.className='solved-chip'+(!r.solved?' fail':'');chip.textContent=r.word;log.appendChild(chip);});
+  }
+}
+function setFeedback(msg,type=''){const el=document.getElementById('feedback');el.textContent=msg;el.className=type==='error'?'error':type==='warn'?'warn':'';}
+
+/* === KEYBOARD === */
+document.addEventListener('keydown',e=>{
+  if(wordSolved||animating||wordIdx>=WORDS_PER_DAY)return;
+  if(document.getElementById('name-modal').classList.contains('show'))return;
+  const key=e.key.toUpperCase();
+  if(key==='BACKSPACE'||key==='DELETE'){for(let i=answerArr.length-1;i>=0;i--){if(answerArr[i]!==null){removeLetter(i);break;}}}
+  else if(key==='ENTER'){checkAnswer();}
+  else if(/^[A-Z]$/.test(key)){for(let i=0;i<scrambled.length;i++){const sk=scrambled[i]+':'+i;if(scrambled[i]===key&&!answerArr.includes(sk)){pickLetter(i);break;}}}
+});
+</script>
+</body>
+</html>

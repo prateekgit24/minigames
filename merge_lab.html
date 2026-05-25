@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Merge Lab</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#03080f;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;color:#e0f0ff;user-select:none}
+  h1{font-size:1.5rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(90deg,#44ddaa,#4a8fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+  #meta{display:flex;gap:28px;margin-bottom:14px;font-size:.82rem;color:#4a6880}
+  .mv{font-weight:900;color:#fff;font-size:1rem;margin-left:4px}
+  #board{display:grid;grid-template-columns:repeat(4,100px);grid-gap:10px;background:linear-gradient(145deg,#060e1a,#0a1626);padding:18px;border-radius:18px;box-shadow:0 0 50px rgba(68,221,170,.1),0 0 0 1.5px rgba(68,221,170,.14)}
+  .cell{width:100px;height:100px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:1.4rem;cursor:pointer;border:2px solid transparent;transition:transform .14s,box-shadow .14s,border-color .14s;position:relative;overflow:hidden}
+  .cell:empty,.cell[data-v="0"]{background:#07111e;border-color:rgba(74,136,255,.06);cursor:default}
+  .cell.selected{transform:scale(1.06);border-color:rgba(255,200,40,.65)!important;box-shadow:0 0 22px rgba(255,200,40,.3)!important}
+  .cell:not(:empty):not(.selected):hover{transform:scale(1.04);border-color:rgba(74,143,255,.3)}
+  .cell-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.55;margin-top:4px}
+  /* merge flash */
+  @keyframes mergeFlash{0%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
+  .cell.merged{animation:mergeFlash .28s ease-out}
+  /* overlay */
+  #overlay{position:fixed;inset:0;background:rgba(3,8,15,.9);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100}
+  #overlay.hidden{display:none}
+  .ot{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#44ddaa,#4a8fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .os{color:#5080a0;font-size:.9rem;text-align:center;line-height:1.6;max-width:280px}
+  .obig{font-size:2.6rem;font-weight:900;color:#ffdd44}
+  #startBtn{padding:12px 36px;border-radius:999px;border:1.5px solid rgba(68,221,170,.38);background:rgba(68,221,170,.1);color:#88ffcc;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #startBtn:hover{background:rgba(68,221,170,.22)}
+  #hint{font-size:.75rem;color:#202e3a;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>⚗️ Merge Lab</h1>
+<div id="meta">
+  <span>Score <span class="mv" id="scoreEl">0</span></span>
+  <span>Best <span class="mv" id="bestEl">0</span></span>
+  <span>Highest <span class="mv" id="highEl">2</span></span>
+</div>
+<div id="board"></div>
+<div id="overlay">
+  <div class="ot" id="oTitle">MERGE LAB</div>
+  <div class="obig" id="oBig" style="display:none"></div>
+  <div class="os" id="oSub">Swipe or use arrow keys to slide tiles.<br>Merge matching numbers to grow!<br>Goal: reach <strong style="color:#ffdd44">2048</strong>!</div>
+  <button id="startBtn">▶ START</button>
+</div>
+<div id="hint">← → ↑ ↓ or swipe · Same numbers merge · Reach 2048!</div>
+
+<script>
+/* ── Full 2048 Implementation ── */
+const COLS=4,ROWS=4;
+const scoreEl=document.getElementById('scoreEl');
+const bestEl=document.getElementById('bestEl');
+const highEl=document.getElementById('highEl');
+const boardEl=document.getElementById('board');
+const overlay=document.getElementById('overlay');
+const oTitle=document.getElementById('oTitle');
+const oBig=document.getElementById('oBig');
+const oSub=document.getElementById('oSub');
+const startBtn=document.getElementById('startBtn');
+
+let best=+localStorage.getItem('ml2048Best')||0;
+bestEl.textContent=best;
+
+/* colour map */
+const COLOURS={
+  0:   {bg:'#07111e',  text:'#4a6880', border:'rgba(74,136,255,.06)'},
+  2:   {bg:'#0f2a40',  text:'#88d4ff', border:'rgba(68,200,255,.22)',glow:'#44aadd'},
+  4:   {bg:'#0f3428',  text:'#66ffbb', border:'rgba(68,255,160,.22)',glow:'#44ddaa'},
+  8:   {bg:'#223400',  text:'#aaff44', border:'rgba(150,255,60,.22)', glow:'#88ee22'},
+  16:  {bg:'#332200',  text:'#ffdd44', border:'rgba(255,210,40,.28)', glow:'#ddaa22'},
+  32:  {bg:'#3a1a00',  text:'#ff9944', border:'rgba(255,140,40,.28)', glow:'#ff7722'},
+  64:  {bg:'#3a0a00',  text:'#ff6644', border:'rgba(255,80,40,.30)',  glow:'#ff4422'},
+  128: {bg:'#3a0030',  text:'#ff55cc', border:'rgba(255,60,180,.30)', glow:'#ee22aa'},
+  256: {bg:'#2a0040',  text:'#cc44ff', border:'rgba(180,60,255,.30)', glow:'#aa22ee'},
+  512: {bg:'#001840',  text:'#44aaff', border:'rgba(60,160,255,.35)', glow:'#2288ee'},
+  1024:{bg:'#001830',  text:'#22ddff', border:'rgba(30,220,255,.38)', glow:'#11aacc'},
+  2048:{bg:'#332200',  text:'#ffdd44', border:'rgba(255,220,40,.5)',  glow:'#ffcc00'},
+};
+function getColour(v){return COLOURS[v]||{bg:'#1a0038',text:'#ff88ff',border:'rgba(200,80,255,.4)',glow:'#cc44ff'};}
+
+let grid,score,moved;
+
+function newGrid(){return Array.from({length:ROWS},()=>new Array(COLS).fill(0));}
+function addRandom(){
+  const empty=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(!grid[r][c])empty.push([r,c]);
+  if(!empty.length) return false;
+  const [r,c]=empty[Math.random()*empty.length|0];
+  grid[r][c]=Math.random()<.85?2:4;
+  return true;
+}
+
+function render(){
+  boardEl.innerHTML='';
+  let highest=0;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const v=grid[r][c];
+      if(v>highest) highest=v;
+      const cl=getColour(v);
+      const el=document.createElement('div');
+      el.className='cell';
+      el.style.cssText=`background:${cl.bg};border-color:${cl.border};color:${cl.text};box-shadow:${v?`0 0 18px ${cl.glow}22,0 4px 12px rgba(0,0,0,.4)`:'none'}`;
+      if(v){
+        el.innerHTML=`<span>${v}</span>`;
+        if(v>=8) el.style.textShadow=`0 0 14px ${cl.glow}`;
+      }
+      boardEl.appendChild(el);
+    }
+  }
+  highEl.textContent=highest;
+  scoreEl.textContent=score;
+  if(score>best){best=score;localStorage.setItem('ml2048Best',best);bestEl.textContent=best;}
+}
+
+/* Slide + merge a single row left */
+function slideRow(row){
+  let arr=row.filter(v=>v);
+  let pts=0;
+  for(let i=0;i<arr.length-1;i++){
+    if(arr[i]===arr[i+1]){arr[i]*=2;pts+=arr[i];arr[i+1]=0;}
+  }
+  arr=arr.filter(v=>v);
+  while(arr.length<COLS) arr.push(0);
+  return{row:arr,pts};
+}
+
+function move(dir){
+  moved=false;
+  let totalPts=0;
+  const G=grid.map(r=>[...r]);
+
+  if(dir==='left'){
+    for(let r=0;r<ROWS;r++){
+      const {row,pts}=slideRow(grid[r]);
+      if(row.join()!==G[r].join()) moved=true;
+      grid[r]=row;totalPts+=pts;
+    }
+  } else if(dir==='right'){
+    for(let r=0;r<ROWS;r++){
+      const {row,pts}=slideRow([...grid[r]].reverse());
+      const rev=row.reverse();
+      if(rev.join()!==G[r].join()) moved=true;
+      grid[r]=rev;totalPts+=pts;
+    }
+  } else if(dir==='up'){
+    for(let c=0;c<COLS;c++){
+      const col=grid.map(r=>r[c]);
+      const {row,pts}=slideRow(col);
+      row.forEach((v,r)=>{if(v!==G[r][c]) moved=true; grid[r][c]=v;});
+      totalPts+=pts;
+    }
+  } else if(dir==='down'){
+    for(let c=0;c<COLS;c++){
+      const col=grid.map(r=>r[c]).reverse();
+      const {row,pts}=slideRow(col);
+      const rev=row.reverse();
+      rev.forEach((v,r)=>{if(v!==G[r][c]) moved=true; grid[r][c]=v;});
+      totalPts+=pts;
+    }
+  }
+
+  if(moved){
+    score+=totalPts;
+    addRandom();
+    render();
+    /* check win */
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(grid[r][c]===2048){win();return;}
+    /* check game over */
+    if(!canMove()) gameOver();
+  }
+}
+
+function canMove(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    if(!grid[r][c]) return true;
+    if(c<COLS-1&&grid[r][c]===grid[r][c+1]) return true;
+    if(r<ROWS-1&&grid[r][c]===grid[r+1][c]) return true;
+  }
+  return false;
+}
+
+function startGame(){
+  grid=newGrid();score=0;
+  addRandom();addRandom();
+  render();
+  overlay.classList.add('hidden');
+}
+function win(){
+  oTitle.textContent='YOU WIN! 🏆';
+  oBig.textContent='2048';oBig.style.display='block';
+  oSub.innerHTML=`Score: <strong style="color:#fff">${score}</strong><br>You built the 2048 tile!<br>Keep going for a higher score?`;
+  startBtn.textContent='↺ NEW GAME';
+  overlay.classList.remove('hidden');
+}
+function gameOver(){
+  oTitle.textContent='NO MOVES';
+  oBig.textContent=score;oBig.style.display='block';
+  oSub.innerHTML=`Score: <strong style="color:#fff">${score}</strong><br>No more moves left!`;
+  startBtn.textContent='↺ RETRY';
+  overlay.classList.remove('hidden');
+}
+
+startBtn.addEventListener('click',startGame);
+
+const MAP={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',
+           KeyA:'left',KeyD:'right',KeyW:'up',KeyS:'down'};
+window.addEventListener('keydown',e=>{
+  if(MAP[e.code]){e.preventDefault();move(MAP[e.code]);}
+});
+
+/* Touch swipe */
+let tx0=0,ty0=0;
+boardEl.addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;},{passive:true});
+boardEl.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx0,dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)<10&&Math.abs(dy)<10) return;
+  if(Math.abs(dx)>Math.abs(dy)) move(dx>0?'right':'left');
+  else move(dy>0?'down':'up');
+},{passive:true});
+</script>
+</body>
+</html>

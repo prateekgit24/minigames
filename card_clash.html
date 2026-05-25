@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card Clash</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#030a16;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;color:#e0eeff;overflow:hidden}
+  h1{font-size:1.5rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;background:linear-gradient(90deg,#4a8fff,#44ddbb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+
+  #ui{display:flex;gap:32px;margin-bottom:14px;font-size:.82rem;color:#5070a0;font-weight:600}
+  .uv{font-weight:900;color:#fff;font-size:1rem;margin-left:4px}
+
+  /* difficulty selector */
+  #diff-wrap{display:flex;gap:8px;margin-bottom:14px}
+  .dbtn{padding:8px 18px;border-radius:999px;border:1.5px solid rgba(74,143,255,.18);background:rgba(6,14,28,.8);color:#5080c0;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s}
+  .dbtn.active,.dbtn:hover{border-color:rgba(74,143,255,.5);color:#a0c8ff;background:rgba(74,143,255,.1)}
+
+  /* board */
+  #board{display:grid;gap:12px;perspective:900px}
+
+  /* card */
+  .card{cursor:pointer;width:90px;height:118px;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.4,0,.2,1)}
+  .card.flipped,.card.matched{transform:rotateY(180deg)}
+  .card-face,.card-back{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+
+  .card-back{
+    background:linear-gradient(145deg,#0a1e38,#06122a);
+    border:1.5px solid rgba(74,143,255,.15);
+    box-shadow:0 6px 24px rgba(0,0,0,.4);
+    transition:box-shadow .2s,border-color .2s;
+  }
+  .card:hover:not(.flipped):not(.matched) .card-back{
+    border-color:rgba(74,143,255,.45);
+    box-shadow:0 8px 32px rgba(74,143,255,.18);
+  }
+  .card-back::before{
+    content:'?';font-size:1.6rem;font-weight:900;color:rgba(74,143,255,.25);
+    text-shadow:0 0 20px rgba(74,143,255,.3);
+  }
+  /* subtle pattern on back */
+  .card-back::after{
+    content:'';position:absolute;inset:0;border-radius:14px;
+    background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(74,143,255,.03) 8px,rgba(74,143,255,.03) 9px);
+  }
+
+  .card-face{
+    transform:rotateY(180deg);
+    font-size:2.4rem;
+    flex-direction:column;
+    gap:4px;
+    border:1.5px solid transparent;
+    box-shadow:0 8px 28px rgba(0,0,0,.5);
+  }
+
+  .card-face-label{font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.5}
+
+  /* matched animation */
+  .card.matched .card-face{
+    animation:matchPulse .4s ease-out;
+  }
+  @keyframes matchPulse{0%{transform:rotateY(180deg) scale(1)}50%{transform:rotateY(180deg) scale(1.08)}100%{transform:rotateY(180deg) scale(1)}}
+
+  /* overlay */
+  #overlay{position:fixed;inset:0;background:rgba(3,10,22,.9);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100}
+  #overlay.hidden{display:none}
+  .ot{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#4a8fff,#44ddbb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .os{font-size:.9rem;color:#6080b0;text-align:center;line-height:1.7}
+  .obig{font-size:2.5rem;font-weight:900;color:#ffdd44}
+  #startBtn{padding:12px 36px;border-radius:999px;border:1.5px solid rgba(74,143,255,.38);background:rgba(74,143,255,.12);color:#a0c8ff;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #startBtn:hover{background:rgba(74,143,255,.25)}
+
+  /* timer ring */
+  #timerWrap{position:relative;width:56px;height:56px}
+  #timerRing{transform:rotate(-90deg)}
+  #timerVal{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:900;color:#fff}
+</style>
+</head>
+<body>
+<h1>🃏 Card Clash</h1>
+<div id="diff-wrap">
+  <button class="dbtn active" id="d4">4×3 Easy</button>
+  <button class="dbtn" id="d5">5×4 Medium</button>
+  <button class="dbtn" id="d6">6×5 Hard</button>
+</div>
+<div id="ui">
+  <span>Moves <span class="uv" id="movesEl">0</span></span>
+  <div id="timerWrap">
+    <svg id="timerRing" width="56" height="56">
+      <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(74,143,255,.12)" stroke-width="4"/>
+      <circle id="timerArc" cx="28" cy="28" r="22" fill="none" stroke="#4a8fff" stroke-width="4"
+        stroke-dasharray="138.2" stroke-dashoffset="0" stroke-linecap="round"
+        style="transition:stroke-dashoffset .5s,stroke .5s"/>
+    </svg>
+    <div id="timerVal">—</div>
+  </div>
+  <span>Best <span class="uv" id="bestEl">—</span></span>
+</div>
+<div id="board"></div>
+
+<div id="overlay">
+  <div class="ot" id="oTitle">CARD CLASH</div>
+  <div class="obig" id="oBig" style="display:none"></div>
+  <div class="os" id="oSub">Find all matching pairs as fast as you can!<br>Fewer moves = higher score.</div>
+  <button id="startBtn">▶ PLAY</button>
+</div>
+
+<script>
+const board=document.getElementById('board');
+const movesEl=document.getElementById('movesEl');
+const bestEl=document.getElementById('bestEl');
+const timerVal=document.getElementById('timerVal');
+const timerArc=document.getElementById('timerArc');
+const overlay=document.getElementById('overlay');
+const oTitle=document.getElementById('oTitle');
+const oBig=document.getElementById('oBig');
+const oSub=document.getElementById('oSub');
+const startBtn=document.getElementById('startBtn');
+
+const EMOJIS=[
+  '🔥','❄️','⚡','🌊','🌙','⭐','💎','🎯','🎮','🏆',
+  '🚀','🐉','🦋','🎵','🍀','🌈','🎭','💡','🔮','🎪',
+  '🦊','🐺','🦁','🐬','🌺','🍄','🦄','🎸','🏔️','🌋'
+];
+
+const DIFFICULTIES={
+  '4':  {cols:4,rows:3,label:'4×3 Easy', time:90},
+  '5':  {cols:5,rows:4,label:'5×4 Medium',time:120},
+  '6':  {cols:6,rows:5,label:'6×5 Hard',  time:180},
+};
+
+// Card background themes
+const CARD_THEMES=[
+  {bg:'linear-gradient(145deg,#0d1f3c,#162e5a)',border:'rgba(74,143,255,.5)',glow:'#4a8fff'},
+  {bg:'linear-gradient(145deg,#1a0d38,#2d1460)',border:'rgba(160,80,255,.5)',glow:'#aa44ff'},
+  {bg:'linear-gradient(145deg,#1a1400,#2d2200)',border:'rgba(255,200,40,.5)',glow:'#ffcc28'},
+  {bg:'linear-gradient(145deg,#001a14,#002a20)',border:'rgba(40,220,140,.5)',glow:'#28dc8c'},
+  {bg:'linear-gradient(145deg,#1a0a00,#2d1400)',border:'rgba(255,100,40,.5)',glow:'#ff6428'},
+];
+
+let mode='4',cards=[],open=[],locked=false,moves=0,matched=0,totalPairs=0;
+let timerSecs=0,timerMax=90,timerInterval=null,running=false;
+let bestMoves={};
+
+/* Difficulty buttons */
+document.querySelectorAll('.dbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode=btn.id.replace('d','');
+  });
+});
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function startGame(){
+  const cfg=DIFFICULTIES[mode];
+  const pairs=(cfg.cols*cfg.rows)/2|0;
+  totalPairs=pairs;
+  matched=0;moves=0;locked=false;open=[];
+  movesEl.textContent=0;
+
+  /* pick random emoji subset */
+  const subset=shuffle([...EMOJIS]).slice(0,pairs);
+  const deck=shuffle([...subset,...subset]);
+
+  /* pick a color theme per emoji */
+  const themeMap={};
+  subset.forEach((e,i)=>themeMap[e]=CARD_THEMES[i%CARD_THEMES.length]);
+
+  /* board grid */
+  board.style.gridTemplateColumns=`repeat(${cfg.cols},90px)`;
+  board.innerHTML='';
+  cards=[];
+
+  deck.forEach((emoji,i)=>{
+    const th=themeMap[emoji];
+    const el=document.createElement('div');
+    el.className='card';
+    el.innerHTML=`
+      <div class="card-back"></div>
+      <div class="card-face" style="background:${th.bg};border-color:${th.border};box-shadow:0 8px 28px rgba(0,0,0,.5),0 0 20px ${th.glow}22">
+        <span>${emoji}</span>
+        <span class="card-face-label">${emoji}</span>
+      </div>`;
+    el.addEventListener('click',()=>flip(i));
+    board.appendChild(el);
+    cards.push({el,emoji,flipped:false,matched:false});
+  });
+
+  /* timer */
+  clearInterval(timerInterval);
+  timerSecs=cfg.time;timerMax=cfg.time;
+  updateTimer();
+  timerInterval=setInterval(()=>{
+    timerSecs--;
+    updateTimer();
+    if(timerSecs<=0){clearInterval(timerInterval);timeUp();}
+  },1000);
+
+  running=true;
+  overlay.classList.add('hidden');
+}
+
+function updateTimer(){
+  const t=timerSecs;
+  timerVal.textContent=t;
+  const pct=t/timerMax;
+  const circ=2*Math.PI*22;
+  timerArc.style.strokeDashoffset=circ*(1-pct);
+  timerArc.style.stroke=pct>.5?'#4a8fff':pct>.25?'#ffcc28':'#ff4422';
+}
+
+function flip(i){
+  if(!running||locked) return;
+  const card=cards[i];
+  if(card.flipped||card.matched) return;
+  card.flipped=true;
+  card.el.classList.add('flipped');
+  open.push(i);
+  if(open.length===2) checkMatch();
+}
+
+function checkMatch(){
+  locked=true;
+  moves++;
+  movesEl.textContent=moves;
+  const [a,b]=open;
+  if(cards[a].emoji===cards[b].emoji){
+    /* match! */
+    setTimeout(()=>{
+      cards[a].matched=cards[b].matched=true;
+      cards[a].el.classList.add('matched');
+      cards[b].el.classList.add('matched');
+      open=[];locked=false;
+      matched++;
+      if(matched===totalPairs) victory();
+    },400);
+  } else {
+    /* no match — flip back */
+    setTimeout(()=>{
+      cards[a].el.classList.remove('flipped');
+      cards[b].el.classList.remove('flipped');
+      cards[a].flipped=cards[b].flipped=false;
+      open=[];locked=false;
+    },900);
+  }
+}
+
+function victory(){
+  running=false;
+  clearInterval(timerInterval);
+  const timeUsed=DIFFICULTIES[mode].time-timerSecs;
+  const score=Math.max(0,Math.round(10000-moves*80-timeUsed*10));
+  const bKey=`cc_best_${mode}`;
+  const prev=+localStorage.getItem(bKey)||0;
+  if(!prev||score>prev){localStorage.setItem(bKey,score);}
+  const best=Math.max(score,prev);
+  bestEl.textContent=best;
+  oTitle.textContent='🎉 CLEARED!';
+  oBig.textContent=score+' pts';oBig.style.display='block';
+  oSub.innerHTML=`Pairs: ${totalPairs} &nbsp;|&nbsp; Moves: ${moves} &nbsp;|&nbsp; Time: ${timeUsed}s<br>${score>prev?'🏆 New Best Score!':'Keep going for a higher score!'}`;
+  startBtn.textContent='↺ PLAY AGAIN';
+  overlay.classList.remove('hidden');
+}
+
+function timeUp(){
+  running=false;
+  oTitle.textContent='TIME\'S UP!';
+  oBig.textContent=`${matched} / ${totalPairs}`;oBig.style.display='block';
+  oSub.innerHTML=`Matched ${matched} of ${totalPairs} pairs<br>Moves used: ${moves}`;
+  startBtn.textContent='↺ TRY AGAIN';
+  overlay.classList.remove('hidden');
+}
+
+startBtn.addEventListener('click',startGame);
+
+/* Load stored bests */
+Object.keys(DIFFICULTIES).forEach(k=>{
+  const v=localStorage.getItem(`cc_best_${k}`);
+  if(v) bestEl.textContent=v;
+});
+</script>
+</body>
+</html>

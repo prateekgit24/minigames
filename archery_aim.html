@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrossBow Archery — Aim Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0c08;font-family:'Outfit',sans-serif;color:#e8e0c8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+canvas{display:block;border-radius:12px;cursor:crosshair}
+#wrap{position:relative;display:inline-block}
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:center;gap:12px;padding:12px;pointer-events:none;z-index:5}
+.hb{background:rgba(10,12,8,0.88);border:1px solid #2a3020;border-radius:10px;padding:6px 16px;text-align:center;backdrop-filter:blur(4px)}
+.hv{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;color:#a8d060;line-height:1}
+.hl{font-size:0.55rem;color:#3a4030;text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace}
+#overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(8,10,6,0.93);border-radius:12px;z-index:10;backdrop-filter:blur(6px)}
+.ov-title{font-family:'Bebas Neue',sans-serif;font-size:4rem;letter-spacing:3px;background:linear-gradient(135deg,#a8d060,#60a830);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.ov-sub{font-size:0.7rem;color:#3a4030;letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:1.75rem}
+.sbtn{background:#4a7020;border:1px solid #6a9030;color:#c8f060;font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;padding:0.85rem 2.5rem;border-radius:50px;cursor:pointer;transition:all 0.15s;box-shadow:0 0 25px rgba(100,180,40,0.3)}
+.sbtn:hover{background:#5a8030;transform:scale(1.04)}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.75rem;width:320px}
+.scard{background:#0e1008;border:1px solid #1a2010;border-radius:10px;padding:0.75rem;text-align:center}
+.sv{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:#a8d060}
+.sl{font-size:0.58rem;color:#2a3020;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.big-sc{font-family:'Bebas Neue',sans-serif;font-size:5rem;color:#a8d060;line-height:1;text-shadow:0 0 40px rgba(120,200,60,0.4)}
+.sc-lbl{font-size:0.7rem;color:#3a4030;letter-spacing:2px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:1.5rem}
+.diff-row{display:flex;gap:8px;margin-bottom:1.5rem}
+.dbtn{background:#0e1008;border:1px solid #1a2010;color:#3a4030;padding:7px 16px;border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;transition:all 0.2s}
+.dbtn.on{border-color:#6a9030;color:#a8d060;background:#1a2a08}
+</style>
+</head>
+<body>
+<div id="hud">
+  <div class="hb"><div class="hv" id="h-score">0</div><div class="hl">Score</div></div>
+  <div class="hb"><div class="hv" id="h-arrows">10</div><div class="hl">Arrows</div></div>
+  <div class="hb"><div class="hv" id="h-streak">0</div><div class="hl">Streak</div></div>
+  <div class="hb"><div class="hv" id="h-acc">—</div><div class="hl">Accuracy</div></div>
+</div>
+<div id="wrap">
+  <canvas id="c" width="700" height="520"></canvas>
+  <div id="overlay">
+    <div id="startPanel" style="display:flex;flex-direction:column;align-items:center">
+      <div class="ov-title">CROSSBOW</div>
+      <div class="ov-sub">// aim · breathe · release</div>
+      <div class="diff-row">
+        <button class="dbtn on" onclick="setDiff('easy',this)">Easy</button>
+        <button class="dbtn" onclick="setDiff('medium',this)">Medium</button>
+        <button class="dbtn" onclick="setDiff('hard',this)">Hard</button>
+        <button class="dbtn" onclick="setDiff('moving',this)">Moving Target</button>
+      </div>
+      <button class="sbtn" onclick="startGame()">DRAW AND FIRE</button>
+    </div>
+    <div id="resultPanel" style="display:none;text-align:center">
+      <div class="big-sc" id="r-score">0</div>
+      <div class="sc-lbl">total score</div>
+      <div class="sgrid">
+        <div class="scard"><div class="sv" id="r-bull">0</div><div class="sl">Bullseyes</div></div>
+        <div class="scard"><div class="sv" id="r-streak">0</div><div class="sl">Best Streak</div></div>
+        <div class="scard"><div class="sv" id="r-acc">0%</div><div class="sl">Accuracy</div></div>
+      </div>
+      <button class="sbtn" onclick="startGame()">FIRE AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+
+let difficulty = 'easy';
+let score=0, arrowsLeft=10, streak=0, maxStreak=0, bullseyes=0, totalShots=0, hits=0;
+let arrows=[], windX=0, windTimer=0, active=false, animId=null, frame=0;
+let target={x:W*0.6, y:H*0.5, vx:0, vy:0};
+let aimX=W/2, aimY=H/2;
+let pullStrength=0, pulling=false, pullStart=null;
+let particles=[], arrowsOnBoard=[];
+let bgMounted=false;
+
+function setDiff(d, el){
+  difficulty=d;
+  document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+const DIFFS = {
+  easy:   {targetR:90, windMax:0, speed:0},
+  medium: {targetR:70, windMax:1.5, speed:0},
+  hard:   {targetR:55, windMax:3, speed:0},
+  moving: {targetR:65, windMax:2, speed:1.8}
+};
+
+function startGame(){
+  cancelAnimationFrame(animId);
+  score=0;arrowsLeft=10;streak=0;maxStreak=0;bullseyes=0;totalShots=0;hits=0;
+  arrows=[];particles=[];arrowsOnBoard=[];
+  const d=DIFFS[difficulty];
+  target={x:W*0.62,y:H*0.48,vx:d.speed*(Math.random()<0.5?1:-1),vy:d.speed*(Math.random()<0.5?0.7:-0.7)};
+  windX = (Math.random()-0.5)*d.windMax;
+  windTimer=120+Math.floor(Math.random()*80);
+  active=true; frame=0;
+  document.getElementById('overlay').style.display='none';
+  updateHUD(); loop();
+}
+
+function updateHUD(){
+  document.getElementById('h-score').textContent=score;
+  document.getElementById('h-arrows').textContent=arrowsLeft;
+  document.getElementById('h-streak').textContent=streak;
+  document.getElementById('h-acc').textContent=totalShots>0?Math.round(hits/totalShots*100)+'%':'—';
+}
+
+function endGame(){
+  active=false;
+  document.getElementById('overlay').style.display='flex';
+  document.getElementById('startPanel').style.display='none';
+  document.getElementById('resultPanel').style.display='block';
+  document.getElementById('r-score').textContent=score;
+  document.getElementById('r-bull').textContent=bullseyes;
+  document.getElementById('r-streak').textContent=maxStreak;
+  document.getElementById('r-acc').textContent=totalShots>0?Math.round(hits/totalShots*100)+'%':'0%';
+}
+
+cv.addEventListener('mousedown', e=>{
+  if(!active)return;
+  pulling=true;pullStart=performance.now();pullStrength=0;
+});
+cv.addEventListener('mousemove', e=>{
+  const rect=cv.getBoundingClientRect();
+  aimX=(e.clientX-rect.left)*(W/rect.width);
+  aimY=(e.clientY-rect.top)*(H/rect.height);
+});
+cv.addEventListener('mouseup', e=>{
+  if(!active||!pulling)return;
+  pulling=false;
+  const held=Math.min(1,(performance.now()-pullStart)/800);
+  fireArrow(aimX, aimY, held);
+});
+
+function fireArrow(tx, ty, power){
+  if(arrowsLeft<=0)return;
+  arrowsLeft--;totalShots++;updateHUD();
+  const ax=120, ay=H*0.82;
+  const dx=tx-ax, dy=ty-ay;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  // spread based on inverse of power
+  const spread=(1-power)*25;
+  const finalX=tx+(Math.random()-0.5)*spread+windX*(dist/80);
+  const finalY=ty+(Math.random()-0.5)*spread;
+  // flight animation
+  const steps=22;
+  let step=0;
+  const tickId=setInterval(()=>{
+    step++;
+    const t=step/steps;
+    const cx=ax+(finalX-ax)*t;
+    const cy=ay+(finalY-ay)*t - Math.sin(t*Math.PI)*50*power; // arc
+    if(step>=steps){
+      clearInterval(tickId);
+      arrowsOnBoard.push({x:finalX,y:finalY,angle:Math.atan2(finalY-ay,finalX-ax)});
+      scoreHit(finalX,finalY);
+      if(arrowsLeft<=0)setTimeout(endGame,1200);
+    }
+    arrows=[{x:cx,y:cy,angle:Math.atan2(finalY-ay,finalX-ax),power}];
+  },18);
+}
+
+function scoreHit(fx,fy){
+  const d=Math.sqrt((fx-target.x)**2+(fy-target.y)**2);
+  const R=DIFFS[difficulty].targetR;
+  let pts=0, ringLabel='';
+  if(d<R*0.1){pts=100;ringLabel='BULLSEYE! 🎯';bullseyes++;hits++;}
+  else if(d<R*0.25){pts=70;ringLabel='Inner Gold';hits++;}
+  else if(d<R*0.45){pts=50;ringLabel='Red Ring';hits++;}
+  else if(d<R*0.65){pts=30;ringLabel='Blue Ring';hits++;}
+  else if(d<R*0.85){pts=15;ringLabel='Black Ring';hits++;}
+  else if(d<R){pts=5;ringLabel='White Ring';hits++;}
+  else{pts=0;ringLabel='MISS';streak=0;}
+  if(pts>0){streak++;if(streak>maxStreak)maxStreak=streak;}
+  score+=pts;
+  // popup
+  particles.push({text:pts>0?`+${pts} ${ringLabel}`:'MISS',x:fx,y:fy-20,life:1.5,vy:-0.8,color:pts>=100?'#f0e020':pts>=50?'#f09020':pts>0?'#80c040':'#f05050'});
+  for(let i=0;i<8;i++)particles.push({vx:(Math.random()-0.5)*4,vy:Math.random()*-4,x:fx,y:fy,life:1,color:pts>=50?'#f0e040':'#f08040',r:3,type:'particle'});
+  updateHUD();
+}
+
+function loop(){
+  frame++;
+  // wind
+  windTimer--;
+  if(windTimer<=0){const d=DIFFS[difficulty];windX=(Math.random()-0.5)*d.windMax;windTimer=100+Math.floor(Math.random()*80);}
+  // target move
+  if(difficulty==='moving'){
+    target.x+=target.vx;target.y+=target.vy;
+    const R=DIFFS[difficulty].targetR;
+    if(target.x-R<100||target.x+R>W-20){target.vx*=-1;}
+    if(target.y-R<60||target.y+R>H-80){target.vy*=-1;}
+  }
+  // particles
+  particles=particles.filter(p=>p.life>0);
+  particles.forEach(p=>{if(p.type==='particle'){p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;}else{p.y+=p.vy;}p.life-=0.025;});
+  draw();
+  animId=requestAnimationFrame(loop);
+}
+
+function draw(){
+  // Sky / bg
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#0a1205');
+  sky.addColorStop(0.7,'#0e1808');
+  sky.addColorStop(1,'#0a1005');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+
+  // distant trees
+  for(let i=0;i<18;i++){
+    const tx=i*(W/17),th=60+Math.sin(i*1.7)*30;
+    ctx.fillStyle=`hsl(120,${30+i%3*5}%,${6+i%4}%)`;
+    ctx.beginPath();
+    ctx.moveTo(tx,H*0.7);
+    ctx.lineTo(tx+20,H*0.7-th);
+    ctx.lineTo(tx+40,H*0.7);
+    ctx.fill();
+  }
+
+  // Ground
+  ctx.fillStyle='#0a1e08';
+  ctx.fillRect(0,H*0.8,W,H*0.2);
+
+  // Wind indicator
+  const d=DIFFS[difficulty];
+  if(d.windMax>0){
+    ctx.save();
+    ctx.fillStyle='rgba(255,255,255,0.07)';
+    const wx=50,wy=50;
+    ctx.fillText('',0,0);
+    const wlen=windX/d.windMax*50;
+    ctx.strokeStyle=windX>0?'rgba(200,160,80,0.6)':'rgba(80,160,200,0.6)';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(wx,wy);ctx.lineTo(wx+wlen,wy);ctx.stroke();
+    // arrow head
+    const dir=windX>0?1:-1;
+    ctx.fillStyle=windX>0?'rgba(200,160,80,0.6)':'rgba(80,160,200,0.6)';
+    ctx.beginPath();ctx.moveTo(wx+wlen,wy);ctx.lineTo(wx+wlen-dir*8,wy-5);ctx.lineTo(wx+wlen-dir*8,wy+5);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font="0.7rem 'JetBrains Mono'";ctx.textAlign='left';
+    ctx.fillText(`Wind: ${windX>0?'→':'←'} ${Math.abs(windX).toFixed(1)}`,10,H-12);
+    ctx.restore();
+  }
+
+  // TARGET BOARD
+  const R=DIFFS[difficulty].targetR;
+  const tx=target.x,ty=target.y;
+  // board backing (wood)
+  ctx.fillStyle='#3a2808';
+  ctx.beginPath();ctx.roundRect(tx-R-15,ty-R-15,R*2+30,R*2+30,8);ctx.fill();
+  ctx.strokeStyle='#5a3810';ctx.lineWidth=3;ctx.stroke();
+  // wood grain
+  for(let i=0;i<5;i++){ctx.strokeStyle=`rgba(80,50,20,0.3)`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(tx-R-15,ty-R+i*R*0.4);ctx.lineTo(tx+R+15,ty-R+i*R*0.4+8);ctx.stroke();}
+  // rings
+  const rings=[
+    {r:1.0,c:'#f0f0f0'},{r:0.85,c:'#1a1a1a'},{r:0.65,c:'#3060c0'},{r:0.45,c:'#c02020'},{r:0.25,c:'#f0e020'},{r:0.1,c:'#f0e020'}
+  ];
+  rings.forEach(ring=>{
+    ctx.beginPath();ctx.arc(tx,ty,R*ring.r,0,Math.PI*2);
+    ctx.fillStyle=ring.c;ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.2)';ctx.lineWidth=1;ctx.stroke();
+  });
+  // center dot
+  ctx.beginPath();ctx.arc(tx,ty,R*0.06,0,Math.PI*2);ctx.fillStyle='#1a1a1a';ctx.fill();
+  // crosslines
+  ctx.strokeStyle='rgba(0,0,0,0.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(tx-R,ty);ctx.lineTo(tx+R,ty);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(tx,ty-R);ctx.lineTo(tx,ty+R);ctx.stroke();
+
+  // Arrows stuck in board
+  arrowsOnBoard.forEach(a=>{
+    drawArrow(a.x,a.y,a.angle,0.7);
+  });
+
+  // Flying arrow
+  arrows.forEach(a=>{ drawArrow(a.x,a.y,a.angle,1); });
+
+  // CROSSBOW on left
+  drawCrossbow(110,H*0.82,aimX,aimY,pullStrength);
+
+  // Aim crosshair
+  if(active){
+    const wobble=(pulling?pullStrength*3:0);
+    const wx2=aimX+(Math.random()-0.5)*wobble;
+    const wy2=aimY+(Math.random()-0.5)*wobble;
+    ctx.save();
+    ctx.strokeStyle='rgba(200,240,120,0.7)';ctx.lineWidth=1.5;
+    const cs=20;
+    ctx.beginPath();ctx.moveTo(wx2-cs,wy2);ctx.lineTo(wx2-6,wy2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(wx2+6,wy2);ctx.lineTo(wx2+cs,wy2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(wx2,wy2-cs);ctx.lineTo(wx2,wy2-6);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(wx2,wy2+6);ctx.lineTo(wx2,wy2+cs);ctx.stroke();
+    ctx.beginPath();ctx.arc(wx2,wy2,8,0,Math.PI*2);ctx.strokeStyle='rgba(200,240,120,0.3)';ctx.stroke();
+    // dot
+    ctx.beginPath();ctx.arc(wx2,wy2,2,0,Math.PI*2);ctx.fillStyle='rgba(200,240,120,0.8)';ctx.fill();
+    ctx.restore();
+  }
+
+  // Pull indicator
+  if(pulling){
+    pullStrength=Math.min(1,(performance.now()-pullStart)/800);
+    const bx=20,by=H-20,bw=160,bh=10;
+    ctx.fillStyle='#0a1005';ctx.beginPath();ctx.roundRect(bx,by-bh,bw,bh,4);ctx.fill();
+    const pc=pullStrength;
+    const col=pc>0.7?'#a8f020':pc>0.4?'#f0c020':'#f07020';
+    ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(bx,by-bh,bw*pc,bh,4);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font="0.65rem 'JetBrains Mono'";ctx.textAlign='left';
+    ctx.fillText(pc>0.8?'RELEASE!':pc>0.5?'HOLD...':'PULL...',bx,by-bh-4);
+  }
+
+  // Particles
+  particles.forEach(p=>{
+    ctx.save();ctx.globalAlpha=Math.min(1,p.life);
+    if(p.type==='particle'){
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r||3,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();
+    } else {
+      ctx.fillStyle=p.color;ctx.font=`bold 0.85rem 'Bebas Neue'`;ctx.textAlign='center';ctx.fillText(p.text,p.x,p.y);
+    }
+    ctx.restore();
+  });
+}
+
+function drawArrow(x,y,angle,alpha){
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(angle);
+  // shaft
+  ctx.strokeStyle='#c8a050';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(-30,0);ctx.lineTo(20,0);ctx.stroke();
+  // tip
+  ctx.fillStyle='#c0c0d0';
+  ctx.beginPath();ctx.moveTo(20,0);ctx.lineTo(30,-3);ctx.lineTo(30,3);ctx.fill();
+  // fletching
+  ctx.fillStyle='#e04030';
+  ctx.beginPath();ctx.moveTo(-22,0);ctx.lineTo(-30,-8);ctx.lineTo(-28,0);ctx.fill();
+  ctx.beginPath();ctx.moveTo(-22,0);ctx.lineTo(-30,8);ctx.lineTo(-28,0);ctx.fill();
+  ctx.restore();
+}
+
+function drawCrossbow(x,y,tx,ty,pull){
+  ctx.save();ctx.translate(x,y);
+  const ang=Math.atan2(ty-y,tx-x);
+  ctx.rotate(ang);
+  // stock
+  ctx.fillStyle='#6a3810';ctx.beginPath();ctx.roundRect(-40,-8,80,16,4);ctx.fill();
+  // limbs
+  ctx.strokeStyle='#4a6030';ctx.lineWidth=6;ctx.lineCap='round';
+  const stretch=pull*8;
+  ctx.beginPath();ctx.moveTo(5,-5);ctx.lineTo(25-stretch,-28);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(5,5);ctx.lineTo(25-stretch,28);ctx.stroke();
+  // string
+  ctx.strokeStyle='#d0c090';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(25-stretch,-28);ctx.lineTo(5+pull*6,0);ctx.lineTo(25-stretch,28);ctx.stroke();
+  // trigger guard
+  ctx.fillStyle='#5a2808';ctx.beginPath();ctx.roundRect(-10,-4,10,8,2);ctx.fill();
+  // barrel
+  ctx.strokeStyle='#3a3020';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-40,0);ctx.lineTo(5,0);ctx.stroke();
+  ctx.restore();
+}
+
+(function drawIdle(){
+  const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0a1205');sky.addColorStop(1,'#0a1005');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(120,180,60,0.1)';ctx.font=`bold 2rem 'Bebas Neue'`;ctx.textAlign='center';
+  ctx.fillText('CROSSBOW ARCHERY',W/2,H/2);
+})();
+</script>
+</body>
+</html>

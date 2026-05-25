@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Orbit Survival</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#02050e;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;color:#cce4ff;overflow:hidden}
+  h1{font-size:1.5rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(90deg,#4a8fff,#cc44ff,#ff6a1a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+  #wrap{position:relative}
+  canvas{display:block;border-radius:14px;box-shadow:0 0 70px rgba(74,143,255,.15),0 0 0 1.5px rgba(74,143,255,.18)}
+  #hud{display:flex;justify-content:space-between;padding:8px 4px;font-size:.8rem;color:#3a5070;gap:20px}
+  .hv{font-weight:900;color:#fff;font-size:.95rem;margin-left:4px}
+  /* status bars */
+  #bars{display:flex;gap:14px;align-items:center;padding:0 4px 10px}
+  .bar-row{display:flex;align-items:center;gap:8px;font-size:.74rem;color:#3a5070;font-weight:700;letter-spacing:.06em;text-transform:uppercase;min-width:140px}
+  .bar-track{flex:1;height:8px;border-radius:999px;background:#060e1c;overflow:hidden}
+  .bar-fill{height:100%;border-radius:999px;transition:width .2s}
+  /* overlay */
+  #overlay{position:absolute;inset:0;border-radius:14px;background:rgba(2,5,14,.88);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+  #overlay.hidden{display:none}
+  .ot{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#4a8fff,#cc44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .os{color:#4a6888;font-size:.88rem;text-align:center;line-height:1.7;max-width:290px}
+  .obig{font-size:2.5rem;font-weight:900;color:#ffcc44}
+  #startBtn{padding:11px 34px;border-radius:999px;border:1.5px solid rgba(74,143,255,.36);background:rgba(74,143,255,.1);color:#88b8ff;font-size:.92rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #startBtn:hover{background:rgba(74,143,255,.22)}
+  #hint{font-size:.74rem;color:#1a2a3a;text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>🪐 Orbit Survival</h1>
+<div id="wrap">
+  <div id="bars">
+    <div class="bar-row">❤️ HP<div class="bar-track"><div class="bar-fill" id="hpFill" style="background:linear-gradient(90deg,#ff4444,#ff8844);width:100%"></div></div><span id="hpVal" class="hv">100</span></div>
+    <div class="bar-row">💧 O₂<div class="bar-track"><div class="bar-fill" id="o2Fill" style="background:linear-gradient(90deg,#44aaff,#44ddff);width:100%"></div></div><span id="o2Val" class="hv">100</span></div>
+    <div class="bar-row">⚡ PWR<div class="bar-track"><div class="bar-fill" id="pwrFill" style="background:linear-gradient(90deg,#ffcc44,#ffee88);width:100%"></div></div><span id="pwrVal" class="hv">100</span></div>
+  </div>
+  <canvas id="c" width="860" height="440"></canvas>
+  <div id="hud">
+    <span>Wave <span class="hv" id="waveEl">1</span></span>
+    <span>Score <span class="hv" id="scoreEl">0</span></span>
+    <span>Collected <span class="hv" id="colEl">0</span></span>
+    <span>Best <span class="hv" id="bestEl">0</span></span>
+  </div>
+  <div id="overlay">
+    <div class="ot" id="oTitle">ORBIT SURVIVAL</div>
+    <div class="obig" id="oBig" style="display:none"></div>
+    <div class="os" id="oSub">You're a lone ship stranded in deep space.<br>Collect <span style="color:#44ffaa">energy orbs</span> to stay alive.<br>Dodge <span style="color:#ff6644">hostile drones</span> — they drain your HP!<br><br>WASD / Arrow Keys to move</div>
+    <button id="startBtn">▶ LAUNCH</button>
+  </div>
+</div>
+<div id="hint">Collect green orbs (O₂) · Yellow crystals (Power) · Dodge red drones</div>
+
+<script>
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const W=c.width,H=c.height;
+const overlay=document.getElementById('overlay');
+const oTitle=document.getElementById('oTitle');
+const oBig=document.getElementById('oBig');
+const oSub=document.getElementById('oSub');
+const startBtn=document.getElementById('startBtn');
+const hpFill=document.getElementById('hpFill');
+const o2Fill=document.getElementById('o2Fill');
+const pwrFill=document.getElementById('pwrFill');
+const hpVal=document.getElementById('hpVal');
+const o2Val=document.getElementById('o2Val');
+const pwrVal=document.getElementById('pwrVal');
+const waveEl=document.getElementById('waveEl');
+const scoreEl=document.getElementById('scoreEl');
+const colEl=document.getElementById('colEl');
+const bestEl=document.getElementById('bestEl');
+
+let best=+localStorage.getItem('orbitBest')||0;
+bestEl.textContent=best;
+
+let running=false,keys={};
+let ship,resources,enemies,particles,score,collected,wave,waveTimer,hp,o2,pwr,frameCount;
+
+const SHIP_SPEED=4;
+const HP_DRAIN=0.006, O2_DRAIN=0.012, PWR_DRAIN=0.009;
+const DMG_PER_HIT=0.5;
+
+/* star field */
+const STARS=Array.from({length:120},()=>({
+  x:Math.random()*W, y:Math.random()*H,
+  r:.5+Math.random()*1.5, speed:.05+Math.random()*.3,
+  bright:.2+Math.random()*.7
+}));
+
+function initGame(){
+  ship={x:W/2,y:H/2,r:14,angle:0,trail:[]};
+  resources=[];enemies=[];particles=[];
+  score=0;collected=0;wave=1;waveTimer=0;
+  hp=100;o2=100;pwr=100;frameCount=0;
+  spawnWave();
+}
+
+function spawnWave(){
+  /* resources */
+  for(let i=0;i<6+wave;i++) spawnResource();
+  /* enemies */
+  for(let i=0;i<2+wave*2;i++) spawnEnemy();
+  waveEl.textContent=wave;
+}
+
+function spawnResource(){
+  const types=[
+    {col:'#44ffaa',glow:'#22dd88',type:'o2',label:'O₂'},
+    {col:'#ffdd44',glow:'#ddaa22',type:'pwr',label:'⚡'},
+    {col:'#44ddff',glow:'#22aadd',type:'hp',label:'❤️'},
+  ];
+  const t=types[Math.random()*types.length|0];
+  resources.push({
+    x:60+Math.random()*(W-120), y:60+Math.random()*(H-120),
+    r:8+Math.random()*4, pulse:Math.random()*Math.PI*2,
+    ...t
+  });
+}
+
+function spawnEnemy(){
+  /* spawn off-screen edge */
+  const edge=Math.random()*4|0;
+  let x,y;
+  if(edge===0){x=Math.random()*W;y=-30;}
+  else if(edge===1){x=W+30;y=Math.random()*H;}
+  else if(edge===2){x=Math.random()*W;y=H+30;}
+  else{x=-30;y=Math.random()*H;}
+  const types=[
+    {col:'#ff4422',glow:'#ff6644',speed:1+Math.random()*wave*.4,r:11},
+    {col:'#cc0066',glow:'#ff22aa',speed:.8+Math.random()*wave*.3,r:14},
+    {col:'#ff8800',glow:'#ffbb44',speed:1.5+Math.random()*wave*.5,r:9},
+  ];
+  const t=types[Math.random()*types.length|0];
+  enemies.push({x,y,vx:0,vy:0,angle:0,...t,iframes:0});
+}
+
+function spawnParticles(x,y,col,n=6){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,v=.5+Math.random()*3;
+    particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,col,r:2+Math.random()*3});
+  }
+}
+
+function updateBars(){
+  const bars=[
+    [hpFill,hpVal,hp,'linear-gradient(90deg,#ff4444,#ff8844)'],
+    [o2Fill,o2Val,o2,'linear-gradient(90deg,#44aaff,#44ddff)'],
+    [pwrFill,pwrVal,pwr,'linear-gradient(90deg,#ffcc44,#ffee88)'],
+  ];
+  bars.forEach(([fill,val,v,grad])=>{
+    fill.style.width=Math.max(0,v)+'%';
+    fill.style.background=grad;
+    val.textContent=Math.max(0,Math.ceil(v));
+  });
+}
+
+function update(){
+  if(!running) return;
+  frameCount++;
+
+  /* ship movement */
+  let dx=0,dy=0;
+  if(keys.ArrowLeft||keys.KeyA) dx-=SHIP_SPEED;
+  if(keys.ArrowRight||keys.KeyD) dx+=SHIP_SPEED;
+  if(keys.ArrowUp||keys.KeyW) dy-=SHIP_SPEED;
+  if(keys.ArrowDown||keys.KeyS) dy+=SHIP_SPEED;
+  if(dx&&dy){dx*=.707;dy*=.707;}
+  ship.x=Math.max(ship.r,Math.min(W-ship.r,ship.x+dx));
+  ship.y=Math.max(ship.r,Math.min(H-ship.r,ship.y+dy));
+  if(dx||dy) ship.angle=Math.atan2(dy,dx);
+
+  /* trail */
+  ship.trail.push({x:ship.x,y:ship.y,life:1});
+  if(ship.trail.length>18) ship.trail.shift();
+  ship.trail.forEach(t=>t.life-=.07);
+
+  /* resource drift */
+  resources.forEach(r=>{r.pulse+=.04;});
+
+  /* enemy AI — chase ship */
+  enemies.forEach(e=>{
+    const dx2=ship.x-e.x,dy2=ship.y-e.y,dist=Math.hypot(dx2,dy2)||1;
+    /* wander a bit */
+    e.vx=e.vx*.88+(dx2/dist)*e.speed*.12;
+    e.vy=e.vy*.88+(dy2/dist)*e.speed*.12;
+    e.x+=e.vx;e.y+=e.vy;
+    e.angle=Math.atan2(e.vy,e.vx);
+    /* bounds bounce */
+    if(e.x<-60||e.x>W+60||e.y<-60||e.y>H+60){e.x=Math.random()*W;e.y=Math.random()*H;}
+    if(e.iframes>0) e.iframes--;
+    /* collision with ship */
+    if(e.iframes===0&&Math.hypot(ship.x-e.x,ship.y-e.y)<ship.r+e.r){
+      hp-=DMG_PER_HIT;
+      e.iframes=30;
+      spawnParticles(ship.x,ship.y,'#ff4422',5);
+    }
+  });
+
+  /* collect resources */
+  for(let i=resources.length-1;i>=0;i--){
+    const r=resources[i];
+    if(Math.hypot(ship.x-r.x,ship.y-r.y)<ship.r+r.r){
+      if(r.type==='o2') o2=Math.min(100,o2+22);
+      else if(r.type==='pwr') pwr=Math.min(100,pwr+18);
+      else hp=Math.min(100,hp+15);
+      score+=50*wave;collected++;
+      spawnParticles(r.x,r.y,r.glow,10);
+      resources.splice(i,1);
+      colEl.textContent=collected;
+      scoreEl.textContent=score;
+    }
+  }
+
+  /* passive drain */
+  hp-=HP_DRAIN*(1+wave*.05);
+  o2-=O2_DRAIN*(1+wave*.08);
+  pwr-=PWR_DRAIN;
+  updateBars();
+  if(score>best){best=score;localStorage.setItem('orbitBest',best);bestEl.textContent=best;}
+
+  /* particles */
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx;p.y+=p.vy;p.life-=.025;
+    if(p.life<=0) particles.splice(i,1);
+  }
+
+  /* wave progression */
+  waveTimer++;
+  if(resources.length===0&&waveTimer>120){
+    wave++;waveTimer=0;spawnWave();
+    score+=wave*200;scoreEl.textContent=score;
+  }
+
+  if(hp<=0||o2<=0){endGame();}
+}
+
+function draw(){
+  /* bg */
+  ctx.fillStyle='#02050e';ctx.fillRect(0,0,W,H);
+
+  /* nebula glow */
+  const ng=ctx.createRadialGradient(W*.7,H*.3,0,W*.7,H*.3,300);
+  ng.addColorStop(0,'rgba(74,60,160,.12)');ng.addColorStop(1,'transparent');
+  ctx.fillStyle=ng;ctx.fillRect(0,0,W,H);
+  const ng2=ctx.createRadialGradient(W*.2,H*.7,0,W*.2,H*.7,220);
+  ng2.addColorStop(0,'rgba(40,100,60,.1)');ng2.addColorStop(1,'transparent');
+  ctx.fillStyle=ng2;ctx.fillRect(0,0,W,H);
+
+  /* stars */
+  STARS.forEach(s=>{
+    s.x-=s.speed;if(s.x<0) s.x=W;
+    ctx.save();
+    ctx.globalAlpha=s.bright*(0.6+0.4*Math.sin(frameCount*.02+s.y));
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  /* particles */
+  particles.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.life*.8;
+    ctx.fillStyle=p.col;ctx.shadowColor=p.col;ctx.shadowBlur=10;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  /* resources */
+  resources.forEach(r=>{
+    const pulse=Math.sin(r.pulse)*.15+.85;
+    ctx.save();
+    ctx.shadowColor=r.glow;ctx.shadowBlur=20;
+    ctx.globalAlpha=.9;
+    ctx.fillStyle=r.col;
+    ctx.beginPath();ctx.arc(r.x,r.y,r.r*pulse,0,Math.PI*2);ctx.fill();
+    /* inner bright */
+    ctx.fillStyle='rgba(255,255,255,.4)';
+    ctx.beginPath();ctx.arc(r.x-r.r*.25,r.y-r.r*.25,r.r*.3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    /* label */
+    ctx.save();ctx.font=`bold 10px Segoe UI`;ctx.textAlign='center';ctx.fillStyle=r.glow;
+    ctx.fillText(r.label,r.x,r.y+r.r+13);ctx.restore();
+  });
+
+  /* enemies */
+  enemies.forEach(e=>{
+    ctx.save();
+    ctx.translate(e.x,e.y);ctx.rotate(e.angle+frameCount*.06);
+    ctx.shadowColor=e.glow;ctx.shadowBlur=22;
+    ctx.fillStyle=e.col;
+    /* jagged shape */
+    ctx.beginPath();
+    for(let i=0;i<6;i++){
+      const a=(Math.PI*2/6)*i;
+      const r2=e.r*(i%2===0?1:.58);
+      i===0?ctx.moveTo(Math.cos(a)*r2,Math.sin(a)*r2):ctx.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);
+    }
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+    /* iframes flash */
+    if(e.iframes>0&&Math.floor(e.iframes/4)%2===0){
+      ctx.save();ctx.globalAlpha=.5;ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+  });
+
+  /* ship trail */
+  ship.trail.forEach((t,i)=>{
+    ctx.save();ctx.globalAlpha=t.life*.35;
+    ctx.fillStyle='#4a8fff';ctx.shadowColor='#4a8fff';ctx.shadowBlur=12;
+    const s=i/ship.trail.length*12;
+    ctx.beginPath();ctx.arc(t.x,t.y,s*.5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  /* ship */
+  ctx.save();
+  ctx.translate(ship.x,ship.y);ctx.rotate(ship.angle);
+  ctx.shadowColor='#4a8fff';ctx.shadowBlur=28;
+  ctx.fillStyle='#4a8fff';
+  ctx.beginPath();
+  ctx.moveTo(18,0);ctx.lineTo(-14,-10);ctx.lineTo(-8,0);ctx.lineTo(-14,10);
+  ctx.closePath();ctx.fill();
+  /* cockpit */
+  ctx.fillStyle='rgba(180,230,255,.8)';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.ellipse(6,0,5,4,0,0,Math.PI*2);ctx.fill();
+  /* engine */
+  ctx.fillStyle='rgba(255,106,26,.7)';ctx.shadowColor='#ff6a1a';ctx.shadowBlur=18;
+  ctx.beginPath();ctx.ellipse(-12,0,5,3.5,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  /* low resource warnings */
+  if(o2<25){
+    ctx.save();ctx.globalAlpha=(.5+.5*Math.sin(frameCount*.2))*.7;
+    ctx.fillStyle='rgba(68,170,255,.08)';ctx.fillRect(0,0,W,H);ctx.restore();
+  }
+  if(hp<25){
+    ctx.save();ctx.globalAlpha=(.5+.5*Math.sin(frameCount*.25))*.6;
+    ctx.fillStyle='rgba(255,60,30,.06)';ctx.fillRect(0,0,W,H);ctx.restore();
+  }
+}
+
+function gameLoop(){
+  if(!running) return;
+  update();draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame(){
+  initGame();running=true;
+  overlay.classList.add('hidden');
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  running=false;
+  oTitle.textContent=hp<=0?'HULL BREACH!':'OUT OF OXYGEN!';
+  oBig.textContent=score;oBig.style.display='block';
+  oSub.innerHTML=`Score: <strong style="color:#fff">${score}</strong> &nbsp;|&nbsp; Wave ${wave}<br>Resources collected: ${collected}`;
+  startBtn.textContent='↺ RETRY';
+  overlay.classList.remove('hidden');
+}
+
+startBtn.addEventListener('click',startGame);
+window.addEventListener('keydown',e=>{keys[e.code]=true;e.preventDefault&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&e.preventDefault();});
+window.addEventListener('keyup',e=>{keys[e.code]=false;});
+</script>
+</body>
+</html>

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Escape Grid</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#03050e;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;color:#cce4ff;overflow:hidden}
+  h1{font-size:1.5rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(90deg,#4a8fff,#44ffaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+  #meta{display:flex;gap:24px;margin-bottom:12px;font-size:.8rem;color:#3a5070}
+  .mv{font-weight:900;color:#fff;font-size:.95rem;margin-left:4px}
+  #wrap{position:relative;display:flex;gap:20px;align-items:flex-start}
+  /* grid */
+  #gridWrap{position:relative}
+  #grid{display:grid;gap:5px;padding:14px;background:linear-gradient(145deg,#060e1c,#0a1626);border-radius:16px;box-shadow:0 0 50px rgba(74,143,255,.12),0 0 0 1.5px rgba(74,143,255,.14)}
+  .cell{border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;transition:background .12s,box-shadow .12s,transform .1s;cursor:default;position:relative}
+  .cell.empty{background:#07121e;border:1px solid rgba(74,143,255,.06)}
+  .cell.wall{background:linear-gradient(145deg,#12223a,#1a304e);border:1px solid rgba(74,143,255,.14);box-shadow:inset 0 1px 0 rgba(100,160,255,.06)}
+  .cell.player{background:linear-gradient(145deg,#1a3a80,#2a5acc);border:1.5px solid rgba(74,143,255,.6);box-shadow:0 0 18px rgba(74,143,255,.45),0 0 40px rgba(74,143,255,.15);transform:scale(1.06)}
+  .cell.exit{background:linear-gradient(145deg,#0a3020,#104828);border:1.5px solid rgba(68,255,140,.5);box-shadow:0 0 18px rgba(68,255,140,.35)}
+  .cell.key-cell{background:linear-gradient(145deg,#3a2000,#5a3400);border:1.5px solid rgba(255,200,40,.45);box-shadow:0 0 14px rgba(255,200,40,.25)}
+  .cell.guard{background:linear-gradient(145deg,#380808,#5a0c0c);border:1.5px solid rgba(255,60,60,.45);box-shadow:0 0 14px rgba(255,60,60,.25)}
+  .cell.guard.see{box-shadow:0 0 24px rgba(255,60,60,.6),0 0 50px rgba(255,30,10,.18)}
+  .cell.trap{background:linear-gradient(145deg,#200820,#380a38);border:1.5px solid rgba(200,60,255,.35)}
+  /* move counter flash */
+  @keyframes movePop{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .move-pop{animation:movePop .18s ease-out}
+  /* side panel */
+  #panel{width:180px;display:flex;flex-direction:column;gap:14px}
+  .panel-card{background:rgba(6,14,26,.86);border:1px solid rgba(74,143,255,.12);border-radius:12px;padding:14px;font-size:.78rem;color:#3a5070}
+  .panel-card strong{color:#a0c8ff;display:block;margin-bottom:6px;font-size:.82rem}
+  .legend-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:.74rem}
+  .legend-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+  /* overlay */
+  #overlay{position:fixed;inset:0;background:rgba(3,5,14,.92);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100}
+  #overlay.hidden{display:none}
+  .ot{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#4a8fff,#44ffaa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .os{color:#3a5070;font-size:.88rem;text-align:center;line-height:1.7;max-width:300px}
+  .obig{font-size:2rem;font-weight:900;color:#ffcc44}
+  #startBtn{padding:11px 32px;border-radius:999px;border:1.5px solid rgba(74,143,255,.36);background:rgba(74,143,255,.1);color:#88b8ff;font-size:.92rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #startBtn:hover{background:rgba(74,143,255,.22)}
+  #hint{font-size:.74rem;color:#1a2a38;margin-top:8px}
+  /* diff buttons */
+  #diffWrap{display:flex;gap:8px;margin-bottom:10px}
+  .dbtn{padding:7px 16px;border-radius:999px;border:1.5px solid rgba(74,143,255,.18);background:rgba(6,14,28,.8);color:#3a5070;font-size:.76rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+  .dbtn.active,.dbtn:hover{border-color:rgba(74,143,255,.5);color:#88b8ff;background:rgba(74,143,255,.1)}
+</style>
+</head>
+<body>
+<h1>🔐 Escape Grid</h1>
+<div id="diffWrap">
+  <button class="dbtn active" id="d1">7×7 Easy</button>
+  <button class="dbtn" id="d2">10×10 Medium</button>
+  <button class="dbtn" id="d3">13×13 Hard</button>
+</div>
+<div id="meta">
+  <span>Moves <span class="mv" id="movesEl">0</span></span>
+  <span>Keys <span class="mv" id="keysEl">0/0</span></span>
+  <span>Level <span class="mv" id="levelEl">1</span></span>
+  <span>Best <span class="mv" id="bestEl">—</span></span>
+</div>
+<div id="wrap">
+  <div id="gridWrap"><div id="grid"></div></div>
+  <div id="panel">
+    <div class="panel-card">
+      <strong>Legend</strong>
+      <div class="legend-row"><div class="legend-dot" style="background:#2a5acc;box-shadow:0 0 8px #4a8fff55"></div> You</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#104828;box-shadow:0 0 8px #44ff8c55"></div> Exit</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#5a3400;box-shadow:0 0 8px #ffc82855"></div> Key</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#5a0c0c;box-shadow:0 0 8px #ff3c3c55"></div> Guard</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#380a38;box-shadow:0 0 8px #c83cff55"></div> Trap</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#1a304e"></div> Wall</div>
+    </div>
+    <div class="panel-card">
+      <strong>Controls</strong>
+      ← → ↑ ↓ Arrow Keys<br>or WASD<br><br>
+      Collect all 🔑 keys before reaching the exit!<br><br>
+      Guards patrol — avoid their sight!<br>Traps reset your position.
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="ot" id="oTitle">ESCAPE GRID</div>
+  <div class="obig" id="oBig" style="display:none"></div>
+  <div class="os" id="oSub">Navigate the maze, collect all keys, then reach the exit.<br>Avoid guards and traps!</div>
+  <button id="startBtn">▶ START</button>
+</div>
+<div id="hint">Arrow Keys / WASD · Collect all 🔑 keys · Avoid guards 👁</div>
+
+<script>
+const grid=document.getElementById('grid');
+const movesEl=document.getElementById('movesEl');
+const keysEl=document.getElementById('keysEl');
+const levelEl=document.getElementById('levelEl');
+const bestEl=document.getElementById('bestEl');
+const overlay=document.getElementById('overlay');
+const oTitle=document.getElementById('oTitle');
+const oBig=document.getElementById('oBig');
+const oSub=document.getElementById('oSub');
+const startBtn=document.getElementById('startBtn');
+
+let diffMode=7,level=1,moves=0,keysHeld=0,totalKeys=0;
+let playerPos,exitPos,cells,gridSize,guards,traps,startPos;
+let guardTimer=0;
+let best={};
+
+document.querySelectorAll('.dbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dbtn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    diffMode=btn.id==='d1'?7:btn.id==='d2'?10:13;
+  });
+});
+
+function generateMaze(size){
+  /* Generate a solvable maze using recursive backtracking */
+  const maze=Array.from({length:size},()=>new Array(size).fill(1)); // 1=wall
+  function carve(x,y){
+    const dirs=[[0,-2],[0,2],[-2,0],[2,0]].sort(()=>Math.random()-.5);
+    dirs.forEach(([dx,dy])=>{
+      const nx=x+dx,ny=y+dy;
+      if(nx>=0&&ny>=0&&nx<size&&ny<size&&maze[ny][nx]===1){
+        maze[y+dy/2][x+dx/2]=0;
+        maze[ny][nx]=0;
+        carve(nx,ny);
+      }
+    });
+  }
+  maze[1][1]=0;carve(1,1);
+  maze[0][0]=0;maze[size-1][size-1]=0;
+  /* ensure start/exit reachable */
+  maze[0][1]=0;maze[1][size-2]=0;maze[size-2][size-1]=0;
+  return maze;
+}
+
+function initLevel(){
+  const size=diffMode;
+  gridSize=size;
+  const maze=generateMaze(size);
+  cells=maze; // 0=empty, 1=wall, 2=key, 3=guard, 4=trap, 5=exit
+
+  /* set exit bottom-right */
+  cells[size-1][size-1]=5;
+  /* start top-left */
+  cells[0][0]=0;
+  playerPos={x:0,y:0};
+  startPos={x:0,y:0};
+
+  /* place keys */
+  const keyCount=Math.max(1,Math.floor(size/3));
+  totalKeys=keyCount;keysHeld=0;
+  let placed=0;
+  while(placed<keyCount){
+    const kx=1+Math.random()*(size-2)|0,ky=1+Math.random()*(size-2)|0;
+    if(cells[ky][kx]===0&&!(kx===0&&ky===0)&&!(kx===size-1&&ky===size-1)){
+      cells[ky][kx]=2;placed++;
+    }
+  }
+
+  /* place guards (only medium+) */
+  guards=[];
+  if(size>=10){
+    const guardCount=Math.floor(size/5);
+    for(let g=0;g<guardCount;g++){
+      let gx,gy;
+      do{gx=2+Math.random()*(size-4)|0;gy=2+Math.random()*(size-4)|0;}
+      while(cells[gy][gx]!==0);
+      guards.push({x:gx,y:gy,dir:[1,0],steps:0,maxSteps:2+Math.random()*4|0});
+    }
+  }
+
+  /* place traps (hard only) */
+  traps=[];
+  if(size>=13){
+    const trapCount=5;
+    for(let t=0;t<trapCount;t++){
+      let tx,ty;
+      do{tx=1+Math.random()*(size-2)|0;ty=1+Math.random()*(size-2)|0;}
+      while(cells[ty][tx]!==0);
+      cells[ty][tx]=4;traps.push({x:tx,y:ty});
+    }
+  }
+
+  moves=0;movesEl.textContent=0;keysEl.textContent=`0/${totalKeys}`;
+  render();
+}
+
+function render(){
+  const sz=diffMode===7?60:diffMode===10?46:36;
+  grid.style.gridTemplateColumns=`repeat(${gridSize},${sz}px)`;
+  grid.innerHTML='';
+
+  /* guard positions set */
+  const guardSet=new Set(guards.map(g=>`${g.x},${g.y}`));
+
+  for(let y=0;y<gridSize;y++){
+    for(let x=0;x<gridSize;x++){
+      const el=document.createElement('div');
+      el.className='cell';
+      el.style.width=el.style.height=sz+'px';
+      const v=cells[y][x];
+      const isPlayer=playerPos.x===x&&playerPos.y===y;
+      const isGuard=guardSet.has(`${x},${y}`);
+
+      if(isPlayer){el.classList.add('player');el.textContent='🚀';}
+      else if(isGuard){
+        el.classList.add('guard');
+        /* check if guard sees player */
+        const g=guards.find(g=>g.x===x&&g.y===y);
+        const inSight=canSee(g,playerPos);
+        if(inSight) el.classList.add('see');
+        el.textContent='👁️';
+        el.style.fontSize=(sz*.55)+'px';
+      }
+      else if(v===1){el.classList.add('wall');el.textContent='▪';el.style.fontSize=(sz*.4)+'px';el.style.color='rgba(74,143,255,.12)';}
+      else if(v===2){el.classList.add('key-cell');el.textContent='🔑';el.style.fontSize=(sz*.55)+'px';}
+      else if(v===5){el.classList.add('exit');el.textContent='🚪';el.style.fontSize=(sz*.55)+'px';}
+      else if(v===4){el.classList.add('trap');el.textContent='⚠️';el.style.fontSize=(sz*.5)+'px';}
+      else{el.classList.add('empty');}
+
+      grid.appendChild(el);
+    }
+  }
+}
+
+function canSee(guard,target){
+  /* simple orthogonal line of sight */
+  if(guard.x===target.x){
+    const minY=Math.min(guard.y,target.y),maxY=Math.max(guard.y,target.y);
+    for(let y=minY+1;y<maxY;y++) if(cells[y][guard.x]===1) return false;
+    return Math.abs(guard.y-target.y)<=4;
+  }
+  if(guard.y===target.y){
+    const minX=Math.min(guard.x,target.x),maxX=Math.max(guard.x,target.x);
+    for(let x=minX+1;x<maxX;x++) if(cells[guard.y][x]===1) return false;
+    return Math.abs(guard.x-target.x)<=4;
+  }
+  return false;
+}
+
+function moveGuards(){
+  const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
+  guards.forEach(g=>{
+    g.steps++;
+    if(g.steps>=g.maxSteps){
+      /* pick new random open direction */
+      const shuffled=DIRS.sort(()=>Math.random()-.5);
+      for(const [dx,dy] of shuffled){
+        const nx=g.x+dx,ny=g.y+dy;
+        if(nx>=0&&ny>=0&&nx<gridSize&&ny<gridSize&&cells[ny][nx]===0){
+          g.x=nx;g.y=ny;break;
+        }
+      }
+      g.steps=0;g.maxSteps=2+Math.random()*3|0;
+    }
+    /* caught player? */
+    if(g.x===playerPos.x&&g.y===playerPos.y){caught();return;}
+    if(canSee(g,playerPos)){caught();return;}
+  });
+}
+
+function caught(){
+  /* reset to start */
+  playerPos={...startPos};
+  moves+=3; // penalty
+  movesEl.textContent=moves;
+  render();
+  /* flash effect */
+  const cells2=grid.querySelectorAll('.player');
+  cells2.forEach(c=>{c.style.background='#ff2200';setTimeout(()=>{render();},300);});
+}
+
+function move(dx,dy){
+  const nx=playerPos.x+dx,ny=playerPos.y+dy;
+  if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) return;
+  const v=cells[ny][nx];
+  if(v===1) return; // wall
+
+  playerPos={x:nx,y:ny};
+  moves++;movesEl.textContent=moves;
+
+  if(v===2){cells[ny][nx]=0;keysHeld++;keysEl.textContent=`${keysHeld}/${totalKeys}`;}
+  if(v===4){/* trap */playerPos={...startPos};moves+=2;movesEl.textContent=moves;}
+  if(v===5){
+    if(keysHeld<totalKeys){/* door locked */return;}
+    else{levelComplete();}
+  }
+
+  /* guard step */
+  guardTimer++;if(guardTimer%2===0) moveGuards();
+  render();
+}
+
+function levelComplete(){
+  level++;levelEl.textContent=level;
+  const bKey=`eg_best_${diffMode}`;
+  const prev=+localStorage.getItem(bKey)||Infinity;
+  if(moves<prev){localStorage.setItem(bKey,moves);bestEl.textContent=moves;}
+  oTitle.textContent='ESCAPED! 🎉';
+  oBig.textContent=moves+' moves';oBig.style.display='block';
+  oSub.innerHTML=`Level cleared in <strong style="color:#fff">${moves}</strong> moves.<br>${moves<(prev||9999)?'🏆 New Best!':'Try again for fewer moves!'}<br><br>Starting Level ${level}…`;
+  startBtn.textContent='▶ NEXT LEVEL';
+  overlay.classList.remove('hidden');
+}
+
+function startGame(){
+  if(level===1||(document.querySelectorAll('.dbtn.active').length)) initLevel();
+  else initLevel();
+  overlay.classList.add('hidden');
+}
+
+startBtn.addEventListener('click',startGame);
+
+const MAP={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],
+           KeyA:[-1,0],KeyD:[1,0],KeyW:[0,-1],KeyS:[0,1]};
+window.addEventListener('keydown',e=>{
+  if(MAP[e.code]){e.preventDefault();const[dx,dy]=MAP[e.code];move(dx,dy);}
+});
+
+document.querySelectorAll('.dbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>level=1);
+});
+</script>
+</body>
+</html>

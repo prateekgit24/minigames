@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f; --bg2: #13131c; --bg3: #1c1c2a; --border: #2a2a3d;
+  --accent: #7c6cfc; --accent2: #fc6c9a; --accent3: #6cfcca;
+  --text: #f0efff; --text2: #888aaa; --text3: #555577; --card: #16161f;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+.mono { font-family: 'Space Mono', monospace; }
+
+header { padding: 14px 28px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); background: var(--bg2); position: sticky; top: 0; z-index: 100; }
+.logo { font-size: 20px; font-weight: 800; letter-spacing: -1px; }
+.logo span { color: var(--accent); }
+.logo em { color: var(--accent2); font-style: normal; }
+.nav-tabs { display: flex; gap: 4px; margin-left: auto; }
+.nav-tab { padding: 7px 16px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--text2); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+.nav-tab:hover { color: var(--text); background: var(--bg3); }
+.nav-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+.settings-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 12px 28px; background: var(--bg2); border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); margin-top: 20px; }
+.setting-group { display: flex; flex-direction: column; gap: 4px; }
+.setting-label { font-size: 9px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Mono', monospace; }
+.btn-group { display: flex; gap: 3px; }
+.seg-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.seg-btn:hover { color: var(--text); border-color: var(--accent); }
+.seg-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.seg-btn.accent2.active { background: var(--accent2); border-color: var(--accent2); }
+.seg-btn.accent3.active { background: var(--accent3); color: #000; border-color: var(--accent3); }
+.upload-btn-wrap { margin-left: auto; }
+.upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 8px; border: 1.5px dashed var(--accent); background: rgba(124,108,252,0.07); color: var(--accent); font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.18s; }
+.upload-btn:hover { background: rgba(124,108,252,0.15); }
+#file-input { display: none; }
+
+.game-area { max-width: 1200px; margin: 20px auto; padding: 0 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.panel-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 7px; background: var(--bg2); flex-wrap: wrap; }
+.panel-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Mono', monospace; }
+.panel-body { padding: 14px; display: flex; flex-direction: column; align-items: center; overflow: auto; }
+
+/* ---- In-panel mini grid toggles ---- */
+.grid-toggle-mini { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.grid-toggle-mini .setting-label { font-size: 8px; }
+.mini-btn { padding: 3px 8px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg3); color: var(--text3); font-size: 10px; font-family: 'Space Mono', monospace; cursor: pointer; transition: all 0.14s; }
+.mini-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+.mini-btn.active { background: rgba(108,252,202,0.12); border-color: var(--accent3); color: var(--accent3); }
+.mini-sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+
+/* ---- Canvas ---- */
+.canvas-wrap { position: relative; display: inline-block; }
+canvas { display: block; image-rendering: pixelated; }
+.grid-overlay { position: absolute; top: 0; left: 0; pointer-events: none; image-rendering: pixelated; }
+.hover-overlay { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; image-rendering: pixelated; }
+
+/* ---- Zoom ---- */
+.zoom-row { display: flex; align-items: center; gap: 3px; margin-top: 8px; }
+.zoom-row .setting-label { margin-right: 4px; }
+.expand-btn { padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 13px; cursor: pointer; transition: all 0.15s; margin-left: 6px; }
+.expand-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+/* ---- Tools ---- */
+.tools-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+.tool-btn { padding: 5px 11px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.14s; display: flex; align-items: center; gap: 4px; }
+.tool-btn:hover { color: var(--text); border-color: var(--accent); }
+.tool-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tool-btn.eraser.active { background: var(--accent2); border-color: var(--accent2); }
+.tool-btn.fill.active { background: var(--accent3); color: #000; border-color: var(--accent3); }
+.palette-row { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+.pal-swatch { width: 24px; height: 24px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; transition: transform 0.12s, border-color 0.12s; }
+.pal-swatch:hover { transform: scale(1.2); }
+.pal-swatch.active { border-color: #fff; transform: scale(1.2); }
+
+/* ---- Actions ---- */
+.actions-bar { max-width: 1200px; margin: 0 auto 28px; padding: 0 28px; display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+.action-btn { padding: 9px 16px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg2); color: var(--text); font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.16s; }
+.action-btn:hover { border-color: var(--accent); color: var(--accent); }
+.action-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.action-btn.primary:hover { background: #6a5ae0; }
+.action-btn.success { background: var(--accent3); color: #000; border-color: var(--accent3); }
+.action-btn.success:hover { filter: brightness(0.85); }
+.action-btn:disabled { opacity: 0.35; cursor: default; }
+.action-btn:disabled:hover { border-color: var(--border); color: var(--text); }
+.score-pill { padding: 9px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 9px; font-family: 'Space Mono', monospace; font-size: 12px; color: var(--text2); margin-left: auto; }
+.score-pill .val { color: var(--accent3); font-size: 16px; font-weight: 700; }
+
+/* ---- Timer ---- */
+.timer-pill { padding: 6px 12px; background: rgba(108,252,202,0.08); border: 1px solid rgba(108,252,202,0.25); border-radius: 8px; font-family: 'Space Mono', monospace; font-size: 14px; font-weight: 700; color: var(--accent3); min-width: 82px; text-align: center; transition: color 0.3s; }
+.timer-pill.urgent { color: var(--accent2); border-color: rgba(252,108,154,0.5); animation: tpulse 0.8s infinite; }
+@keyframes tpulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* ---- Compare Overlay ---- */
+.compare-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 999; align-items: center; justify-content: center; }
+.compare-overlay.visible { display: flex; }
+.compare-modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 18px; padding: 28px; max-width: 90vw; max-height: 90vh; overflow: auto; text-align: center; }
+.compare-modal h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+.compare-modal p { color: var(--text2); font-size: 13px; margin-bottom: 20px; }
+.compare-images { display: flex; gap: 18px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+.compare-col { text-align: center; }
+.compare-col .lbl { font-size: 11px; color: var(--text2); margin-top: 6px; font-family: 'Space Mono', monospace; text-transform: uppercase; }
+.compare-score { margin-top: 20px; font-size: 44px; font-weight: 800; color: var(--accent3); font-family: 'Space Mono', monospace; }
+.compare-msg { font-size: 16px; color: var(--text2); margin-top: 4px; }
+.modal-close { margin-top: 18px; padding: 9px 26px; border-radius: 9px; border: none; background: var(--accent); color: #fff; font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+/* ---- Fullscreen ---- */
+.fullscreen-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 900; display: none; flex-direction: column; }
+.fullscreen-overlay.visible { display: flex; }
+.fullscreen-header { display: flex; align-items: center; padding: 12px 22px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 12px; flex-shrink: 0; }
+.fullscreen-close { margin-left: auto; padding: 6px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-family: 'Syne', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.fullscreen-close:hover { border-color: var(--accent2); color: var(--accent2); }
+.fullscreen-body { flex: 1; display: flex; gap: 20px; padding: 20px; overflow: auto; align-items: flex-start; justify-content: center; }
+.fullscreen-side { display: flex; flex-direction: column; gap: 16px; min-width: 160px; }
+.fullscreen-side .tools-row { flex-direction: column; align-items: stretch; margin-top: 0; }
+
+/* ---- Challenge ---- */
+.challenge-wrap { max-width: 920px; margin: 0 auto; padding: 28px; }
+.challenge-header { text-align: center; margin-bottom: 28px; }
+.challenge-header h2 { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; }
+.challenge-header p { color: var(--text2); margin-top: 6px; }
+.category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.cat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.18s; }
+.cat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.cat-card.active { border-color: var(--accent); background: rgba(124,108,252,0.1); }
+.cat-icon { font-size: 32px; margin-bottom: 8px; }
+.cat-name { font-size: 14px; font-weight: 700; }
+.cat-levels { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.level-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+.level-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 4px; text-align: center; cursor: pointer; transition: all 0.16s; }
+.level-card:hover { border-color: var(--accent2); }
+.level-card.active { border-color: var(--accent2); background: rgba(252,108,154,0.1); }
+.level-num { font-size: 20px; font-weight: 800; font-family: 'Space Mono', monospace; }
+.level-badge { font-size: 9px; padding: 2px 6px; border-radius: 20px; margin-top: 3px; display: inline-block; font-weight: 600; }
+.level-name { font-size: 9px; color: var(--text3); margin-top: 4px; font-family: 'Space Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px; }
+.badge-easy { background: rgba(108,252,202,0.15); color: var(--accent3); }
+.badge-medium { background: rgba(252,200,108,0.15); color: #fcca6c; }
+.badge-hard { background: rgba(252,108,154,0.15); color: var(--accent2); }
+.badge-expert { background: rgba(124,108,252,0.15); color: var(--accent); }
+.badge-master { background: rgba(252,108,108,0.15); color: #fc6c6c; }
+.challenge-start-btn { display: block; width: 100%; padding: 13px; border-radius: 12px; border: none; background: var(--accent); color: #fff; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.16s; }
+.challenge-start-btn:hover { background: #6a5ae0; }
+
+/* ---- Real image ref wrap ---- */
+.real-ref-wrap { position: relative; display: inline-block; }
+.real-ref-img { display: block; image-rendering: auto; border-radius: 8px; background: #fff; }
+
+/* ---- Code It ---- */
+.codeit-wrap { max-width: 1200px; margin: 0 auto; padding: 20px 28px; }
+.codeit-header { margin-bottom: 18px; }
+.codeit-header h2 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; }
+.codeit-header h2 .glow { color: var(--accent3); text-shadow: 0 0 28px rgba(108,252,202,0.45); }
+.codeit-header p { color: var(--text2); margin-top: 5px; }
+.codeit-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+.codeit-editor-panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; }
+.code-toolbar { display: flex; gap: 7px; align-items: center; padding: 9px 12px; background: var(--bg2); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.code-run-btn { padding: 6px 18px; border-radius: 7px; border: none; background: var(--accent3); color: #000; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: filter 0.15s; }
+.code-run-btn:hover { filter: brightness(0.85); }
+.code-clear-btn { padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-family: 'Syne', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+.code-clear-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.code-snippet-select { padding: 5px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg3); color: var(--text2); font-family: 'Space Mono', monospace; font-size: 10px; cursor: pointer; margin-left: auto; }
+.code-api-hint { padding: 6px 12px; background: rgba(108,252,202,0.04); border-bottom: 1px solid var(--border); font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent3); opacity: 0.75; line-height: 1.9; white-space: pre-line; }
+.code-editor { flex: 1; width: 100%; min-height: 280px; padding: 14px; background: #0c0c15; color: #dde0ff; font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.75; border: none; outline: none; resize: vertical; tab-size: 2; }
+.code-error { padding: 6px 12px; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent2); min-height: 26px; background: rgba(252,108,154,0.05); border-top: 1px solid var(--border); }
+.codeit-canvas-panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.codeit-settings-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 9px 12px; background: var(--bg2); border-bottom: 1px solid var(--border); }
+.codeit-canvas-body { padding: 14px; display: flex; flex-direction: column; align-items: center; }
+.codeit-actions { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+
+#no-image-msg { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">pixel<span>.</span><em>game</em></div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchScreen('free')">Free Play</button>
+    <button class="nav-tab" onclick="switchScreen('challenge')">Challenge Mode</button>
+    <button class="nav-tab" onclick="switchScreen('codeit')">⌨ Code It</button>
+  </nav>
+</header>
+
+<!-- ===== FREE PLAY ===== -->
+<div class="screen active" id="screen-free">
+  <div class="settings-bar">
+    <div class="setting-group">
+      <div class="setting-label">Resolution</div>
+      <div class="btn-group" id="res-group">
+        <button class="seg-btn active" onclick="setRes(this,15)">15×15</button>
+        <button class="seg-btn" onclick="setRes(this,50)">50×50</button>
+        <button class="seg-btn" onclick="setRes(this,80)">80×80</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Colour Mode</div>
+      <div class="btn-group">
+        <button class="seg-btn accent2 active" id="mode-colour" onclick="setColMode('colour')">Colour</button>
+        <button class="seg-btn" id="mode-bw" onclick="setColMode('bw')">B&amp;W</button>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-label">Grid Colour</div>
+      <div class="btn-group">
+        <button class="seg-btn active" id="fp-gcol-black" onclick="setGridColor('fp','black')">⬛ Black</button>
+        <button class="seg-btn" id="fp-gcol-white" onclick="setGridColor('fp','white')">⬜ White</button>
+      </div>
+    </div>
+    <div class="upload-btn-wrap">
+      <label class="upload-btn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload Image
+        <input type="file" id="file-input" accept="image/*">
+      </label>
+    </div>
+  </div>
+
+  <div class="game-area">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Reference Image</span>
+        <span class="panel-title mono" id="ref-info" style="color:var(--text3)">no image loaded</span>
+        <div class="grid-toggle-mini" style="margin-left:auto">
+          <span class="setting-label">Ref Grid</span>
+          <button class="mini-btn active" id="fp-ref-grid-on" onclick="setRefGrid('fp',true)">On</button>
+          <button class="mini-btn" id="fp-ref-grid-off" onclick="setRefGrid('fp',false)">Off</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div id="no-image-msg">
+          <p>Upload an image to start</p>
+          <p style="margin-top:5px;font-size:11px;opacity:0.6">Your image will be pixelated here</p>
+        </div>
+        <div class="canvas-wrap" id="ref-wrap" style="display:none">
+          <canvas id="ref-canvas"></canvas>
+          <canvas id="ref-grid-canvas" class="grid-overlay"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="fp-draw-panel">
+      <div class="panel-header">
+        <span class="panel-title">Your Canvas</span>
+        <span class="panel-title mono" id="draw-info" style="color:var(--text3)">0% filled</span>
+        <div class="grid-toggle-mini">
+          <span class="setting-label">Canvas Grid</span>
+          <button class="mini-btn active" id="fp-draw-grid-on" onclick="setDrawGrid('fp',true)">On</button>
+          <button class="mini-btn" id="fp-draw-grid-off" onclick="setDrawGrid('fp',false)">Off</button>
+        </div>
+        <button class="expand-btn" onclick="openFullscreen('fp')" title="Fullscreen">⤢</button>
+      </div>
+      <div class="panel-body">
+        <div class="canvas-wrap" id="fp-draw-wrap">
+          <canvas id="draw-canvas"></canvas>
+          <canvas id="draw-grid-canvas" class="grid-overlay"></canvas>
+          <canvas id="draw-hover-canvas" class="hover-overlay"></canvas>
+        </div>
+        <div class="zoom-row">
+          <span class="setting-label">Zoom</span>
+          <button class="seg-btn active" id="fp-z1" onclick="setZoom('fp',1)">1×</button>
+          <button class="seg-btn" id="fp-z2" onclick="setZoom('fp',2)">2×</button>
+          <button class="seg-btn" id="fp-z3" onclick="setZoom('fp',3)">3×</button>
+        </div>
+        <div class="palette-row" id="palette-row"></div>
+        <div class="tools-row">
+          <button class="tool-btn active" id="tool-draw" onclick="setTool('draw')">✏️ Draw</button>
+          <button class="tool-btn eraser" id="tool-erase" onclick="setTool('erase')">🧹 Eraser</button>
+          <button class="tool-btn fill" id="tool-fill" onclick="setTool('fill')">🪣 Fill</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions-bar">
+    <button class="action-btn" id="fp-undo-btn" onclick="undo('fp')" disabled>↩ Undo</button>
+    <button class="action-btn" id="fp-redo-btn" onclick="redo('fp')" disabled>↪ Redo</button>
+    <button class="action-btn primary" onclick="checkAccuracy()">📊 Check Accuracy</button>
+    <button class="action-btn" onclick="compareImages()">🔍 Compare</button>
+    <button class="action-btn" onclick="clearCanvas()">🗑️ Clear</button>
+    <button class="action-btn success" onclick="downloadPixelArt()">⬇️ Download Art</button>
+    <div class="score-pill">Match: <span class="val" id="score-display">—</span></div>
+  </div>
+</div>
+
+<!-- ===== CHALLENGE ===== -->
+<div class="screen" id="screen-challenge">
+  <div class="challenge-wrap" id="challenge-config">
+    <div class="challenge-header">
+      <h2>Challenge Mode</h2>
+      <p>Pick a category, choose a level, and recreate the image pixel by pixel.</p>
+    </div>
+
+    <div class="setting-label" style="margin-bottom:9px">Category</div>
+    <div class="category-grid">
+      <div class="cat-card active" onclick="selectCat(this,'shapes')">
+        <div class="cat-icon">🔷</div><div class="cat-name">Shapes</div><div class="cat-levels">5 levels</div>
+      </div>
+      <div class="cat-card" onclick="selectCat(this,'cartoon')">
+        <div class="cat-icon">🐸</div><div class="cat-name">Cartoon</div><div class="cat-levels">5 levels</div>
+      </div>
+      <div class="cat-card" onclick="selectCat(this,'scenery')">
+        <div class="cat-icon">🌄</div><div class="cat-name">Scenery</div><div class="cat-levels">5 levels</div>
+      </div>
+      <div class="cat-card" onclick="selectCat(this,'people')">
+        <div class="cat-icon">🧑</div><div class="cat-name">People</div><div class="cat-levels">5 levels</div>
+      </div>
+      <div class="cat-card" onclick="selectCat(this,'everyday')">
+        <div class="cat-icon">☕</div><div class="cat-name">Everyday</div><div class="cat-levels">5 levels</div>
+      </div>
+    </div>
+
+    <div class="setting-label" style="margin-bottom:9px">Level</div>
+    <div class="level-grid">
+      <div class="level-card active" onclick="selectLevel(this,1)">
+        <div class="level-num">1</div><div class="level-badge badge-easy">Easy</div>
+        <div class="level-name" id="lname-1">Circle</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(this,2)">
+        <div class="level-num">2</div><div class="level-badge badge-medium">Medium</div>
+        <div class="level-name" id="lname-2">Diamond</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(this,3)">
+        <div class="level-num">3</div><div class="level-badge badge-hard">Hard</div>
+        <div class="level-name" id="lname-3">Stripes</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(this,4)">
+        <div class="level-num">4</div><div class="level-badge badge-expert">Expert</div>
+        <div class="level-name" id="lname-4">Checkers</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(this,5)">
+        <div class="level-num">5</div><div class="level-badge badge-master">Master</div>
+        <div class="level-name" id="lname-5">Star</div>
+      </div>
+    </div>
+
+    <div class="settings-bar" style="margin:0 0 18px; border-radius:12px; border:1px solid var(--border); margin-top:0;">
+      <div class="setting-group">
+        <div class="setting-label">Resolution</div>
+        <div class="btn-group" id="ch-res-group">
+          <button class="seg-btn active" onclick="setChallengeRes(this,15)">15×15</button>
+          <button class="seg-btn" onclick="setChallengeRes(this,50)">50×50</button>
+          <button class="seg-btn" onclick="setChallengeRes(this,80)">80×80</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Colour Mode</div>
+        <div class="btn-group">
+          <button class="seg-btn accent2 active" id="ch-mode-colour" onclick="setChallengeMode('colour')">Colour</button>
+          <button class="seg-btn" id="ch-mode-bw" onclick="setChallengeMode('bw')">B&amp;W</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Grid Colour</div>
+        <div class="btn-group">
+          <button class="seg-btn active" id="ch-gcol-black" onclick="setGridColor('ch','black')">⬛ Black</button>
+          <button class="seg-btn" id="ch-gcol-white" onclick="setGridColor('ch','white')">⬜ White</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <div class="setting-label">Timer</div>
+        <div class="btn-group" id="ch-timer-group">
+          <button class="seg-btn active" onclick="setChallengeTimer('auto')">Auto</button>
+          <button class="seg-btn" onclick="setChallengeTimer(120)">2m</button>
+          <button class="seg-btn" onclick="setChallengeTimer(300)">5m</button>
+          <button class="seg-btn" onclick="setChallengeTimer(600)">10m</button>
+          <button class="seg-btn" onclick="setChallengeTimer(0)">∞</button>
+        </div>
+      </div>
+    </div>
+    <button class="challenge-start-btn" onclick="startChallenge()">Start Challenge →</button>
+  </div>
+
+  <div id="challenge-game" style="display:none">
+    <div class="game-area">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title" id="ch-panel-title">Reference</span>
+          <span class="panel-title mono" id="ch-panel-meta" style="color:var(--text3)"></span>
+          <div class="grid-toggle-mini" style="margin-left:auto">
+            <span class="setting-label">Ref Grid</span>
+            <button class="mini-btn active" id="ch-ref-grid-on" onclick="setRefGrid('ch',true)">On</button>
+            <button class="mini-btn" id="ch-ref-grid-off" onclick="setRefGrid('ch',false)">Off</button>
+          </div>
+          <span class="timer-pill" id="timer-display" style="display:none">⏱ --:--</span>
+        </div>
+        <div class="panel-body">
+          <div class="canvas-wrap" id="ch-ref-canvas-wrap">
+            <canvas id="ch-ref-canvas"></canvas>
+            <canvas id="ch-ref-grid" class="grid-overlay"></canvas>
+          </div>
+          <div class="real-ref-wrap" id="ch-ref-img-wrap" style="display:none">
+            <img id="ch-ref-img" class="real-ref-img" alt="Reference" />
+            <canvas id="ch-ref-img-grid" class="grid-overlay" style="border-radius:8px"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="panel" id="ch-draw-panel">
+        <div class="panel-header">
+          <span class="panel-title">Your Canvas</span>
+          <span class="panel-title mono" id="ch-draw-info" style="color:var(--text3)">0% filled</span>
+          <div class="grid-toggle-mini">
+            <span class="setting-label">Canvas Grid</span>
+            <button class="mini-btn active" id="ch-draw-grid-on" onclick="setDrawGrid('ch',true)">On</button>
+            <button class="mini-btn" id="ch-draw-grid-off" onclick="setDrawGrid('ch',false)">Off</button>
+          </div>
+          <button class="expand-btn" onclick="openFullscreen('ch')" title="Fullscreen">⤢</button>
+        </div>
+        <div class="panel-body">
+          <div class="canvas-wrap" id="ch-draw-wrap">
+            <canvas id="ch-draw-canvas"></canvas>
+            <canvas id="ch-draw-grid" class="grid-overlay"></canvas>
+            <canvas id="ch-draw-hover" class="hover-overlay"></canvas>
+          </div>
+          <div class="zoom-row">
+            <span class="setting-label">Zoom</span>
+            <button class="seg-btn active" id="ch-z1" onclick="setZoom('ch',1)">1×</button>
+            <button class="seg-btn" id="ch-z2" onclick="setZoom('ch',2)">2×</button>
+            <button class="seg-btn" id="ch-z3" onclick="setZoom('ch',3)">3×</button>
+          </div>
+          <div class="palette-row" id="ch-palette-row"></div>
+          <div class="tools-row">
+            <button class="tool-btn active" id="ch-tool-draw" onclick="setChallengeToolMode('draw')">✏️ Draw</button>
+            <button class="tool-btn eraser" id="ch-tool-erase" onclick="setChallengeToolMode('erase')">🧹 Eraser</button>
+            <button class="tool-btn fill" id="ch-tool-fill" onclick="setChallengeToolMode('fill')">🪣 Fill</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="actions-bar">
+      <button class="action-btn" onclick="backToChallenge()">← Back</button>
+      <button class="action-btn" id="ch-undo-btn" onclick="undo('ch')" disabled>↩ Undo</button>
+      <button class="action-btn" id="ch-redo-btn" onclick="redo('ch')" disabled>↪ Redo</button>
+      <button class="action-btn primary" onclick="checkChallengeAccuracy()">📊 Check Accuracy</button>
+      <button class="action-btn" onclick="compareChallengeImages()">🔍 Compare</button>
+      <button class="action-btn" onclick="clearChallengeCanvas()">🗑️ Clear</button>
+      <button class="action-btn success" onclick="downloadChallengeArt()">⬇️ Download</button>
+      <div class="score-pill">Match: <span class="val" id="ch-score-display">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CODE IT ===== -->
+<div class="screen" id="screen-codeit">
+  <div class="codeit-wrap">
+    <div class="codeit-header">
+      <h2>⌨ Code <span class="glow">It</span></h2>
+      <p>Write JavaScript to draw patterns on the pixel canvas. Use the API below.</p>
+    </div>
+    <div class="codeit-layout">
+      <div class="codeit-editor-panel">
+        <div class="code-toolbar">
+          <button class="code-run-btn" onclick="runUserCode()">▶ Run</button>
+          <button class="code-clear-btn" onclick="clearCodeCanvas()">🗑 Clear</button>
+          <select class="code-snippet-select" onchange="loadSnippet(this.value); this.value=''">
+            <option value="">📋 Examples…</option>
+            <option value="circle">Concentric Circles</option>
+            <option value="stripes">Colour Stripes</option>
+            <option value="checkers">Checkerboard</option>
+            <option value="gradient">Gradient</option>
+            <option value="star">5-Point Star</option>
+          </select>
+        </div>
+        <div class="code-api-hint">// pixel(x, y, color)  ·  rect(x1, y1, x2, y2, color)  ·  circle(cx, cy, radius, color)  ·  clear()
+// grid = resolution (e.g. 15)  ·  color = any CSS color string e.g. '#E63946'</div>
+        <textarea id="code-editor" class="code-editor" spellcheck="false">// Concentric circles
+const cx = grid / 2, cy = grid / 2;
+circle(cx, cy, grid * 0.42, '#4CC9F0');
+circle(cx, cy, grid * 0.28, '#E63946');
+circle(cx, cy, grid * 0.14, '#E9C46A');
+circle(cx, cy, grid * 0.05, '#2A9D8F');</textarea>
+        <div id="code-error" class="code-error"></div>
+      </div>
+      <div class="codeit-canvas-panel">
+        <div class="codeit-settings-bar">
+          <div class="setting-group">
+            <div class="setting-label">Resolution</div>
+            <div class="btn-group" id="ci-res-group">
+              <button class="seg-btn active" onclick="setCodeRes(this,15)">15×15</button>
+              <button class="seg-btn" onclick="setCodeRes(this,50)">50×50</button>
+              <button class="seg-btn" onclick="setCodeRes(this,80)">80×80</button>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-label">Grid</div>
+            <div class="btn-group">
+              <button class="seg-btn accent3 active" id="ci-grid-on" onclick="setCodeGrid(true)">On</button>
+              <button class="seg-btn" id="ci-grid-off" onclick="setCodeGrid(false)">Off</button>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-label">Grid Colour</div>
+            <div class="btn-group">
+              <button class="seg-btn active" id="ci-gcol-black" onclick="setGridColor('ci','black')">⬛</button>
+              <button class="seg-btn" id="ci-gcol-white" onclick="setGridColor('ci','white')">⬜</button>
+            </div>
+          </div>
+        </div>
+        <div class="codeit-canvas-body">
+          <div class="canvas-wrap" id="ci-canvas-wrap">
+            <canvas id="code-canvas"></canvas>
+            <canvas id="code-grid-canvas" class="grid-overlay"></canvas>
+          </div>
+          <div class="zoom-row">
+            <span class="setting-label">Zoom</span>
+            <button class="seg-btn active" id="ci-z1" onclick="setZoom('ci',1)">1×</button>
+            <button class="seg-btn" id="ci-z2" onclick="setZoom('ci',2)">2×</button>
+            <button class="seg-btn" id="ci-z3" onclick="setZoom('ci',3)">3×</button>
+          </div>
+          <div class="codeit-actions">
+            <button class="action-btn primary" onclick="runUserCode()">▶ Run Code</button>
+            <button class="action-btn success" onclick="downloadCodeArt()">⬇️ Download</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== COMPARE OVERLAY ===== -->
+<div class="compare-overlay" id="compare-overlay">
+  <div class="compare-modal">
+    <h2>Side by Side</h2>
+    <p>Reference vs your pixel art</p>
+    <div class="compare-images">
+      <div class="compare-col"><canvas id="cmp-ref"></canvas><div class="lbl">Reference</div></div>
+      <div class="compare-col"><canvas id="cmp-draw"></canvas><div class="lbl">Your Art</div></div>
+    </div>
+    <div class="compare-score" id="cmp-score">—</div>
+    <div class="compare-msg" id="cmp-msg"></div>
+    <button class="modal-close" onclick="closeCompare()">Close</button>
+  </div>
+</div>
+
+<!-- ===== FULLSCREEN OVERLAY ===== -->
+<div class="fullscreen-overlay" id="fullscreen-overlay">
+  <div class="fullscreen-header">
+    <span class="panel-title" id="fs-title">Canvas — Fullscreen</span>
+    <button class="fullscreen-close" onclick="closeFullscreen()">✕ Close</button>
+  </div>
+  <div class="fullscreen-body">
+    <div>
+      <div class="canvas-wrap" id="fs-canvas-wrap">
+        <canvas id="fs-canvas"></canvas>
+        <canvas id="fs-grid-canvas" class="grid-overlay"></canvas>
+        <canvas id="fs-hover-canvas" class="hover-overlay"></canvas>
+      </div>
+    </div>
+    <div class="fullscreen-side">
+      <div>
+        <div class="setting-label" style="margin-bottom:6px">Palette</div>
+        <div class="palette-row" id="fs-palette-row" style="justify-content:flex-start;max-width:160px"></div>
+      </div>
+      <div>
+        <div class="setting-label" style="margin-bottom:6px">Tools</div>
+        <div class="tools-row" style="flex-direction:column;align-items:stretch;">
+          <button class="tool-btn active" id="fs-tool-draw" onclick="setFsTool('draw')">✏️ Draw</button>
+          <button class="tool-btn eraser" id="fs-tool-erase" onclick="setFsTool('erase')">🧹 Eraser</button>
+          <button class="tool-btn fill" id="fs-tool-fill" onclick="setFsTool('fill')">🪣 Fill</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const CANVAS_PX = 340;
+const FS_PX = 580;
+
+// Grid step per resolution: number of cells between guide lines
+function getGridStep(res) {
+  if (res === 15) return 5;   // 3×3 sections of 5 cells
+  if (res === 50) return 10;  // 5×5 sections of 10 cells
+  if (res === 80) return 20;  // 4×4 sections of 20 cells (with mid at 40 too)
+  return Math.ceil(res / 4);
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let fp = {
+  res: 15, colMode: 'colour', showRefGrid: true, showDrawGrid: true, gridColor: 'black',
+  tool: 'draw', selectedColor: '#000000', zoom: 1,
+  drawData: [], refData: [], sourceImg: null, isDragging: false,
+  undoStack: [], redoStack: []
+};
+
+let ch = {
+  cat: 'shapes', level: 1, res: 15, colMode: 'colour',
+  showRefGrid: true, showDrawGrid: true, gridColor: 'black',
+  tool: 'draw', selectedColor: '#000000', zoom: 1,
+  drawData: [], refData: [], isDragging: false,
+  timerSeconds: 'auto', timeLeft: 0, timerRunning: false,
+  undoStack: [], redoStack: []
+};
+
+let ci = {
+  res: 15, showGrid: true, gridColor: 'black', zoom: 1,
+  drawData: []
+};
+
+let fsState = { which: null, isDragging: false };
+const drawControllers = {};
+let timerInterval = null;
+
+// ============================================================
+// PALETTES
+// ============================================================
+const COLOUR_PAL = ['#000000','#E63946','#F4A261','#E9C46A','#2A9D8F','#264653','#6A4C93','#F72585','#4CC9F0','#80B918','#FB5607','#ffffff'];
+const BW_PAL = ['#000000','#1a1a1a','#333333','#555555','#777777','#999999','#bbbbbb','#dddddd','#eeeeee','#ffffff'];
+function getPal(mode) { return mode === 'bw' ? BW_PAL : COLOUR_PAL; }
+
+// ============================================================
+// LEVEL NAMES  (ordered by level 1→5 = easy→master)
+// ============================================================
+const LEVEL_NAMES = {
+  shapes:   ['Circle', 'Diamond', 'Stripes', 'Checkers', 'Star'],
+  cartoon:  ['Mickey Mouse', 'Ben 10', 'Doraemon', 'Frozen', 'Tom & Jerry'],
+  scenery:  ['Scene 1', 'Scene 2', 'Scene 3', 'Scene 4', 'Scene 5'],
+  people:   ['Portrait', 'Robert', 'Einstein', 'Scarlett', 'Harry Potter'],
+  everyday: ['Room', 'House', 'Street', 'Train', 'Times Square'],
+};
+
+function updateLevelNames(cat) {
+  const names = LEVEL_NAMES[cat] || [];
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('lname-' + i);
+    if (el) el.textContent = names[i - 1] || '';
+  }
+}
+
+// ============================================================
+// CATEGORY IMAGE FILES  (all non-shapes use real images)
+// ============================================================
+const CATEGORY_IMAGES = {
+  cartoon: [
+    { file: 'images/cartoon/Mickey.webp',     name: 'Mickey Mouse' },
+    { file: 'images/cartoon/ben.jpg',         name: 'Ben 10' },
+    { file: 'images/cartoon/doraemon.jpg',    name: 'Doraemon' },
+    { file: 'images/cartoon/frozen.jpg',      name: 'Frozen' },
+    { file: 'images/cartoon/tomandjerry.png', name: 'Tom & Jerry' },
+  ],
+  scenery: [
+    { file: 'images/scenery/scene1.jpg', name: 'Scene 1' },
+    { file: 'images/scenery/scene2.jpg', name: 'Scene 2' },
+    { file: 'images/scenery/scene3.jpg', name: 'Scene 3' },
+    { file: 'images/scenery/scene4.jpg', name: 'Scene 4' },
+    { file: 'images/scenery/scene5.jpg', name: 'Scene 5' },
+  ],
+  people: [
+    { file: 'images/people/portrait level1.jpg',      name: 'Portrait' },
+    { file: 'images/people/robert level2.jpg',        name: 'Robert' },
+    { file: 'images/people/einstein level3.jpg',      name: 'Einstein' },
+    { file: 'images/people/scarlett level4.jpg',      name: 'Scarlett' },
+    { file: 'images/people/harrypotter level5.jpg',   name: 'Harry Potter' },
+  ],
+  everyday: [
+    { file: 'images/everyday/room level1.jpg',          name: 'Room' },
+    { file: 'images/everyday/house level2.jpg',         name: 'House' },
+    { file: 'images/everyday/street level3.webp',       name: 'Street' },
+    { file: 'images/everyday/train level4.png',         name: 'Train' },
+    { file: 'images/everyday/timessquare level5.jpg',   name: 'Times Square' },
+  ],
+};
+
+// ============================================================
+// SHAPES GENERATORS  (procedural — shapes only)
+// ============================================================
+function genShape(res, type, pal) {
+  const g=res, bg=pal[pal.length-1]||'#fff';
+  const c1=pal[0], c2=pal[Math.min(2,pal.length-1)], c3=pal[Math.min(5,pal.length-1)];
+  const data=Array(g*g).fill(bg);
+  const cx=g/2, cy=g/2;
+  for (let r=0;r<g;r++) for (let c=0;c<g;c++) {
+    const i=r*g+c, dx=c-cx, dy=r-cy, dist=Math.sqrt(dx*dx+dy*dy);
+    if (type==='circle') {
+      if(dist<g*0.4)data[i]=c1; if(dist<g*0.25)data[i]=c2; if(dist<g*0.1)data[i]=c3;
+    } else if (type==='diamond') {
+      if(Math.abs(dx)+Math.abs(dy)<g*0.42)data[i]=c1;
+      if(Math.abs(dx)+Math.abs(dy)<g*0.26)data[i]=c2;
+      if(Math.abs(dx)+Math.abs(dy)<g*0.12)data[i]=c3;
+    } else if (type==='stripes') {
+      data[i]=[c1,c2,c3][Math.floor(c/Math.ceil(g/5))%3];
+    } else if (type==='checkers') {
+      const bw=Math.ceil(g/6); data[i]=((Math.floor(r/bw)+Math.floor(c/bw))%2===0)?c1:c2;
+    } else if (type==='star') {
+      const angle=Math.atan2(dy,dx), pts=5, oR=g*0.42, iR=g*0.18;
+      const sa=(angle+Math.PI/2+Math.PI*2)%(Math.PI*2);
+      const sec=Math.floor(sa/(Math.PI*2/pts));
+      const secA=sa-sec*(Math.PI*2/pts);
+      const interp=iR+(oR-iR)*Math.abs(Math.cos(secA*pts/2));
+      if(dist<interp)data[i]=c1; if(dist<iR*0.6)data[i]=c2;
+    }
+  }
+  return data;
+}
+
+// ============================================================
+// CANVAS RENDERING
+// ============================================================
+function renderPixelCanvas(canvasId, data, res, colMode, sz) {
+  sz = sz || CANVAS_PX;
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const cs = sz / res;
+  cv.width = sz; cv.height = sz;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, sz, sz);
+  for (let i = 0; i < res * res; i++) {
+    const r = Math.floor(i / res), c = i % res;
+    let color = data[i] || '#ffffff';
+    if (colMode === 'bw') color = toGray(color);
+    ctx.fillStyle = color;
+    ctx.fillRect(c * cs, r * cs, cs, cs);
+  }
+}
+
+function renderDrawCanvas(canvasId, data, res, sz) {
+  sz = sz || CANVAS_PX;
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  const cs = sz / res;
+  cv.width = sz; cv.height = sz;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, sz, sz);
+  for (let i = 0; i < res * res; i++) {
+    if (!data[i]) continue;
+    const r = Math.floor(i / res), c = i % res;
+    ctx.fillStyle = data[i];
+    ctx.fillRect(c * cs, r * cs, cs, cs);
+  }
+}
+
+// Grid for pixel draw/ref canvas
+// Resolution-based steps: 15→5, 50→10, 80→20
+// Canvas also gets thin individual-pixel lines
+function renderGridOverlay(canvasId, res, showGrid, isDrawCanvas, gridColor, sz) {
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  sz = sz || CANVAS_PX;
+  cv.width = sz; cv.height = sz;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, sz, sz);
+  if (!showGrid) return;
+
+  const cs = sz / res;
+  const isBlack = (gridColor || 'black') === 'black';
+  const step = getGridStep(res);
+
+  function lines(alpha, lw, every) {
+    ctx.strokeStyle = isBlack ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+    ctx.lineWidth = lw;
+    for (let i = 0; i <= res; i++) {
+      if (every && i % every !== 0) continue;
+      ctx.beginPath(); ctx.moveTo(i * cs, 0); ctx.lineTo(i * cs, sz); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i * cs); ctx.lineTo(sz, i * cs); ctx.stroke();
+    }
+  }
+
+  if (isDrawCanvas) {
+    // Thin individual pixel lines
+    lines(0.07, 0.4, null);
+  }
+
+  // Thick guide lines at resolution-appropriate step
+  lines(0.35, 1.3, step);
+
+  // For 80×80: also add mid-step (40) as thickest
+  if (res === 80) {
+    lines(0.5, 2.0, 40);
+  }
+}
+
+// Quadrant overlay for real reference images (uses same step logic)
+function renderImageGridOverlay(canvasId, res, showGrid, gridColor, w, h) {
+  const cv = document.getElementById(canvasId); if (!cv) return;
+  cv.width = w || CANVAS_PX; cv.height = h || CANVAS_PX;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  if (!showGrid) return;
+
+  const isBlack = (gridColor || 'black') === 'black';
+  const step = getGridStep(res);
+
+  // Draw step-based quadrant lines across the image (scaled to image display size)
+  function divLines(alpha, lw, sections) {
+    ctx.strokeStyle = isBlack ? `rgba(0,0,0,${alpha})` : `rgba(255,255,255,${alpha})`;
+    ctx.lineWidth = lw;
+    for (let i = 0; i <= sections; i++) {
+      const x = i * cv.width / sections;
+      const y = i * cv.height / sections;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke();
+    }
+  }
+
+  // Number of sections = res / step
+  const sections = Math.round(res / step);
+  divLines(0.18, 0.7, sections * 2); // sub-division
+  divLines(0.38, 1.4, sections);     // main guide
+
+  if (res === 80) {
+    divLines(0.55, 2.0, 2); // midpoint for 80×80
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function toGray(hex) {
+  if (!hex || !hex.startsWith('#')) return '#888';
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  const v = Math.round(0.299*r + 0.587*g + 0.114*b);
+  return `rgb(${v},${v},${v})`;
+}
+function rgbToHex(r, g, b) { return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join(''); }
+function hexToRgba(hex, alpha) {
+  if (!hex || !hex.startsWith('#')) return `rgba(0,0,0,${alpha})`;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ============================================================
+// UNDO / REDO
+// ============================================================
+const MAX_HISTORY = 50;
+
+function pushHistory(which) {
+  const st = which === 'fp' ? fp : ch;
+  st.undoStack.push([...st.drawData]);
+  if (st.undoStack.length > MAX_HISTORY) st.undoStack.shift();
+  st.redoStack = [];
+  updateUndoRedoUI(which);
+}
+
+function undo(which) {
+  const st = which === 'fp' ? fp : ch;
+  if (!st.undoStack.length) return;
+  st.redoStack.push([...st.drawData]);
+  st.drawData = st.undoStack.pop();
+  const drawId = which === 'fp' ? 'draw-canvas' : 'ch-draw-canvas';
+  const gridId = which === 'fp' ? 'draw-grid-canvas' : 'ch-draw-grid';
+  renderDrawCanvas(drawId, st.drawData, st.res);
+  renderGridOverlay(gridId, st.res, st.showDrawGrid, true, st.gridColor);
+  updateFillInfo(st, which === 'fp' ? 'draw-info' : 'ch-draw-info');
+  updateUndoRedoUI(which);
+}
+
+function redo(which) {
+  const st = which === 'fp' ? fp : ch;
+  if (!st.redoStack.length) return;
+  st.undoStack.push([...st.drawData]);
+  st.drawData = st.redoStack.pop();
+  const drawId = which === 'fp' ? 'draw-canvas' : 'ch-draw-canvas';
+  const gridId = which === 'fp' ? 'draw-grid-canvas' : 'ch-draw-grid';
+  renderDrawCanvas(drawId, st.drawData, st.res);
+  renderGridOverlay(gridId, st.res, st.showDrawGrid, true, st.gridColor);
+  updateFillInfo(st, which === 'fp' ? 'draw-info' : 'ch-draw-info');
+  updateUndoRedoUI(which);
+}
+
+function updateUndoRedoUI(which) {
+  const st = which === 'fp' ? fp : ch;
+  const prefix = which === 'fp' ? 'fp' : 'ch';
+  const undoBtn = document.getElementById(prefix + '-undo-btn');
+  const redoBtn = document.getElementById(prefix + '-redo-btn');
+  if (undoBtn) undoBtn.disabled = !st.undoStack.length;
+  if (redoBtn) redoBtn.disabled = !st.redoStack.length;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  const active = document.querySelector('.screen.active');
+  if (!active) return;
+  const which = active.id === 'screen-free' ? 'fp' : active.id === 'screen-challenge' ? 'ch' : null;
+  if (!which) return;
+  // Don't trigger if focus is in a text input / textarea
+  if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+  if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(which); }
+  if (e.ctrlKey && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(which); }
+});
+
+// ============================================================
+// FREE PLAY — UPLOAD & PIXELATE
+// ============================================================
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { fp.sourceImg = img; pixelateRef(); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  this.value = '';
+});
+
+function pixelateRef() {
+  if (!fp.sourceImg) return;
+  const g = fp.res;
+  const tmp = document.createElement('canvas');
+  tmp.width = g; tmp.height = g;
+  const ctx = tmp.getContext('2d');
+  ctx.drawImage(fp.sourceImg, 0, 0, g, g);
+  const imgData = ctx.getImageData(0, 0, g, g);
+  fp.refData = [];
+  for (let i = 0; i < g * g; i++) {
+    const idx = i * 4;
+    fp.refData.push(rgbToHex(imgData.data[idx], imgData.data[idx+1], imgData.data[idx+2]));
+  }
+  document.getElementById('no-image-msg').style.display = 'none';
+  document.getElementById('ref-wrap').style.display = '';
+  renderRefCanvas();
+  renderGridOverlay('ref-grid-canvas', fp.res, fp.showRefGrid, false, fp.gridColor);
+  if (fp.drawData.length !== g * g) {
+    fp.drawData = Array(g * g).fill(null);
+    fp.undoStack = []; fp.redoStack = []; updateUndoRedoUI('fp');
+    renderDrawCanvas('draw-canvas', fp.drawData, fp.res);
+    renderGridOverlay('draw-grid-canvas', fp.res, fp.showDrawGrid, true, fp.gridColor);
+  }
+  document.getElementById('ref-info').textContent = `${g}×${g} • ${fp.colMode}`;
+  buildPalette('palette-row', fp.colMode, 'fp');
+}
+
+function renderRefCanvas() {
+  const cv = document.getElementById('ref-canvas');
+  cv.width = CANVAS_PX; cv.height = CANVAS_PX;
+  const ctx = cv.getContext('2d');
+  const g = fp.res, cs = CANVAS_PX / g;
+  for (let i = 0; i < g * g; i++) {
+    const r = Math.floor(i / g), c = i % g;
+    let col = fp.refData[i] || '#fff';
+    if (fp.colMode === 'bw') col = toGray(col);
+    ctx.fillStyle = col;
+    ctx.fillRect(c * cs, r * cs, cs, cs);
+  }
+}
+
+// ============================================================
+// PALETTE
+// ============================================================
+function buildPalette(containerId, mode, which) {
+  const el = document.getElementById(containerId); if (!el) return;
+  el.innerHTML = '';
+  const pal = getPal(mode);
+  pal.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'pal-swatch' + (i === 0 ? ' active' : '');
+    d.style.background = c;
+    d.style.border = c === '#ffffff' ? '2px solid #555' : '2px solid transparent';
+    d.title = c;
+    d.addEventListener('click', () => {
+      el.querySelectorAll('.pal-swatch').forEach(x => x.classList.remove('active'));
+      d.classList.add('active');
+      if (which === 'fp') { fp.selectedColor = c; fp.tool = 'draw'; updateToolUI('fp'); }
+      else if (which === 'ch') { ch.selectedColor = c; ch.tool = 'draw'; updateToolUI('ch'); }
+      else if (which === 'fs') {
+        const st = fsState.which === 'fp' ? fp : ch;
+        st.selectedColor = c; st.tool = 'draw';
+        updateToolUI(fsState.which); updateFsToolUI();
+      }
+    });
+    el.appendChild(d);
+  });
+  if (which === 'fp') fp.selectedColor = pal[0];
+  else if (which === 'ch') ch.selectedColor = pal[0];
+}
+
+function updateToolUI(which) {
+  const prefix = which === 'fp' ? 'tool' : 'ch-tool';
+  const st = which === 'fp' ? fp : ch;
+  ['draw','erase','fill'].forEach(t => {
+    const el = document.getElementById(prefix + '-' + t);
+    if (el) el.classList.toggle('active', st.tool === t);
+  });
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function setRes(btn, val) {
+  document.querySelectorAll('#res-group .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  fp.res = val;
+  fp.drawData = Array(val * val).fill(null);
+  fp.undoStack = []; fp.redoStack = []; updateUndoRedoUI('fp');
+  pixelateRef();
+  renderDrawCanvas('draw-canvas', fp.drawData, fp.res);
+  renderGridOverlay('draw-grid-canvas', fp.res, fp.showDrawGrid, true, fp.gridColor);
+}
+function setColMode(mode) {
+  fp.colMode = mode;
+  document.getElementById('mode-colour').classList.toggle('active', mode === 'colour');
+  document.getElementById('mode-bw').classList.toggle('active', mode === 'bw');
+  if (fp.sourceImg) renderRefCanvas();
+  buildPalette('palette-row', mode, 'fp');
+}
+
+// Separate grid toggles for ref panel and draw panel (in-panel buttons)
+function setRefGrid(which, val) {
+  const st = which === 'fp' ? fp : ch;
+  st.showRefGrid = val;
+  document.getElementById(which + '-ref-grid-on').classList.toggle('active', val);
+  document.getElementById(which + '-ref-grid-off').classList.toggle('active', !val);
+  if (which === 'fp') {
+    renderGridOverlay('ref-grid-canvas', fp.res, fp.showRefGrid, false, fp.gridColor);
+  } else {
+    // Could be pixel canvas or image canvas
+    renderGridOverlay('ch-ref-grid', ch.res, ch.showRefGrid, false, ch.gridColor);
+    renderImageGridOverlay('ch-ref-img-grid', ch.res, ch.showRefGrid, ch.gridColor, CANVAS_PX, CANVAS_PX);
+  }
+}
+function setDrawGrid(which, val) {
+  const st = which === 'fp' ? fp : ch;
+  st.showDrawGrid = val;
+  document.getElementById(which + '-draw-grid-on').classList.toggle('active', val);
+  document.getElementById(which + '-draw-grid-off').classList.toggle('active', !val);
+  const gridId = which === 'fp' ? 'draw-grid-canvas' : 'ch-draw-grid';
+  renderGridOverlay(gridId, st.res, st.showDrawGrid, true, st.gridColor);
+}
+
+function setGridColor(which, color) {
+  if (which === 'fp') {
+    fp.gridColor = color;
+    document.getElementById('fp-gcol-black').classList.toggle('active', color === 'black');
+    document.getElementById('fp-gcol-white').classList.toggle('active', color === 'white');
+    renderGridOverlay('ref-grid-canvas', fp.res, fp.showRefGrid, false, fp.gridColor);
+    renderGridOverlay('draw-grid-canvas', fp.res, fp.showDrawGrid, true, fp.gridColor);
+  } else if (which === 'ch') {
+    ch.gridColor = color;
+    document.getElementById('ch-gcol-black').classList.toggle('active', color === 'black');
+    document.getElementById('ch-gcol-white').classList.toggle('active', color === 'white');
+    renderGridOverlay('ch-ref-grid', ch.res, ch.showRefGrid, false, ch.gridColor);
+    renderGridOverlay('ch-draw-grid', ch.res, ch.showDrawGrid, true, ch.gridColor);
+    renderImageGridOverlay('ch-ref-img-grid', ch.res, ch.showRefGrid, ch.gridColor, CANVAS_PX, CANVAS_PX);
+  } else if (which === 'ci') {
+    ci.gridColor = color;
+    document.getElementById('ci-gcol-black').classList.toggle('active', color === 'black');
+    document.getElementById('ci-gcol-white').classList.toggle('active', color === 'white');
+    renderGridOverlay('code-grid-canvas', ci.res, ci.showGrid, false, ci.gridColor);
+  }
+}
+function setTool(t) { fp.tool = t; updateToolUI('fp'); }
+
+// ============================================================
+// ZOOM
+// ============================================================
+function setZoom(which, factor) {
+  const state = which === 'fp' ? fp : which === 'ch' ? ch : ci;
+  state.zoom = factor;
+  const displaySize = CANVAS_PX * factor;
+  const idSets = {
+    fp: ['draw-canvas', 'draw-grid-canvas', 'draw-hover-canvas'],
+    ch: ['ch-draw-canvas', 'ch-draw-grid', 'ch-draw-hover'],
+    ci: ['code-canvas', 'code-grid-canvas'],
+  };
+  idSets[which].forEach(id => {
+    const cv = document.getElementById(id);
+    if (cv) { cv.style.width = displaySize + 'px'; cv.style.height = displaySize + 'px'; }
+  });
+  if (which === 'ch') {
+    ['ch-ref-canvas', 'ch-ref-grid'].forEach(id => {
+      const cv = document.getElementById(id);
+      if (cv) { cv.style.width = displaySize + 'px'; cv.style.height = displaySize + 'px'; }
+    });
+    const ri = document.getElementById('ch-ref-img');
+    if (ri) { ri.style.width = displaySize + 'px'; ri.style.height = displaySize + 'px'; }
+    const rg = document.getElementById('ch-ref-img-grid');
+    if (rg) { rg.style.width = displaySize + 'px'; rg.style.height = displaySize + 'px'; }
+  }
+  const prefix = { fp: 'fp-z', ch: 'ch-z', ci: 'ci-z' }[which];
+  [1,2,3].forEach(z => {
+    const btn = document.getElementById(prefix + z);
+    if (btn) btn.classList.toggle('active', z === factor);
+  });
+}
+
+// ============================================================
+// FULLSCREEN
+// ============================================================
+function openFullscreen(which) {
+  fsState.which = which;
+  const state = which === 'fp' ? fp : ch;
+  document.getElementById('fs-title').textContent =
+    which === 'fp' ? 'Your Canvas — Fullscreen' : 'Challenge Canvas — Fullscreen';
+  renderDrawCanvas('fs-canvas', state.drawData, state.res, FS_PX);
+  renderGridOverlay('fs-grid-canvas', state.res, state.showDrawGrid, true, state.gridColor, FS_PX);
+  const hoverCv = document.getElementById('fs-hover-canvas');
+  hoverCv.width = FS_PX; hoverCv.height = FS_PX;
+  buildPalette('fs-palette-row', state.colMode, 'fs');
+  updateFsToolUI();
+  document.getElementById('fullscreen-overlay').classList.add('visible');
+  setupDraw('fs-canvas', 'fs-grid-canvas', 'fs-hover-canvas', state, null, null, 'fs', FS_PX);
+}
+
+function closeFullscreen() {
+  document.getElementById('fullscreen-overlay').classList.remove('visible');
+  const state = fsState.which === 'fp' ? fp : ch;
+  if (fsState.which === 'fp') {
+    renderDrawCanvas('draw-canvas', state.drawData, state.res);
+    renderGridOverlay('draw-grid-canvas', state.res, state.showDrawGrid, true, state.gridColor);
+    updateFillInfo(state, 'draw-info');
+  } else if (fsState.which === 'ch') {
+    renderDrawCanvas('ch-draw-canvas', state.drawData, state.res);
+    renderGridOverlay('ch-draw-grid', state.res, state.showDrawGrid, true, state.gridColor);
+    updateFillInfo(state, 'ch-draw-info');
+  }
+  if (drawControllers['fs']) { drawControllers['fs'].abort(); delete drawControllers['fs']; }
+}
+
+function setFsTool(t) {
+  const state = fsState.which === 'fp' ? fp : ch;
+  state.tool = t;
+  updateFsToolUI();
+  if (fsState.which) updateToolUI(fsState.which);
+}
+function updateFsToolUI() {
+  const state = fsState.which === 'fp' ? fp : ch;
+  if (!state) return;
+  ['draw','erase','fill'].forEach(t => {
+    const el = document.getElementById('fs-tool-' + t);
+    if (el) el.classList.toggle('active', state.tool === t);
+  });
+}
+
+// ============================================================
+// DRAW INTERACTION + HOVER
+// ============================================================
+function setupDraw(drawId, gridId, hoverId, stateObj, infoId, palId, which, sz) {
+  sz = sz || CANVAS_PX;
+  if (drawControllers[which]) drawControllers[which].abort();
+  drawControllers[which] = new AbortController();
+  const { signal } = drawControllers[which];
+  const cv = document.getElementById(drawId); if (!cv) return;
+  let pendingPush = false;
+
+  function getIdx(e) {
+    const rect = cv.getBoundingClientRect();
+    const x = (('touches' in e ? e.touches[0].clientX : e.clientX) - rect.left) * (sz / rect.width);
+    const y = (('touches' in e ? e.touches[0].clientY : e.clientY) - rect.top) * (sz / rect.height);
+    const cs = sz / stateObj.res;
+    const col = Math.floor(x / cs), row = Math.floor(y / cs);
+    if (col < 0 || col >= stateObj.res || row < 0 || row >= stateObj.res) return -1;
+    return row * stateObj.res + col;
+  }
+
+  function paint(idx) {
+    if (idx < 0) return;
+    if (stateObj.tool === 'fill') {
+      const histWhich = stateObj === fp ? 'fp' : 'ch';
+      pushHistory(histWhich);
+      floodFill(stateObj, idx);
+      renderDrawCanvas(drawId, stateObj.drawData, stateObj.res, sz);
+      renderGridOverlay(gridId, stateObj.res, stateObj.showDrawGrid, true, stateObj.gridColor, sz);
+      if (infoId) updateFillInfo(stateObj, infoId);
+      return;
+    }
+    const col = stateObj.tool === 'erase' ? null : stateObj.selectedColor;
+    if (stateObj.drawData[idx] === col) return;
+    stateObj.drawData[idx] = col;
+    renderDrawCanvas(drawId, stateObj.drawData, stateObj.res, sz);
+    renderGridOverlay(gridId, stateObj.res, stateObj.showDrawGrid, true, stateObj.gridColor, sz);
+    if (infoId) updateFillInfo(stateObj, infoId);
+  }
+
+  cv.addEventListener('mousedown', e => {
+    stateObj.isDragging = true;
+    pendingPush = true;
+    const idx = getIdx(e);
+    if (idx >= 0) {
+      const histWhich = stateObj === fp ? 'fp' : stateObj === ch ? 'ch' : null;
+      if (histWhich && stateObj.tool !== 'fill') pushHistory(histWhich);
+      pendingPush = false;
+    }
+    paint(idx);
+  }, { signal });
+  cv.addEventListener('mousemove', e => { if (stateObj.isDragging) paint(getIdx(e)); }, { signal });
+  document.addEventListener('mouseup', () => { stateObj.isDragging = false; }, { signal });
+  cv.addEventListener('touchstart', e => {
+    e.preventDefault();
+    stateObj.isDragging = true;
+    const idx = getIdx(e);
+    const histWhich = stateObj === fp ? 'fp' : stateObj === ch ? 'ch' : null;
+    if (histWhich && stateObj.tool !== 'fill') pushHistory(histWhich);
+    paint(idx);
+  }, { passive: false, signal });
+  cv.addEventListener('touchmove', e => { e.preventDefault(); if (stateObj.isDragging) paint(getIdx(e)); }, { passive: false, signal });
+  cv.addEventListener('touchend', () => stateObj.isDragging = false, { signal });
+
+  // Hover preview
+  if (hoverId) {
+    const hoverCv = document.getElementById(hoverId); if (!hoverCv) return;
+    hoverCv.width = sz; hoverCv.height = sz;
+    cv.addEventListener('mousemove', e => {
+      const rect = cv.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (sz / rect.width);
+      const y = (e.clientY - rect.top) * (sz / rect.height);
+      const cs = sz / stateObj.res;
+      const col = Math.floor(x / cs), row = Math.floor(y / cs);
+      const hctx = hoverCv.getContext('2d');
+      hctx.clearRect(0, 0, sz, sz);
+      if (col >= 0 && col < stateObj.res && row >= 0 && row < stateObj.res) {
+        if (stateObj.tool === 'erase') hctx.fillStyle = 'rgba(252,108,154,0.45)';
+        else if (stateObj.tool === 'fill') hctx.fillStyle = hexToRgba(stateObj.selectedColor || '#000', 0.3);
+        else hctx.fillStyle = hexToRgba(stateObj.selectedColor || '#000', 0.6);
+        hctx.fillRect(col * cs, row * cs, cs, cs);
+        hctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        hctx.lineWidth = 1;
+        hctx.strokeRect(col * cs + 0.5, row * cs + 0.5, cs - 1, cs - 1);
+      }
+    }, { signal });
+    cv.addEventListener('mouseleave', () => {
+      const hctx = hoverCv.getContext('2d');
+      hctx.clearRect(0, 0, sz, sz);
+    }, { signal });
+  }
+}
+
+function floodFill(state, idx) {
+  const old = state.drawData[idx], nw = state.tool === 'erase' ? null : state.selectedColor;
+  if (old === nw) return;
+  const stack = [idx], vis = new Set();
+  while (stack.length) {
+    const cur = stack.pop();
+    if (vis.has(cur) || state.drawData[cur] !== old) continue;
+    vis.add(cur); state.drawData[cur] = nw;
+    const r = Math.floor(cur / state.res), c = cur % state.res;
+    if (r > 0) stack.push((r-1)*state.res+c);
+    if (r < state.res-1) stack.push((r+1)*state.res+c);
+    if (c > 0) stack.push(r*state.res+c-1);
+    if (c < state.res-1) stack.push(r*state.res+c+1);
+  }
+}
+
+function updateFillInfo(state, infoId) {
+  const filled = state.drawData.filter(Boolean).length;
+  const pct = Math.round(filled / state.drawData.length * 100);
+  const el = document.getElementById(infoId);
+  if (el) el.textContent = pct + '% filled';
+}
+
+// ============================================================
+// ACCURACY
+// ============================================================
+function calcAccuracy(refData, drawData, res, colMode) {
+  if (!refData || !refData.length) return null;
+  let match = 0;
+  for (let i = 0; i < res * res; i++) {
+    const ref = colMode === 'bw' ? toGray(refData[i]||'#fff') : (refData[i]||'#fff');
+    const drw = colMode === 'bw' ? toGray(drawData[i]||'#fff') : (drawData[i]||'#fff');
+    if (colorClose(ref, drw)) match++;
+  }
+  return Math.round(match / (res * res) * 100);
+}
+function colorClose(a, b, thr=30) {
+  const pa=parseColor(a), pb=parseColor(b);
+  return Math.abs(pa[0]-pb[0])+Math.abs(pa[1]-pb[1])+Math.abs(pa[2]-pb[2]) < thr * 3;
+}
+function parseColor(s) {
+  if (!s) return [255,255,255];
+  if (s.startsWith('#')) return [parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)];
+  const m = s.match(/\d+/g); return m ? [+m[0],+m[1],+m[2]] : [0,0,0];
+}
+
+function checkAccuracy() {
+  if (!fp.refData.length) { alert('Upload an image first!'); return; }
+  document.getElementById('score-display').textContent = calcAccuracy(fp.refData, fp.drawData, fp.res, fp.colMode) + '%';
+}
+function clearCanvas() {
+  pushHistory('fp');
+  fp.drawData = Array(fp.res*fp.res).fill(null);
+  renderDrawCanvas('draw-canvas', fp.drawData, fp.res);
+  renderGridOverlay('draw-grid-canvas', fp.res, fp.showDrawGrid, true, fp.gridColor);
+  document.getElementById('draw-info').textContent = '0% filled';
+}
+
+// Download: render to a fresh canvas WITHOUT grid overlay → clean image
+function downloadPixelArt() { downloadClean('draw-canvas', fp.drawData, fp.res, 'pixel-art.png'); }
+function downloadChallengeArt() { downloadClean('ch-draw-canvas', ch.drawData, ch.res, 'pixel-challenge.png'); }
+function downloadCodeArt() { downloadClean('code-canvas', ci.drawData, ci.res, 'code-art.png'); }
+
+function downloadClean(srcId, data, res, name) {
+  const big = document.createElement('canvas'); big.width = 800; big.height = 800;
+  const ctx = big.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  // Render pixel data cleanly (no grid)
+  const cs = 800 / res;
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 800, 800);
+  for (let i = 0; i < res * res; i++) {
+    if (!data[i]) continue;
+    const r = Math.floor(i / res), c = i % res;
+    ctx.fillStyle = data[i];
+    ctx.fillRect(c * cs, r * cs, cs, cs);
+  }
+  const a = document.createElement('a'); a.href = big.toDataURL('image/png'); a.download = name; a.click();
+}
+
+// ============================================================
+// COMPARE
+// ============================================================
+function compareImages() {
+  if (!fp.refData.length) { alert('Upload an image first!'); return; }
+  showCompare(fp.refData, fp.drawData, fp.res, fp.colMode);
+}
+function compareChallengeImages() { showCompare(ch.refData, ch.drawData, ch.res, ch.colMode); }
+
+function showCompare(refData, drawData, res, colMode) {
+  const SIZE = 260;
+  function drawTo(id, data) {
+    const cv = document.getElementById(id); cv.width = SIZE; cv.height = SIZE;
+    const ctx = cv.getContext('2d'); const cs = SIZE / res;
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,SIZE,SIZE);
+    for (let i = 0; i < res*res; i++) {
+      const r2=Math.floor(i/res), c2=i%res;
+      let col = data[i] || '#fff';
+      if (colMode === 'bw') col = toGray(col);
+      ctx.fillStyle = col; ctx.fillRect(c2*cs, r2*cs, cs, cs);
+    }
+  }
+  drawTo('cmp-ref', refData);
+  drawTo('cmp-draw', drawData);
+  const pct = calcAccuracy(refData, drawData, res, colMode);
+  document.getElementById('cmp-score').textContent = pct !== null ? pct + '%' : '—';
+  const msgs = ['Keep painting!','Nice start!','Getting there!','Looking good!','Almost there!','So close!','🎉 Excellent!','🏆 Amazing!'];
+  document.getElementById('cmp-msg').textContent = pct !== null ? msgs[Math.min(Math.floor(pct/13),7)] : '';
+  document.getElementById('compare-overlay').classList.add('visible');
+}
+function closeCompare() { document.getElementById('compare-overlay').classList.remove('visible'); }
+
+// ============================================================
+// CHALLENGE SETTINGS
+// ============================================================
+function selectCat(el, cat) {
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active'); ch.cat = cat;
+  updateLevelNames(cat);
+}
+function selectLevel(el, lvl) {
+  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active'); ch.level = lvl;
+}
+function setChallengeRes(btn, val) {
+  document.querySelectorAll('#ch-res-group .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active'); ch.res = val;
+}
+function setChallengeMode(mode) {
+  ch.colMode = mode;
+  document.getElementById('ch-mode-colour').classList.toggle('active', mode === 'colour');
+  document.getElementById('ch-mode-bw').classList.toggle('active', mode === 'bw');
+}
+function setChallengeTimer(val) {
+  ch.timerSeconds = val;
+  const btns = document.querySelectorAll('#ch-timer-group .seg-btn');
+  const vals = ['auto', 120, 300, 600, 0];
+  btns.forEach((b, i) => b.classList.toggle('active', vals[i] === val));
+}
+function setChallengeToolMode(t) { ch.tool = t; updateToolUI('ch'); }
+
+// ============================================================
+// TIMER
+// ============================================================
+function getTimerSeconds() {
+  if (ch.timerSeconds === 'auto') {
+    if (ch.res === 15) return 120;
+    if (ch.res === 50) return 300;
+    return 600;
+  }
+  return ch.timerSeconds;
+}
+function startTimer(seconds) {
+  stopTimer();
+  const el = document.getElementById('timer-display');
+  if (!seconds) { el.style.display = 'none'; return; }
+  ch.timeLeft = seconds; ch.timerRunning = true;
+  el.style.display = '';
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    ch.timeLeft--;
+    updateTimerDisplay();
+    if (ch.timeLeft <= 0) {
+      stopTimer();
+      const dc = document.getElementById('ch-draw-canvas');
+      if (dc) dc.style.pointerEvents = 'none';
+      setTimeout(() => { checkChallengeAccuracy(); compareChallengeImages(); }, 400);
+    }
+  }, 1000);
+}
+function stopTimer() { clearInterval(timerInterval); timerInterval = null; ch.timerRunning = false; }
+function updateTimerDisplay() {
+  const el = document.getElementById('timer-display'); if (!el) return;
+  const m = Math.floor(ch.timeLeft / 60), s = ch.timeLeft % 60;
+  el.textContent = `⏱ ${m}:${s.toString().padStart(2,'0')}`;
+  el.classList.toggle('urgent', ch.timeLeft > 0 && ch.timeLeft <= 30);
+}
+
+// ============================================================
+// START CHALLENGE  (all non-shapes use real images)
+// ============================================================
+function startChallenge() {
+  stopTimer();
+  document.getElementById('ch-draw-canvas').style.pointerEvents = '';
+  const catLabel = {shapes:'Shapes',cartoon:'Cartoon',scenery:'Scenery',people:'People',everyday:'Everyday'}[ch.cat];
+  document.getElementById('ch-panel-title').textContent = `${catLabel} — Level ${ch.level}`;
+  document.getElementById('ch-score-display').textContent = '—';
+  ch.zoom = 1; setZoom('ch', 1);
+  ch.undoStack = []; ch.redoStack = []; updateUndoRedoUI('ch');
+
+  if (ch.cat === 'shapes') {
+    // Procedural
+    const gens = [(r,p)=>genShape(r,'circle',p),(r,p)=>genShape(r,'diamond',p),(r,p)=>genShape(r,'stripes',p),(r,p)=>genShape(r,'checkers',p),(r,p)=>genShape(r,'star',p)];
+    ch.refData = gens[ch.level - 1](ch.res, getPal(ch.colMode));
+    document.getElementById('ch-ref-canvas-wrap').style.display = '';
+    document.getElementById('ch-ref-img-wrap').style.display = 'none';
+    renderPixelCanvas('ch-ref-canvas', ch.refData, ch.res, ch.colMode);
+    renderGridOverlay('ch-ref-grid', ch.res, ch.showRefGrid, false, ch.gridColor);
+    document.getElementById('ch-panel-meta').textContent = `${ch.res}×${ch.res} • ${ch.colMode}`;
+  } else {
+    // Real image
+    const imgInfo = CATEGORY_IMAGES[ch.cat][ch.level - 1];
+    const refImg = document.getElementById('ch-ref-img');
+    const imgWrap = document.getElementById('ch-ref-img-wrap');
+    const canvasWrap = document.getElementById('ch-ref-canvas-wrap');
+    canvasWrap.style.display = 'none'; imgWrap.style.display = '';
+    refImg.alt = imgInfo.name;
+    refImg.style.width = CANVAS_PX + 'px'; refImg.style.height = CANVAS_PX + 'px';
+
+    const loaderImg = new Image();
+    loaderImg.onload = function() {
+      const tmp = document.createElement('canvas');
+      tmp.width = ch.res; tmp.height = ch.res;
+      const ctx = tmp.getContext('2d');
+      ctx.drawImage(loaderImg, 0, 0, ch.res, ch.res);
+      const imgData = ctx.getImageData(0, 0, ch.res, ch.res);
+      ch.refData = [];
+      for (let i = 0; i < ch.res * ch.res; i++) {
+        const idx = i * 4;
+        ch.refData.push(rgbToHex(imgData.data[idx], imgData.data[idx+1], imgData.data[idx+2]));
+      }
+      renderImageGridOverlay('ch-ref-img-grid', ch.res, ch.showRefGrid, ch.gridColor, CANVAS_PX, CANVAS_PX);
+    };
+    loaderImg.crossOrigin = 'anonymous';
+    loaderImg.src = imgInfo.file;
+    refImg.src = imgInfo.file;
+    document.getElementById('ch-panel-meta').textContent = `${imgInfo.name} • ${ch.res}×${ch.res}`;
+  }
+
+  ch.drawData = Array(ch.res * ch.res).fill(null);
+  renderDrawCanvas('ch-draw-canvas', ch.drawData, ch.res);
+  renderGridOverlay('ch-draw-grid', ch.res, ch.showDrawGrid, true, ch.gridColor);
+  buildPalette('ch-palette-row', ch.colMode, 'ch');
+  document.getElementById('challenge-config').style.display = 'none';
+  document.getElementById('challenge-game').style.display = '';
+  setupDraw('ch-draw-canvas', 'ch-draw-grid', 'ch-draw-hover', ch, 'ch-draw-info', 'ch-palette-row', 'ch');
+  startTimer(getTimerSeconds());
+}
+
+function backToChallenge() {
+  stopTimer();
+  document.getElementById('challenge-config').style.display = '';
+  document.getElementById('challenge-game').style.display = 'none';
+  document.getElementById('ch-draw-canvas').style.pointerEvents = '';
+}
+function clearChallengeCanvas() {
+  pushHistory('ch');
+  ch.drawData = Array(ch.res*ch.res).fill(null);
+  renderDrawCanvas('ch-draw-canvas', ch.drawData, ch.res);
+  renderGridOverlay('ch-draw-grid', ch.res, ch.showDrawGrid, true, ch.gridColor);
+  document.getElementById('ch-draw-info').textContent = '0% filled';
+}
+function checkChallengeAccuracy() {
+  const pct = calcAccuracy(ch.refData, ch.drawData, ch.res, ch.colMode);
+  document.getElementById('ch-score-display').textContent = (pct !== null ? pct : '?') + '%';
+}
+
+// ============================================================
+// CODE IT
+// ============================================================
+function setCodeRes(btn, val) {
+  document.querySelectorAll('#ci-res-group .seg-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ci.res = val;
+  ci.drawData = Array(val * val).fill(null);
+  renderDrawCanvas('code-canvas', ci.drawData, ci.res);
+  renderGridOverlay('code-grid-canvas', ci.res, ci.showGrid, false, ci.gridColor);
+}
+function setCodeGrid(val) {
+  ci.showGrid = val;
+  document.getElementById('ci-grid-on').classList.toggle('active', val);
+  document.getElementById('ci-grid-off').classList.toggle('active', !val);
+  renderGridOverlay('code-grid-canvas', ci.res, ci.showGrid, false, ci.gridColor);
+}
+
+function runUserCode() {
+  const code = document.getElementById('code-editor').value;
+  const errorEl = document.getElementById('code-error');
+  errorEl.textContent = '';
+  const res = ci.res;
+  ci.drawData = Array(res * res).fill(null);
+  const api_pixel = (x, y, color) => {
+    x = Math.round(x); y = Math.round(y);
+    if (x >= 0 && x < res && y >= 0 && y < res) ci.drawData[y * res + x] = color;
+  };
+  const api_rect = (x1, y1, x2, y2, color) => {
+    for (let y = Math.floor(Math.min(y1,y2)); y < Math.ceil(Math.max(y1,y2)); y++)
+      for (let x = Math.floor(Math.min(x1,x2)); x < Math.ceil(Math.max(x1,x2)); x++)
+        if (x >= 0 && x < res && y >= 0 && y < res) ci.drawData[y * res + x] = color;
+  };
+  const api_circle = (cx, cy, r, color) => {
+    for (let y = 0; y < res; y++)
+      for (let x = 0; x < res; x++)
+        if (Math.sqrt((x-cx)**2 + (y-cy)**2) <= r) ci.drawData[y * res + x] = color;
+  };
+  const api_clear = () => { ci.drawData = Array(res * res).fill(null); };
+  try {
+    const fn = new Function('pixel', 'rect', 'circle', 'clear', 'grid', code);
+    fn(api_pixel, api_rect, api_circle, api_clear, res);
+    renderDrawCanvas('code-canvas', ci.drawData, ci.res);
+    renderGridOverlay('code-grid-canvas', ci.res, ci.showGrid, false, ci.gridColor);
+  } catch(e) {
+    errorEl.textContent = '⚠ ' + e.message;
+  }
+}
+function clearCodeCanvas() {
+  ci.drawData = Array(ci.res * ci.res).fill(null);
+  renderDrawCanvas('code-canvas', ci.drawData, ci.res);
+  renderGridOverlay('code-grid-canvas', ci.res, ci.showGrid, false, ci.gridColor);
+  document.getElementById('code-error').textContent = '';
+}
+
+const CODE_SNIPPETS = {
+  circle: `// Concentric circles
+const cx = grid / 2, cy = grid / 2;
+circle(cx, cy, grid * 0.42, '#4CC9F0');
+circle(cx, cy, grid * 0.28, '#E63946');
+circle(cx, cy, grid * 0.14, '#E9C46A');
+circle(cx, cy, grid * 0.05, '#2A9D8F');`,
+  stripes: `// Vertical colour stripes
+const colors = ['#E63946','#F4A261','#E9C46A','#2A9D8F','#6A4C93'];
+for (let x = 0; x < grid; x++) {
+  const c = colors[Math.floor(x / grid * colors.length)];
+  for (let y = 0; y < grid; y++) pixel(x, y, c);
+}`,
+  checkers: `// Checkerboard
+const size = Math.max(1, Math.ceil(grid / 6));
+for (let y = 0; y < grid; y++)
+  for (let x = 0; x < grid; x++)
+    pixel(x, y, (Math.floor(x/size)+Math.floor(y/size))%2===0 ? '#264653' : '#E9C46A');`,
+  gradient: `// Colour gradient
+for (let y = 0; y < grid; y++)
+  for (let x = 0; x < grid; x++) {
+    const r = Math.round(70 + 185 * x / grid);
+    const b = Math.round(70 + 185 * y / grid);
+    pixel(x, y, '#' + r.toString(16).padStart(2,'0') + '44' + b.toString(16).padStart(2,'0'));
+  }`,
+  star: `// 5-point star
+const cx = grid/2, cy = grid/2;
+const outer = grid*0.42, inner = grid*0.18;
+for (let y = 0; y < grid; y++)
+  for (let x = 0; x < grid; x++) {
+    const dx=x-cx, dy=y-cy, dist=Math.sqrt(dx*dx+dy*dy);
+    const angle = Math.atan2(dy,dx);
+    const a = (angle + Math.PI/2 + Math.PI*2) % (Math.PI*2);
+    const sec = Math.floor(a/(Math.PI*2/5));
+    const sa = a - sec*(Math.PI*2/5);
+    const R = inner + (outer-inner)*Math.abs(Math.cos(sa*5/2));
+    if (dist < R) pixel(x, y, '#E9C46A');
+    if (dist < inner*0.5) pixel(x, y, '#E63946');
+  }`,
+};
+function loadSnippet(name) {
+  if (!name || !CODE_SNIPPETS[name]) return;
+  document.getElementById('code-editor').value = CODE_SNIPPETS[name];
+  document.getElementById('code-error').textContent = '';
+}
+document.getElementById('code-editor').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = this.selectionStart, end = this.selectionEnd;
+    this.value = this.value.substring(0, s) + '  ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = s + 2;
+  }
+});
+
+// ============================================================
+// SCREEN SWITCHING
+// ============================================================
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.nav-tab[onclick="switchScreen('${name}')"]`).classList.add('active');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(function init() {
+  fp.drawData = Array(fp.res * fp.res).fill(null);
+  renderDrawCanvas('draw-canvas', fp.drawData, fp.res);
+  renderGridOverlay('draw-grid-canvas', fp.res, fp.showDrawGrid, true, fp.gridColor);
+  buildPalette('palette-row', fp.colMode, 'fp');
+  setupDraw('draw-canvas', 'draw-grid-canvas', 'draw-hover-canvas', fp, 'draw-info', 'palette-row', 'fp');
+
+  ci.drawData = Array(ci.res * ci.res).fill(null);
+  renderDrawCanvas('code-canvas', ci.drawData, ci.res);
+  renderGridOverlay('code-grid-canvas', ci.res, ci.showGrid, false, ci.gridColor);
+
+  updateLevelNames('shapes');
+  setTimeout(runUserCode, 150);
+})();
+</script>
+</body>
+</html>

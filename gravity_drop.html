@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gravity Drop</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#03070f;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Segoe UI',Arial,sans-serif;color:#e8f0ff;user-select:none}
+  h1{font-size:1.5rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;background:linear-gradient(90deg,#4a8fff,#cc88ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  #wrap{position:relative;width:480px}
+  canvas{display:block;border-radius:14px;box-shadow:0 0 50px rgba(74,143,255,.2),0 0 0 1.5px rgba(74,143,255,.18)}
+  #hud{display:flex;justify-content:space-between;padding:10px 4px;font-size:.85rem;color:#6080b0}
+  .hn{font-weight:800;color:#fff;font-size:1rem}
+  #msgBox{position:absolute;inset:0;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(2,6,16,.88);backdrop-filter:blur(5px);gap:12px}
+  #msgBox.hidden{display:none}
+  .mt{font-size:1.8rem;font-weight:900;background:linear-gradient(90deg,#4a8fff,#cc88ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .ms{font-size:.9rem;color:#8090b0;max-width:260px;text-align:center;line-height:1.5}
+  #playBtn{padding:11px 34px;border-radius:999px;border:1.5px solid rgba(74,143,255,.38);background:rgba(74,143,255,.14);color:#a8c8ff;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #playBtn:hover{background:rgba(74,143,255,.28)}
+  #hint{font-size:.76rem;color:#304060;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>🌌 Gravity Drop</h1>
+<div id="wrap">
+  <div id="hud">
+    <div>Score: <span class="hn" id="scoreEl">0</span></div>
+    <div>Level: <span class="hn" id="levelEl">1</span></div>
+    <div>Best: <span class="hn" id="bestEl">0</span></div>
+  </div>
+  <canvas id="c" width="480" height="620"></canvas>
+  <div id="msgBox">
+    <div class="mt" id="mt">GRAVITY DROP</div>
+    <div class="ms" id="ms">Move: ← → Arrow Keys or A/D<br>Rotate: ↑ or W<br>Fast drop: ↓ or S<br>Instant drop: Space</div>
+    <button id="playBtn">▶ PLAY</button>
+  </div>
+</div>
+<div id="hint">Stack blocks — clear lines to score · 10 lines = next level</div>
+
+<script>
+/* ── Tetris-style Gravity Drop ── */
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const scoreEl=document.getElementById('scoreEl');
+const levelEl=document.getElementById('levelEl');
+const bestEl=document.getElementById('bestEl');
+const msgBox=document.getElementById('msgBox');
+const mt=document.getElementById('mt');
+const ms=document.getElementById('ms');
+const playBtn=document.getElementById('playBtn');
+
+const COLS=10, ROWS=20, SZ=46; // cell size
+const W=COLS*SZ, H=ROWS*SZ;
+c.width=W; c.height=H;
+
+const COLORS=['#4a8fff','#cc44ff','#ff6a1a','#ffcc00','#44ddaa','#ff4466','#22ccff'];
+const GLOWS= ['#4a8fff','#bb33ee','#ff5500','#ddaa00','#33cc99','#ee3355','#11aaee'];
+
+const PIECES=[
+  [[1,1,1,1]],
+  [[1,1],[1,1]],
+  [[0,1,0],[1,1,1]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]],
+  [[1,1,0],[0,1,1]],
+  [[0,1,1],[1,1,0]],
+];
+
+let board, piece, px, py, score, level, lines, best, dropTimer, dropSpeed, running, gameOver;
+best=+localStorage.getItem('gdBest')||0;
+bestEl.textContent=best;
+
+function newBoard(){return Array.from({length:ROWS},()=>new Array(COLS).fill(null));}
+
+function randomPiece(){
+  const idx=Math.random()*PIECES.length|0;
+  const ci=Math.random()*COLORS.length|0;
+  return{shape:PIECES[idx].map(r=>[...r]),color:COLORS[ci],glow:GLOWS[ci]};
+}
+
+function rotate(shape){
+  const r=shape[0].length,co=shape.length;
+  return Array.from({length:r},(_,i)=>Array.from({length:co},(_,j)=>shape[co-1-j][i]));
+}
+
+function fits(shape,offx,offy){
+  for(let r=0;r<shape.length;r++)
+    for(let c2=0;c2<shape[r].length;c2++)
+      if(shape[r][c2]){
+        const nx=offx+c2,ny=offy+r;
+        if(nx<0||nx>=COLS||ny>=ROWS) return false;
+        if(ny>=0&&board[ny][nx]) return false;
+      }
+  return true;
+}
+
+function lock(){
+  piece.shape.forEach((r,ri)=>r.forEach((v,ci)=>{
+    if(v&&py+ri>=0) board[py+ri][px+ci]={color:piece.color,glow:piece.glow};
+  }));
+  /* clear lines */
+  let cleared=0;
+  for(let r=ROWS-1;r>=0;r--){
+    if(board[r].every(c2=>c2)){
+      board.splice(r,1);
+      board.unshift(new Array(COLS).fill(null));
+      cleared++;r++;
+    }
+  }
+  const pts=[0,100,300,500,800];
+  score+=pts[cleared]*level;
+  lines+=cleared;
+  if(lines>=level*10){level++;dropSpeed=Math.max(80,500-level*40);}
+  scoreEl.textContent=score;
+  levelEl.textContent=level;
+  if(score>best){best=score;localStorage.setItem('gdBest',best);bestEl.textContent=best;}
+  /* next piece */
+  piece=randomPiece();
+  px=Math.floor(COLS/2)-Math.floor(piece.shape[0].length/2);
+  py=-piece.shape.length;
+  if(!fits(piece.shape,px,py+1)){endGame();}
+}
+
+function drop(){
+  if(fits(piece.shape,px,py+1)){py++;}
+  else lock();
+}
+
+function hardDrop(){
+  while(fits(piece.shape,px,py+1)){py++;score+=2;}
+  lock();
+}
+
+function drawCell(x,y,w,h,col,glow,alpha=1){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.shadowColor=glow;ctx.shadowBlur=18;
+  ctx.fillStyle=col;
+  ctx.beginPath();ctx.roundRect(x+1,y+1,w-2,h-2,5);ctx.fill();
+  /* shine */
+  ctx.globalAlpha=alpha*.22;
+  ctx.fillStyle='#fff';
+  ctx.fillRect(x+4,y+3,w-14,5);
+  ctx.restore();
+}
+
+function ghostY(){
+  let gy=py;
+  while(fits(piece.shape,px,gy+1)) gy++;
+  return gy;
+}
+
+function render(){
+  /* background */
+  ctx.fillStyle='#030710';
+  ctx.fillRect(0,0,W,H);
+
+  /* grid */
+  ctx.strokeStyle='rgba(74,143,255,.05)';ctx.lineWidth=1;
+  for(let r=0;r<ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*SZ);ctx.lineTo(W,r*SZ);ctx.stroke();}
+  for(let cc=0;cc<COLS;cc++){ctx.beginPath();ctx.moveTo(cc*SZ,0);ctx.lineTo(cc*SZ,H);ctx.stroke();}
+
+  /* board */
+  board.forEach((row,r)=>row.forEach((cell,cc)=>{
+    if(cell) drawCell(cc*SZ,r*SZ,SZ,SZ,cell.color,cell.glow);
+  }));
+
+  /* ghost */
+  const gy=ghostY();
+  piece.shape.forEach((row,r)=>row.forEach((v,cc)=>{
+    if(v&&gy+r>=0){
+      ctx.save();
+      ctx.globalAlpha=.18;
+      ctx.strokeStyle=piece.glow;ctx.lineWidth=2;
+      ctx.beginPath();ctx.roundRect((px+cc)*SZ+2,(gy+r)*SZ+2,SZ-4,SZ-4,4);ctx.stroke();
+      ctx.restore();
+    }
+  }));
+
+  /* active piece */
+  piece.shape.forEach((row,r)=>row.forEach((v,cc)=>{
+    if(v&&py+r>=0) drawCell((px+cc)*SZ,(py+r)*SZ,SZ,SZ,piece.color,piece.glow);
+  }));
+}
+
+let lastTime=0;
+function gameLoop(ts){
+  if(!running) return;
+  const dt=ts-lastTime;
+  if(dt>dropSpeed){lastTime=ts;drop();}
+  render();
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame(){
+  board=newBoard();
+  piece=randomPiece();
+  px=Math.floor(COLS/2)-1;py=-1;
+  score=0;level=1;lines=0;dropSpeed=500;gameOver=false;running=true;
+  scoreEl.textContent=0;levelEl.textContent=1;
+  msgBox.classList.add('hidden');
+  lastTime=performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  running=false;
+  mt.textContent='GAME OVER';
+  ms.innerHTML=`Score: <strong style="color:#fff">${score}</strong><br>Level: ${level} &nbsp;|&nbsp; Lines: ${lines}<br><br>Move: ← → &nbsp; Rotate: ↑ &nbsp; Drop: Space`;
+  playBtn.textContent='↺ RETRY';
+  msgBox.classList.remove('hidden');
+}
+
+playBtn.addEventListener('click',startGame);
+
+window.addEventListener('keydown',e=>{
+  if(!running) return;
+  if(e.code==='ArrowLeft'||e.code==='KeyA'){if(fits(piece.shape,px-1,py))px--;}
+  else if(e.code==='ArrowRight'||e.code==='KeyD'){if(fits(piece.shape,px+1,py))px++;}
+  else if(e.code==='ArrowDown'||e.code==='KeyS'){drop();lastTime=performance.now();}
+  else if(e.code==='ArrowUp'||e.code==='KeyW'){const r=rotate(piece.shape);if(fits(r,px,py))piece.shape=r;}
+  else if(e.code==='Space'){e.preventDefault();hardDrop();}
+});
+</script>
+</body>
+</html>

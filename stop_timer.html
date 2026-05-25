@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stop Timer</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#040c18;color:#eef;font-family:Arial}
+  .card{width:640px;padding:24px;border-radius:14px;background:#081426;text-align:center;box-shadow:0 18px 60px rgba(0,0,0,.35)}
+  .time{font-size:88px;font-weight:800;letter-spacing:2px}
+  button{padding:14px 22px;border:none;border-radius:10px;background:#4f8cff;color:#fff;font-weight:700;font-size:16px}
+  .small{color:#9db0d6;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Stop Timer</h1>
+  <div class="time" id="time">0.00</div>
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+  <div class="small">Try to stop exactly at the target second.</div>
+  <div id="result" style="margin-top:12px"></div>
+</div>
+<script>
+  const timeEl=document.getElementById('time'); const result=document.getElementById('result'); const startBtn=document.getElementById('start'); const stopBtn=document.getElementById('stop');
+  let startAt=0, timer=null, running=false, target=10;
+  function tick(){ const seconds=(performance.now()-startAt)/1000; timeEl.textContent=seconds.toFixed(2); }
+  startBtn.onclick=()=>{ if(running) return; running=true; result.textContent='Target: '+target+' seconds'; startAt=performance.now(); timer=setInterval(tick,16) };
+  stopBtn.onclick=()=>{ if(!running) return; clearInterval(timer); running=false; const seconds=(performance.now()-startAt)/1000; const diff=Math.abs(seconds-target); result.textContent = diff<0.1 ? 'Perfect stop!' : 'Off by '+diff.toFixed(2)+'s'; };
+</script>
+</body>
+</html>

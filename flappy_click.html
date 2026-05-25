@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FlappyClick — Click to Fly</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Outfit',sans-serif;color:#fff;overflow:hidden;user-select:none}
+h1{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:3px;color:#5eb8ff;text-shadow:0 0 30px rgba(94,184,255,0.5);margin-bottom:2px}
+.sub{font-size:0.72rem;color:#334466;letter-spacing:3px;text-transform:uppercase;margin-bottom:1rem}
+#gameCanvas{border-radius:16px;border:2px solid #1a2a4a;box-shadow:0 0 60px rgba(94,184,255,0.15);cursor:pointer;display:block}
+.info-row{display:flex;gap:1.5rem;margin-top:0.9rem}
+.info-box{background:#0f1824;border:1px solid #1a2a44;border-radius:10px;padding:0.5rem 1.1rem;text-align:center}
+.info-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#5eb8ff}
+.info-lbl{font-size:0.6rem;color:#334466;letter-spacing:1px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<h1>FLAPPY CLICK</h1>
+<div class="sub">// click fast to fly · dodge the pipes</div>
+<canvas id="gameCanvas" width="480" height="520"></canvas>
+<div class="info-row">
+  <div class="info-box"><div class="info-val" id="scoreLbl">0</div><div class="info-lbl">Score</div></div>
+  <div class="info-box"><div class="info-val" id="bestLbl">0</div><div class="info-lbl">Best</div></div>
+  <div class="info-box"><div class="info-val" id="cpsLbl">0</div><div class="info-lbl">CPS</div></div>
+</div>
+
+<script>
+const cv = document.getElementById('gameCanvas');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+
+// ── ASSETS / THEME ──
+const SKY_TOP = '#0a1628', SKY_BOT = '#0f2040';
+const PIPE_COL = '#1e6bb5', PIPE_DARK = '#0d3a6e', PIPE_LIGHT = '#3a9eff';
+const BIRD_BODY = '#ffcc00', BIRD_WING = '#ff9900', BIRD_EYE = '#1a1a2e';
+const GROUND_COL = '#0d2040', GROUND_LINE = '#1a3a6a';
+
+let state = 'idle'; // idle, playing, dead
+let bird, pipes, score, best = 0, frame = 0, raf;
+let clickTimes = [];
+
+function initBird() {
+  return { x: 90, y: H / 2, vy: 0, angle: 0, wingPhase: 0, trail: [] };
+}
+
+function initGame() {
+  bird = initBird();
+  pipes = [];
+  score = 0;
+  frame = 0;
+  clickTimes = [];
+  state = 'idle';
+  document.getElementById('scoreLbl').textContent = '0';
+  document.getElementById('cpsLbl').textContent = '0';
+}
+
+// ── CLICK HANDLER ──
+function onInput(e) {
+  e.preventDefault();
+  if (state === 'dead') { initGame(); loop(); return; }
+  if (state === 'idle') { state = 'playing'; }
+
+  // flap
+  bird.vy = -7.5;
+
+  // track CPS
+  const now = performance.now();
+  clickTimes.push(now);
+  clickTimes = clickTimes.filter(t => now - t < 1000);
+  document.getElementById('cpsLbl').textContent = clickTimes.length;
+}
+
+cv.addEventListener('click', onInput);
+cv.addEventListener('touchstart', onInput, { passive: false });
+document.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'ArrowUp') onInput(e); });
+
+// ── PIPE SPAWNING ──
+const GAP = 155, PIPE_W = 62, SPEED = 2.8;
+
+function spawnPipe() {
+  const minY = 90, maxY = H - 150 - GAP;
+  const topH = minY + Math.random() * (maxY - minY);
+  pipes.push({ x: W + 20, topH, scored: false });
+}
+
+// ── DRAWING ──
+function drawBg() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, SKY_TOP); g.addColorStop(1, SKY_BOT);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // stars
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  for (let i = 0; i < 60; i++) {
+    const sx = ((i * 137 + frame * 0.05) % W);
+    const sy = (i * 73) % (H * 0.6);
+    ctx.beginPath(); ctx.arc(sx, sy, 0.8, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // distant city silhouette
+  ctx.fillStyle = '#0d1e38';
+  const buildings = [30,60,45,80,55,70,40,90,65,50,75,85,35,55,70];
+  let bx = 0;
+  buildings.forEach((bh, i) => {
+    const bw = 28 + (i % 3) * 8;
+    ctx.fillRect(bx, H - 80 - bh, bw, bh);
+    bx += bw + 4;
+  });
+}
+
+function drawGround() {
+  ctx.fillStyle = GROUND_COL;
+  ctx.fillRect(0, H - 60, W, 60);
+  ctx.fillStyle = GROUND_LINE;
+  ctx.fillRect(0, H - 60, W, 3);
+  // moving ground lines
+  ctx.fillStyle = '#1a3a6a';
+  for (let i = 0; i < 8; i++) {
+    const lx = ((i * 70 - frame * SPEED) % W + W) % W;
+    ctx.fillRect(lx, H - 48, 40, 3);
+  }
+}
+
+function drawPipe(p) {
+  const rx = 8;
+  // top pipe
+  ctx.fillStyle = PIPE_COL;
+  roundRect(ctx, p.x, 0, PIPE_W, p.topH, rx);
+  ctx.fillStyle = PIPE_DARK;
+  roundRect(ctx, p.x, 0, PIPE_W * 0.15, p.topH, rx);
+  // top cap
+  ctx.fillStyle = PIPE_LIGHT;
+  roundRect(ctx, p.x - 6, p.topH - 28, PIPE_W + 12, 28, 5);
+  ctx.fillStyle = PIPE_COL;
+  roundRect(ctx, p.x - 6, p.topH - 28, PIPE_W * 0.15, 28, 5);
+
+  // bottom pipe
+  const botY = p.topH + GAP;
+  const botH = H - 60 - botY;
+  // bottom cap
+  ctx.fillStyle = PIPE_LIGHT;
+  roundRect(ctx, p.x - 6, botY, PIPE_W + 12, 28, 5);
+  ctx.fillStyle = PIPE_COL;
+  roundRect(ctx, p.x - 6, botY, PIPE_W * 0.15, 28, 5);
+  ctx.fillStyle = PIPE_COL;
+  roundRect(ctx, p.x, botY + 28, PIPE_W, botH - 28, rx);
+  ctx.fillStyle = PIPE_DARK;
+  roundRect(ctx, p.x, botY + 28, PIPE_W * 0.15, botH - 28, rx);
+
+  // gap glow
+  const gg = ctx.createLinearGradient(0, p.topH, 0, botY);
+  gg.addColorStop(0, 'rgba(94,184,255,0.04)');
+  gg.addColorStop(0.5, 'rgba(94,184,255,0.08)');
+  gg.addColorStop(1, 'rgba(94,184,255,0.04)');
+  ctx.fillStyle = gg;
+  ctx.fillRect(p.x - 6, p.topH, PIPE_W + 12, GAP);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
+}
+
+function drawBird(b) {
+  ctx.save();
+  ctx.translate(b.x, b.y);
+  ctx.rotate(b.angle);
+
+  // trail
+  b.trail.forEach((t, i) => {
+    ctx.globalAlpha = (i / b.trail.length) * 0.3;
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath(); ctx.arc(t.x - b.x, t.y - b.y, 8 * (i / b.trail.length), 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+
+  // wing shadow
+  const wingY = Math.sin(b.wingPhase) * 10;
+  ctx.fillStyle = BIRD_WING;
+  ctx.beginPath();
+  ctx.ellipse(-6, wingY, 16, 8, -0.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // body
+  const bodyGrad = ctx.createRadialGradient(-2, -3, 2, 0, 0, 18);
+  bodyGrad.addColorStop(0, '#ffe066');
+  bodyGrad.addColorStop(1, '#cc8800');
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath(); ctx.ellipse(0, 0, 18, 15, 0, 0, Math.PI * 2); ctx.fill();
+
+  // belly
+  ctx.fillStyle = '#ffeebb';
+  ctx.beginPath(); ctx.ellipse(4, 3, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
+
+  // eye
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(8, -4, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = BIRD_EYE;
+  ctx.beginPath(); ctx.arc(10, -4, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(11, -5.5, 1.2, 0, Math.PI * 2); ctx.fill();
+
+  // beak
+  ctx.fillStyle = '#ff8800';
+  ctx.beginPath(); ctx.moveTo(14, -2); ctx.lineTo(22, 1); ctx.lineTo(14, 4); ctx.closePath(); ctx.fill();
+
+  ctx.restore();
+}
+
+function drawHUD() {
+  // score
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = `bold 42px 'Bebas Neue', sans-serif`;
+  ctx.shadowColor = 'rgba(94,184,255,0.6)';
+  ctx.shadowBlur = 15;
+  ctx.fillText(score, W / 2, 60);
+  ctx.shadowBlur = 0;
+}
+
+function drawIdle() {
+  drawBg(); drawGround();
+  ctx.save();
+  bird.y = H / 2 + Math.sin(frame * 0.05) * 12;
+  bird.wingPhase = frame * 0.15;
+  bird.angle = Math.sin(frame * 0.05) * 0.15;
+  drawBird(bird);
+  ctx.restore();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(94,184,255,0.95)';
+  ctx.font = `bold 28px 'Bebas Neue', sans-serif`;
+  ctx.fillText('CLICK TO FLY', W / 2, H / 2 - 70);
+  ctx.font = `14px 'Outfit', sans-serif`;
+  ctx.fillStyle = '#5588aa';
+  ctx.fillText('Click fast → fly higher', W / 2, H / 2 - 45);
+  ctx.fillText('Click slow → fall down', W / 2, H / 2 - 25);
+  ctx.font = `12px 'Outfit', sans-serif`;
+  ctx.fillStyle = '#334466';
+  ctx.fillText('SPACE or TAP also works', W / 2, H / 2);
+}
+
+function drawDead() {
+  // dim overlay
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff5e6c';
+  ctx.font = `bold 56px 'Bebas Neue', sans-serif`;
+  ctx.shadowColor = 'rgba(255,94,108,0.5)';
+  ctx.shadowBlur = 20;
+  ctx.fillText('GAME OVER', W / 2, H / 2 - 60);
+  ctx.shadowBlur = 0;
+
+  ctx.fillStyle = '#fff';
+  ctx.font = `28px 'Bebas Neue', sans-serif`;
+  ctx.fillText(`SCORE: ${score}`, W / 2, H / 2 - 15);
+
+  if (score >= best && score > 0) {
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = `18px 'Bebas Neue', sans-serif`;
+    ctx.fillText('🏆 NEW BEST!', W / 2, H / 2 + 18);
+  } else {
+    ctx.fillStyle = '#5588aa';
+    ctx.font = `16px 'Outfit', sans-serif`;
+    ctx.fillText(`Best: ${best}`, W / 2, H / 2 + 18);
+  }
+
+  // pulse click
+  const pulse = 0.7 + 0.3 * Math.sin(frame * 0.12);
+  ctx.globalAlpha = pulse;
+  ctx.fillStyle = '#5eb8ff';
+  ctx.font = `16px 'Outfit', sans-serif`;
+  ctx.fillText('Click or Tap to restart', W / 2, H / 2 + 60);
+  ctx.globalAlpha = 1;
+}
+
+// ── COLLISION ──
+function checkCollision() {
+  const bx = bird.x, by = bird.y, br = 13;
+  if (by + br >= H - 60 || by - br <= 0) return true;
+  for (const p of pipes) {
+    if (bx + br > p.x + 4 && bx - br < p.x + PIPE_W - 4) {
+      if (by - br < p.topH || by + br > p.topH + GAP) return true;
+    }
+  }
+  return false;
+}
+
+// ── MAIN LOOP ──
+function loop() {
+  frame++;
+  ctx.clearRect(0, 0, W, H);
+
+  if (state === 'idle') {
+    drawIdle();
+    raf = requestAnimationFrame(loop);
+    return;
+  }
+
+  if (state === 'dead') {
+    drawBg(); drawGround();
+    drawBird(bird);
+    drawDead();
+    raf = requestAnimationFrame(loop);
+    return;
+  }
+
+  // physics
+  bird.vy += 0.42;
+  bird.y += bird.vy;
+  bird.angle = Math.max(-0.5, Math.min(Math.PI / 2.5, bird.vy * 0.06));
+  bird.wingPhase += 0.35;
+  bird.trail.push({ x: bird.x, y: bird.y });
+  if (bird.trail.length > 8) bird.trail.shift();
+
+  // pipes
+  if (frame % 90 === 0) spawnPipe();
+  pipes.forEach(p => p.x -= SPEED);
+  pipes = pipes.filter(p => p.x > -PIPE_W - 20);
+
+  // score
+  pipes.forEach(p => {
+    if (!p.scored && p.x + PIPE_W < bird.x) {
+      p.scored = true; score++;
+      document.getElementById('scoreLbl').textContent = score;
+      if (score > best) { best = score; document.getElementById('bestLbl').textContent = best; }
+      // speed up slightly
+      // SPEED increases handled below
+    }
+  });
+
+  // collision
+  if (checkCollision()) {
+    state = 'dead';
+    if (score > best) best = score;
+    document.getElementById('bestLbl').textContent = best;
+  }
+
+  drawBg();
+  pipes.forEach(p => drawPipe(p));
+  drawGround();
+  drawBird(bird);
+  drawHUD();
+
+  raf = requestAnimationFrame(loop);
+}
+
+initGame();
+loop();
+</script>
+</body>
+</html>

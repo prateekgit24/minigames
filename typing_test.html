@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TypeBlitz — Speed & Accuracy Test</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d12;--surface:#141420;--surface2:#1c1c2e;--surface3:#242438;
+  --accent:#e8ff5a;--accent2:#a8f060;--purple:#9b7fe8;--red:#ff5e6c;--green:#3deba0;--blue:#5eb8ff;
+  --text:#f0f0f8;--text2:#8888aa;--text3:#444466;--border:#2a2a44;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem}
+h1{font-family:'Bebas Neue',sans-serif;font-size:3.5rem;letter-spacing:3px;color:var(--accent);text-shadow:0 0 40px rgba(232,255,90,0.3);margin-bottom:4px}
+.tagline{font-size:0.75rem;color:var(--text3);letter-spacing:3px;text-transform:uppercase;margin-bottom:2rem;font-family:'JetBrains Mono',monospace}
+.container{width:100%;max-width:780px}
+/* MODE SELECTOR */
+.mode-bar{display:flex;gap:8px;margin-bottom:1.5rem;background:var(--surface);padding:6px;border-radius:12px;border:1px solid var(--border)}
+.mode-btn{flex:1;padding:8px;border:none;background:transparent;color:var(--text2);border-radius:8px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:0.82rem;font-weight:600;transition:all 0.2s}
+.mode-btn.active{background:var(--surface3);color:var(--accent);box-shadow:0 0 10px rgba(232,255,90,0.1)}
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:0.9rem;text-align:center}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:1.8rem;font-weight:700;line-height:1}
+.stat-lbl{font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-top:4px}
+.stat-wpm .stat-val{color:var(--accent)}
+.stat-acc .stat-val{color:var(--green)}
+.stat-time .stat-val{color:var(--blue)}
+.stat-err .stat-val{color:var(--red)}
+/* TYPING AREA */
+.typing-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2rem;position:relative;cursor:text}
+.typing-card.focused{border-color:var(--accent);box-shadow:0 0 20px rgba(232,255,90,0.08)}
+.typing-card.blurred::after{content:'Click to focus';position:absolute;inset:0;background:rgba(13,13,18,0.85);display:flex;align-items:center;justify-content:center;border-radius:16px;font-size:0.9rem;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.text-display{font-family:'JetBrains Mono',monospace;font-size:1.1rem;line-height:2.1;letter-spacing:0.5px;user-select:none;min-height:120px}
+.ch{color:var(--text3);transition:none}
+.ch.typed{color:var(--text)}
+.ch.correct{color:var(--green)}
+.ch.wrong{color:var(--red);background:rgba(255,94,108,0.12);border-radius:2px}
+.ch.cursor{border-left:2.5px solid var(--accent);animation:blink 1s step-end infinite;color:var(--text)}
+@keyframes blink{0%,100%{border-color:var(--accent)}50%{border-color:transparent}}
+.hidden-input{position:absolute;opacity:0;width:1px;height:1px;top:0;left:0}
+/* PROGRESS BAR */
+.prog-bar{width:100%;height:3px;background:var(--border);border-radius:2px;margin-bottom:1.25rem;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:2px;transition:width 0.1s}
+/* RESULTS */
+.result-screen{display:none;text-align:center;padding:2rem}
+.result-wpm{font-family:'Bebas Neue',sans-serif;font-size:6rem;line-height:1;color:var(--accent);text-shadow:0 0 60px rgba(232,255,90,0.4)}
+.result-sub{font-size:0.85rem;color:var(--text2);margin:0.5rem 0 2rem}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:2rem}
+.res-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem}
+.res-val{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700}
+.res-lbl{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-top:4px}
+.grade-badge{display:inline-block;font-size:0.8rem;font-weight:700;padding:6px 18px;border-radius:20px;margin-bottom:1.5rem;letter-spacing:1px}
+/* BUTTONS */
+.btn{background:var(--accent);border:none;color:#000;padding:0.75rem 2.5rem;border-radius:10px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;transition:all 0.15s}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn:active{transform:scale(0.97)}
+.btn-ghost{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:0.7rem 1.5rem;border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.15s}
+.btn-ghost:hover{border-color:var(--accent);color:var(--text)}
+.start-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;min-height:160px}
+.keyboard-hint{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:0.5rem;opacity:0.3}
+.key{background:var(--surface3);border:1px solid var(--border);border-radius:5px;padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-align:center}
+</style>
+</head>
+<body>
+<h1>TYPEBLITZ</h1>
+<div class="tagline">// speed · accuracy · flow state</div>
+<div class="container">
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="setMode('15s')">15 sec</button>
+    <button class="mode-btn" onclick="setMode('30s')">30 sec</button>
+    <button class="mode-btn" onclick="setMode('60s')">60 sec</button>
+    <button class="mode-btn" onclick="setMode('120s')">2 min</button>
+    <button class="mode-btn" onclick="setMode('words25')">25 words</button>
+    <button class="mode-btn" onclick="setMode('words50')">50 words</button>
+    <button class="mode-btn" onclick="setMode('quote')">quotes</button>
+    <button class="mode-btn" onclick="setMode('code')">code</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat stat-wpm"><div class="stat-val" id="sv-wpm">—</div><div class="stat-lbl">WPM</div></div>
+    <div class="stat stat-acc"><div class="stat-val" id="sv-acc">—</div><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat stat-time"><div class="stat-val" id="sv-time">—</div><div class="stat-lbl">Time</div></div>
+    <div class="stat stat-err"><div class="stat-val" id="sv-err">0</div><div class="stat-lbl">Errors</div></div>
+  </div>
+
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+
+  <div class="typing-card blurred" id="typingCard" onclick="focusInput()">
+    <div class="text-display" id="textDisplay">
+      <div class="start-overlay">
+        <div style="font-size:0.9rem;color:var(--text2)">Choose a mode above, then click here to start typing</div>
+        <button class="btn" onclick="event.stopPropagation();initGame()">New Test</button>
+      </div>
+    </div>
+    <input type="text" id="hiddenInput" class="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  </div>
+
+  <div style="text-align:center;margin-top:1rem">
+    <button class="btn-ghost" onclick="initGame()" style="margin-right:8px">↺ Restart</button>
+    <span style="font-size:0.75rem;color:var(--text3);font-family:'JetBrains Mono',monospace">Tab+Enter to restart</span>
+  </div>
+</div>
+
+<script>
+const WORDS_COMMON = "the be to of and a in that have it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us about above across after against along among around because before between by down during except for from in inside into like near of off on out outside over past since through throughout to toward under until up upon with without".split(" ");
+const WORDS_MEDIUM = "although beautiful breathe butterfly campaign conscience daughter development different discipline embarrass environment especially experience extraordinary february foreign government guarantee independence immediately important information knowledge language necessary neighbor patience restaurant receive separate throughout tomorrow twilight understand wherever yesterday abundance achieve accomplish actually analysis approach argument arrangement assistance available awareness beginning brilliant calculate carefully chemistry committee complicated conclusion confident confusion constant continually conversation".split(" ");
+const QUOTES = [
+  "The only way to do great work is to love what you do. If you have not found it yet keep looking. Do not settle.",
+  "In the middle of every difficulty lies opportunity. The measure of intelligence is the ability to change.",
+  "It does not matter how slowly you go as long as you do not stop moving forward toward your goal.",
+  "Success is not final, failure is not fatal. It is the courage to continue that counts in the end.",
+  "The greatest glory in living lies not in never falling, but in rising every time we fall. That is courage.",
+  "Life is what happens when you are busy making other plans. Embrace each moment and live fully present.",
+  "The future belongs to those who believe in the beauty of their dreams and work relentlessly to achieve them.",
+  "It always seems impossible until it is done. Every expert was once a beginner who refused to quit.",
+  "Do not judge each day by the harvest you reap but by the seeds that you plant for tomorrow.",
+  "The only impossible journey is the one you never begin. Take that first step no matter how small.",
+  "Spread love everywhere you go. Let no one ever come to you without leaving happier than before.",
+  "When you reach the end of your rope, tie a knot in it and hang on. Persistence wins everything.",
+  "Always remember that you are absolutely unique. Just like everyone else around you in this world.",
+  "Do not go where the path may lead, go instead where there is no path and leave a trail.",
+  "You will face many defeats in life, but never let yourself be defeated by them. Rise stronger.",
+];
+const CODE_SNIPPETS = [
+  "function fibonacci(n) { if (n <= 1) return n; return fibonacci(n - 1) + fibonacci(n - 2); }",
+  "const arr = [3, 1, 4, 1, 5]; const sorted = arr.sort((a, b) => a - b); console.log(sorted);",
+  "class Stack { constructor() { this.items = []; } push(e) { this.items.push(e); } pop() { return this.items.pop(); } }",
+  "async function fetchData(url) { const res = await fetch(url); const data = await res.json(); return data; }",
+  "const map = new Map(); map.set('key', 'value'); console.log(map.get('key')); map.delete('key');",
+  "function debounce(fn, delay) { let timer; return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); }; }",
+  "const [state, setState] = useState(null); useEffect(() => { fetchData().then(setState); }, []);",
+  "const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x); const double = x => x * 2;",
+];
+
+let mode = '30s', text = '', typed = '', startTime = null, active = false, finished = false;
+let timerInterval = null, timeLimit = 30, wordMode = false, wordCount = 0;
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  initGame();
+}
+
+function buildText() {
+  if (mode === 'quote') return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  if (mode === 'code') return CODE_SNIPPETS[Math.floor(Math.random() * CODE_SNIPPETS.length)];
+  const pool = [...WORDS_COMMON, ...WORDS_MEDIUM].sort(() => Math.random() - 0.5);
+  let count = 80;
+  if (mode === 'words25') count = 25;
+  else if (mode === 'words50') count = 50;
+  else if (mode === '15s') count = 40;
+  else if (mode === '30s') count = 60;
+  else if (mode === '60s') count = 100;
+  else if (mode === '120s') count = 200;
+  return pool.slice(0, count).join(' ');
+}
+
+function getTimeLimit() {
+  if (mode === '15s') return 15;
+  if (mode === '30s') return 30;
+  if (mode === '60s') return 60;
+  if (mode === '120s') return 120;
+  return null;
+}
+
+function initGame() {
+  clearInterval(timerInterval);
+  text = buildText(); typed = ''; startTime = null; active = false; finished = false;
+  timeLimit = getTimeLimit(); wordMode = mode.startsWith('words') || mode === 'quote' || mode === 'code';
+  document.getElementById('sv-wpm').textContent = '—';
+  document.getElementById('sv-acc').textContent = '—';
+  document.getElementById('sv-time').textContent = timeLimit ? timeLimit+'s' : '—';
+  document.getElementById('sv-err').textContent = '0';
+  document.getElementById('progFill').style.width = '0%';
+  renderText();
+  focusInput();
+}
+
+function renderText() {
+  const el = document.getElementById('textDisplay');
+  let html = '';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i] === ' ' ? '&nbsp;' : text[i];
+    if (i < typed.length) {
+      if (typed[i] === text[i]) html += `<span class="ch correct">${ch}</span>`;
+      else html += `<span class="ch wrong">${ch}</span>`;
+    } else if (i === typed.length) {
+      html += `<span class="ch cursor">${ch}</span>`;
+    } else {
+      html += `<span class="ch">${ch}</span>`;
+    }
+  }
+  el.innerHTML = html;
+  // scroll cursor into view
+  const cursor = el.querySelector('.cursor');
+  if (cursor) cursor.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function focusInput() {
+  const inp = document.getElementById('hiddenInput');
+  inp.focus();
+  document.getElementById('typingCard').classList.remove('blurred');
+  document.getElementById('typingCard').classList.add('focused');
+}
+
+document.getElementById('hiddenInput').addEventListener('blur', () => {
+  if (!finished) {
+    document.getElementById('typingCard').classList.add('blurred');
+    document.getElementById('typingCard').classList.remove('focused');
+  }
+});
+
+document.getElementById('hiddenInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Tab') { e.preventDefault(); initGame(); return; }
+});
+
+document.getElementById('hiddenInput').addEventListener('input', (e) => {
+  if (finished) return;
+  const val = e.target.value;
+
+  if (!active && val.length > 0) {
+    active = true; startTime = performance.now();
+    if (timeLimit) {
+      let remaining = timeLimit;
+      timerInterval = setInterval(() => {
+        remaining--;
+        document.getElementById('sv-time').textContent = remaining + 's';
+        document.getElementById('progFill').style.width = ((timeLimit - remaining) / timeLimit * 100) + '%';
+        if (remaining <= 0) { clearInterval(timerInterval); finishGame(); }
+      }, 1000);
+    }
+  }
+
+  typed = val.slice(0, text.length);
+  e.target.value = typed;
+
+  // stats
+  if (active && startTime) {
+    const elapsed = (performance.now() - startTime) / 60000;
+    const words = typed.trim().split(/\s+/).filter(Boolean).length;
+    const wpm = elapsed > 0 ? Math.round(words / elapsed) : 0;
+    let errors = 0;
+    for (let i = 0; i < typed.length; i++) if (typed[i] !== text[i]) errors++;
+    const acc = typed.length > 0 ? Math.round((typed.length - errors) / typed.length * 100) : 100;
+    document.getElementById('sv-wpm').textContent = wpm;
+    document.getElementById('sv-acc').textContent = acc + '%';
+    document.getElementById('sv-err').textContent = errors;
+    if (!timeLimit) {
+      const elapsed_s = ((performance.now() - startTime) / 1000).toFixed(1);
+      document.getElementById('sv-time').textContent = elapsed_s + 's';
+      document.getElementById('progFill').style.width = (typed.length / text.length * 100) + '%';
+    }
+  }
+
+  renderText();
+  if (typed.length >= text.length) finishGame();
+});
+
+function finishGame() {
+  if (finished) return;
+  finished = true; active = false;
+  clearInterval(timerInterval);
+  const elapsed = (performance.now() - startTime) / 60000;
+  const words = typed.trim().split(/\s+/).filter(Boolean).length;
+  const wpm = elapsed > 0 ? Math.round(words / elapsed) : 0;
+  let errors = 0;
+  for (let i = 0; i < typed.length; i++) if (typed[i] !== text[i]) errors++;
+  const correct = typed.length - errors;
+  const acc = typed.length > 0 ? Math.round(correct / typed.length * 100) : 0;
+  const grade = wpm >= 100 ? ['🔥 LEGENDARY', '#e8ff5a'] : wpm >= 80 ? ['⚡ EXPERT', '#a8f060'] : wpm >= 60 ? ['💪 ADVANCED', '#5eb8ff'] : wpm >= 40 ? ['👍 INTERMEDIATE', '#9b7fe8'] : ['🌱 BEGINNER', '#ff5e6c'];
+  document.getElementById('textDisplay').innerHTML = `
+    <div style="text-align:center;padding:1rem 0">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:5rem;line-height:1;color:var(--accent);text-shadow:0 0 60px rgba(232,255,90,0.4)">${wpm}</div>
+      <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:1rem">words per minute</div>
+      <div style="display:inline-block;background:${grade[1]}22;border:1px solid ${grade[1]}44;color:${grade[1]};font-size:0.75rem;font-weight:700;padding:5px 16px;border-radius:20px;letter-spacing:1px;margin-bottom:1.5rem">${grade[0]}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:500px;margin:0 auto 1.5rem">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.75rem">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--green)">${acc}%</div>
+          <div style="font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px">accuracy</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.75rem">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--red)">${errors}</div>
+          <div style="font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px">errors</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.75rem">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--blue)">${correct}</div>
+          <div style="font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px">correct</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.75rem">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.4rem;color:var(--purple)">${words}</div>
+          <div style="font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:1px">words</div>
+        </div>
+      </div>
+      <button class="btn" onclick="initGame()">↺ New Test</button>
+    </div>`;
+}
+
+initGame();
+</script>
+</body>
+</html>

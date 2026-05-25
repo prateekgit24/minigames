@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beat Tap</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+  body{background:#04020f;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;color:#e8e0ff;overflow:hidden}
+  h1{font-size:1.6rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(90deg,#cc44ff,#ff4488,#ff6a1a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+  #stage{width:740px;position:relative}
+
+  /* HUD */
+  #hud{display:flex;justify-content:space-between;align-items:center;padding:0 4px 14px;font-size:.82rem;color:#7060a0}
+  .hval{font-weight:900;font-size:1.1rem;color:#fff}
+  #combo{color:#ffcc00;font-size:1rem;font-weight:800;min-width:80px;text-align:center;transition:transform .1s}
+  #combo.pop{transform:scale(1.35)}
+
+  /* Track */
+  #track{width:100%;height:380px;background:linear-gradient(180deg,#08041a,#050212);border-radius:16px;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(180,100,255,.14),0 0 0 1.5px rgba(160,80,255,.18)}
+
+  /* Lane dividers */
+  .lane-div{position:absolute;top:0;bottom:0;width:1px;background:rgba(160,100,255,.08)}
+
+  /* Hit zone */
+  #hitzone{position:absolute;bottom:60px;left:0;right:0;height:52px;display:flex;align-items:center;justify-content:center;gap:0}
+  .lane-target{flex:1;height:100%;display:flex;align-items:center;justify-content:center}
+  .target-ring{width:52px;height:52px;border-radius:50%;border:2px solid rgba(160,100,255,.3);display:flex;align-items:center;justify-content:center;transition:box-shadow .08s,border-color .08s}
+  .target-ring.lit{border-color:#cc44ff;box-shadow:0 0 20px #cc44ff,0 0 40px rgba(200,80,255,.4)}
+  .target-inner{width:22px;height:22px;border-radius:50%;background:rgba(160,80,255,.15)}
+
+  /* Key labels */
+  #keylabels{display:flex;justify-content:space-around;padding:0 0 8px;font-size:.75rem;color:#5040a0;font-weight:700;letter-spacing:.06em}
+
+  /* Notes */
+  .note{position:absolute;width:52px;height:20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+
+  /* Hit feedback */
+  .hit-fx{position:absolute;pointer-events:none;border-radius:50%;animation:hitRing .4s ease-out forwards}
+  @keyframes hitRing{from{transform:scale(.5);opacity:1}to{transform:scale(2.2);opacity:0}}
+
+  /* Judgment text */
+  .judge{position:absolute;font-size:1.2rem;font-weight:900;pointer-events:none;animation:judgeAnim .55s ease-out forwards;letter-spacing:.06em}
+  @keyframes judgeAnim{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-50px);opacity:0}}
+
+  /* BPM bar visualizer */
+  #viz{position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;align-items:flex-end;justify-content:space-around;padding:0 12px 6px;gap:2px;pointer-events:none}
+  .vbar{width:8px;border-radius:4px 4px 0 0;background:rgba(200,100,255,.4);transition:height .1s}
+
+  /* Overlay */
+  #overlay{position:absolute;inset:0;border-radius:16px;background:rgba(4,2,16,.88);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:opacity .3s}
+  #overlay.hidden{opacity:0;pointer-events:none}
+  .ot{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#cc44ff,#ff4488);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .os{font-size:.9rem;color:#8070c0;text-align:center;line-height:1.7;max-width:280px}
+  .obig{font-size:2.8rem;font-weight:900;color:#ffcc00}
+  #startBtn{padding:12px 36px;border-radius:999px;border:1.5px solid rgba(200,80,255,.38);background:rgba(180,60,255,.12);color:#d0a0ff;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #startBtn:hover{background:rgba(180,60,255,.25)}
+  #hint{font-size:.76rem;color:#302050;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>🎵 Beat Tap</h1>
+<div id="stage">
+  <div id="hud">
+    <div>Score <span class="hval" id="scoreEl">0</span></div>
+    <div id="combo"></div>
+    <div>Best <span class="hval" id="bestEl">0</span></div>
+    <div>Accuracy <span class="hval" id="accEl">—</span></div>
+  </div>
+  <div id="track">
+    <div class="lane-div" style="left:25%"></div>
+    <div class="lane-div" style="left:50%"></div>
+    <div class="lane-div" style="left:75%"></div>
+    <div id="hitzone">
+      <div class="lane-target"><div class="target-ring" id="t0"><div class="target-inner"></div></div></div>
+      <div class="lane-target"><div class="target-ring" id="t1"><div class="target-inner"></div></div></div>
+      <div class="lane-target"><div class="target-ring" id="t2"><div class="target-inner"></div></div></div>
+      <div class="lane-target"><div class="target-ring" id="t3"><div class="target-inner"></div></div></div>
+    </div>
+    <div id="viz"></div>
+    <div id="overlay">
+      <div class="ot" id="oTitle">BEAT TAP</div>
+      <div class="obig" id="oScore" style="display:none"></div>
+      <div class="os" id="oSub">Hit notes as they reach the rings!<br>D · F · J · K — or tap the lanes<br>Combos multiply your score.</div>
+      <button id="startBtn">▶ PLAY</button>
+    </div>
+  </div>
+  <div id="keylabels"><span>D</span><span>F</span><span>J</span><span>K</span></div>
+</div>
+<div id="hint">Perfect timing = 100pts · Good = 50pts · Miss breaks combo</div>
+
+<script>
+const track=document.getElementById('track');
+const overlay=document.getElementById('overlay');
+const oTitle=document.getElementById('oTitle');
+const oScore=document.getElementById('oScore');
+const oSub=document.getElementById('oSub');
+const startBtn=document.getElementById('startBtn');
+const scoreEl=document.getElementById('scoreEl');
+const bestEl=document.getElementById('bestEl');
+const accEl=document.getElementById('accEl');
+const comboEl=document.getElementById('combo');
+const targets=[0,1,2,3].map(i=>document.getElementById('t'+i));
+const viz=document.getElementById('viz');
+
+/* BPM bars */
+const BAR_COUNT=24;
+const bars=[];
+for(let i=0;i<BAR_COUNT;i++){const b=document.createElement('div');b.className='vbar';b.style.height='4px';viz.appendChild(b);bars.push(b);}
+
+const LANE_COLS=['#cc44ff','#ff4488','#ff6a1a','#ffcc00'];
+const LANE_GLOWS=['#cc44ff','#ff4488','#ff6a1a','#ddaa00'];
+const LANE_KEYS={KeyD:0,KeyF:1,KeyJ:2,KeyK:3};
+
+let score=0,best=+localStorage.getItem('btBest')||0,running=false;
+let comboCount=0,totalHits=0,perfectHits=0;
+let notes=[],lastNoteTime=0,bpm=120,interval=60000/bpm;
+let songTimer=0,songLength=60; // 60 seconds
+let difficultyTimer=0;
+bestEl.textContent=best;
+
+const TRACK_H=380;
+const HIT_Y=TRACK_H-60-26; // center of hit zone
+const NOTE_TRAVEL=HIT_Y; // pixels a note falls before it hits
+const NOTE_SPEED=3.2; // px per ms initially
+
+function laneX(lane){
+  const W=track.clientWidth;
+  return W/4*lane+W/8;
+}
+
+function spawnNote(lane,isBeat=false){
+  const el=document.createElement('div');
+  el.className='note';
+  const w=isBeat?62:48,h=isBeat?22:16;
+  el.style.cssText=`width:${w}px;height:${h}px;background:${LANE_COLS[lane]};box-shadow:0 0 18px ${LANE_GLOWS[lane]},0 0 6px ${LANE_GLOWS[lane]};left:${laneX(lane)-w/2}px;top:-${h}px`;
+  track.appendChild(el);
+  const speed=NOTE_SPEED*(1+songTimer/songLength*0.4);
+  notes.push({el,lane,y:-h,speed,isBeat,hit:false});
+}
+
+function generatePattern(){
+  /* simple musical pattern generator */
+  const patterns=[
+    [0],[1],[2],[3],[0,2],[1,3],[0,1],[2,3],[0,1,2],[1,2,3],[0,2,3],[0,1,3]
+  ];
+  const p=patterns[Math.random()*patterns.length|0];
+  p.forEach(l=>spawnNote(l,Math.random()<.15));
+}
+
+let patternTimer=0;
+function schedulePattern(dt){
+  patternTimer-=dt;
+  if(patternTimer<=0){
+    generatePattern();
+    const beat=interval; // one beat
+    const gap=Math.max(beat*.5,beat-(songTimer/songLength)*beat*.3);
+    patternTimer=gap;
+  }
+}
+
+function hitLane(lane){
+  if(!running) return;
+  /* find closest note in lane */
+  let best2=null,bestDist=999;
+  notes.forEach(n=>{
+    if(n.lane===lane&&!n.hit){
+      const dist=Math.abs(n.y-HIT_Y);
+      if(dist<bestDist){bestDist=dist;best2=n;}
+    }
+  });
+  const ring=targets[lane];
+  ring.classList.add('lit');
+  setTimeout(()=>ring.classList.remove('lit'),120);
+
+  if(best2&&bestDist<60){
+    best2.hit=true;
+    best2.el.remove();
+    const isPerfect=bestDist<22;
+    const pts=isPerfect?100:50;
+    comboCount++;totalHits++;
+    if(isPerfect) perfectHits++;
+    score+=pts*Math.max(1,Math.floor(comboCount/5));
+    scoreEl.textContent=score;
+    showJudge(laneX(lane),HIT_Y-30,isPerfect?'PERFECT!':'GOOD',isPerfect?'#ffcc00':'#88ff88',isPerfect?'#ddaa00':'#44aa44');
+    showHitRing(laneX(lane),HIT_Y+26,LANE_GLOWS[lane]);
+    updateCombo();
+    if(score>best){best=score;localStorage.setItem('btBest',best);bestEl.textContent=best;}
+  } else {
+    /* missed tap */
+    comboCount=0;
+    updateCombo();
+  }
+}
+
+function showJudge(x,y,text,col,glow){
+  const el=document.createElement('div');
+  el.className='judge';
+  el.textContent=text;
+  el.style.cssText=`left:${x-40}px;top:${y}px;color:${col};text-shadow:0 0 12px ${glow};width:80px;text-align:center`;
+  track.appendChild(el);
+  setTimeout(()=>el.remove(),600);
+}
+
+function showHitRing(x,y,col){
+  const el=document.createElement('div');
+  el.className='hit-fx';
+  el.style.cssText=`left:${x-26}px;top:${y-26}px;width:52px;height:52px;border:2px solid ${col};box-shadow:0 0 12px ${col}`;
+  track.appendChild(el);
+  setTimeout(()=>el.remove(),450);
+}
+
+function updateCombo(){
+  if(comboCount>=2){
+    comboEl.textContent=`x${comboCount} COMBO`;
+    comboEl.classList.add('pop');
+    setTimeout(()=>comboEl.classList.remove('pop'),150);
+  } else {
+    comboEl.textContent='';
+  }
+  const acc=totalHits>0?Math.round(perfectHits/totalHits*100)+'%':'—';
+  accEl.textContent=acc;
+}
+
+/* visualizer bars */
+function updateViz(beat){
+  bars.forEach((b,i)=>{
+    const h=beat?8+Math.random()*40:4+Math.random()*12;
+    b.style.height=h+'px';
+    b.style.opacity=(beat?.9:.35);
+  });
+}
+
+let lastTs=0,beatPhase=0,beatPulse=false;
+function gameLoop(ts){
+  if(!running) return;
+  const dt=ts-lastTs;lastTs=ts;
+  songTimer+=dt/1000;
+
+  /* beat pulse */
+  beatPhase+=dt;
+  const isBeat=beatPhase>=interval;
+  if(isBeat){beatPhase%=interval;updateViz(true);}
+  else if(beatPhase>interval*.3&&beatPulse){beatPulse=false;updateViz(false);}
+  if(isBeat) beatPulse=true;
+
+  /* schedule patterns */
+  schedulePattern(dt);
+
+  /* move notes */
+  for(let i=notes.length-1;i>=0;i--){
+    const n=notes[i];
+    if(n.hit) continue;
+    n.y+=n.speed*dt*.06;
+    n.el.style.top=n.y+'px';
+    if(n.y>TRACK_H){
+      n.el.remove();notes.splice(i,1);
+      /* miss penalty */
+      comboCount=0;updateCombo();
+    }
+  }
+
+  /* song end */
+  if(songTimer>=songLength){endGame();return;}
+
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame(){
+  notes.forEach(n=>n.el.remove());
+  notes=[];score=0;comboCount=0;totalHits=0;perfectHits=0;
+  songTimer=0;patternTimer=0;running=true;
+  scoreEl.textContent=0;accEl.textContent='—';comboEl.textContent='';
+  overlay.classList.add('hidden');
+  lastTs=performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function endGame(){
+  running=false;
+  oTitle.textContent='ROUND OVER';
+  oScore.textContent=score;oScore.style.display='block';
+  const acc=totalHits>0?Math.round(perfectHits/totalHits*100)+'%':'0%';
+  oSub.innerHTML=`Accuracy: <strong style="color:#fff">${acc}</strong> &nbsp;|&nbsp; Combo Best: x${comboCount}<br><br>D · F · J · K or tap lanes`;
+  startBtn.textContent='↺ REPLAY';
+  overlay.classList.remove('hidden');
+}
+
+startBtn.addEventListener('click',startGame);
+
+window.addEventListener('keydown',e=>{
+  if(e.code in LANE_KEYS){e.preventDefault();hitLane(LANE_KEYS[e.code]);}
+});
+
+/* tap lanes */
+track.addEventListener('click',e=>{
+  if(!running) return;
+  const W=track.clientWidth;
+  const lane=Math.floor(e.offsetX/(W/4));
+  hitLane(Math.max(0,Math.min(3,lane)));
+});
+</script>
+</body>
+</html>

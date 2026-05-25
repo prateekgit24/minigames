@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Shadow Stealth</title>
+<link rel="icon" href="assets/logo.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#02030a;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Segoe UI',Arial,sans-serif;color:#c0d4f0;overflow:hidden}
+  h1{font-size:1.5rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(90deg,#8866cc,#4466ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+  #wrap{position:relative}
+  canvas{display:block;border-radius:14px;box-shadow:0 0 60px rgba(100,80,200,.14),0 0 0 1.5px rgba(80,60,160,.2)}
+  #hud{display:flex;justify-content:space-between;padding:8px 4px;font-size:.8rem;color:#3a3060;gap:20px}
+  .hv{font-weight:900;color:#fff;font-size:.95rem;margin-left:4px}
+  #overlay{position:absolute;inset:0;border-radius:14px;background:rgba(2,3,10,.92);backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+  #overlay.hidden{display:none}
+  .ot{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#8866cc,#4466ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .os{color:#3a3060;font-size:.88rem;text-align:center;line-height:1.7;max-width:300px}
+  .obig{font-size:2.5rem;font-weight:900;color:#aa88ff}
+  #startBtn{padding:11px 34px;border-radius:999px;border:1.5px solid rgba(130,100,220,.38);background:rgba(100,80,200,.1);color:#aa88ff;font-size:.92rem;font-weight:700;cursor:pointer;transition:background .2s}
+  #startBtn:hover{background:rgba(100,80,200,.22)}
+  #hint{font-size:.74rem;color:#1a1540;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>👤 Shadow Stealth</h1>
+<div id="wrap">
+  <div id="hud">
+    <span>Level <span class="hv" id="levelEl">1</span></span>
+    <span>Detected <span class="hv" id="detEl">0</span></span>
+    <span>Score <span class="hv" id="scoreEl">0</span></span>
+    <span>Best <span class="hv" id="bestEl">0</span></span>
+  </div>
+  <canvas id="c" width="860" height="460"></canvas>
+  <div id="overlay">
+    <div class="ot" id="oTitle">SHADOW STEALTH</div>
+    <div class="obig" id="oBig" style="display:none"></div>
+    <div class="os" id="oSub">Move through the darkness unseen.<br>Stay in the <strong style="color:#aa88ff">shadows</strong> — avoid guard vision cones.<br>Reach the <strong style="color:#44ffaa">green exit</strong>!<br><br>WASD / Arrow Keys</div>
+    <button id="startBtn">▶ INFILTRATE</button>
+  </div>
+</div>
+<div id="hint">Stay in shadows · Avoid yellow cones · Reach green exit · Each level adds more guards</div>
+
+<script>
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+const W=c.width,H=c.height;
+const overlay=document.getElementById('overlay');
+const oTitle=document.getElementById('oTitle');
+const oBig=document.getElementById('oBig');
+const oSub=document.getElementById('oSub');
+const startBtn=document.getElementById('startBtn');
+const levelEl=document.getElementById('levelEl');
+const detEl=document.getElementById('detEl');
+const scoreEl=document.getElementById('scoreEl');
+const bestEl=document.getElementById('bestEl');
+
+let best=+localStorage.getItem('ssBest')||0;
+bestEl.textContent=best;
+
+let running=false,keys={};
+let player,guards,walls,exit,level,detections,score,frameCount;
+
+const CELL=46,COLS=18,ROWS=9;
+const PLAYER_SPEED=2.8;
+const GUARD_VIEW_DIST=180,GUARD_VIEW_ANGLE=Math.PI/3;
+
+function makeWalls(){
+  /* static wall layout — alternating blocks */
+  const ws=[];
+  for(let r=1;r<ROWS-1;r+=2){
+    for(let c=1;c<COLS-1;c+=3){
+      if(Math.random()>.4) ws.push({x:c*CELL,y:r*CELL,w:CELL*1.5,h:CELL});
+    }
+  }
+  return ws;
+}
+
+function spawnGuards(count){
+  const gs=[];
+  for(let i=0;i<count;i++){
+    let x,y,ok;
+    do{
+      x=100+Math.random()*(W-220);
+      y=60+Math.random()*(H-140);
+      ok=!wallAt(x,y,20)&&Math.hypot(x-player.x,y-player.y)>180;
+    }while(!ok);
+    gs.push({
+      x,y,
+      angle:Math.random()*Math.PI*2,
+      speed:.6+Math.random()*.5,
+      turnSpeed:.016+Math.random()*.012,
+      turnDir:Math.random()<.5?1:-1,
+      alertTimer:0,
+      patrolAngle:Math.random()*Math.PI*2,
+    });
+  }
+  return gs;
+}
+
+function wallAt(x,y,r){
+  for(const w of walls) if(x+r>w.x&&x-r<w.x+w.w&&y+r>w.y&&y-r<w.y+w.h) return true;
+  return false;
+}
+
+function initLevel(){
+  walls=makeWalls();
+  player={x:36,y:H/2,r:11,detected:false,detTimer:0};
+  exit={x:W-36,y:H/2,r:18};
+  guards=spawnGuards(2+level);
+  levelEl.textContent=level;
+}
+
+function update(){
+  if(!running) return;
+  frameCount++;
+
+  /* player movement */
+  let dx=0,dy=0;
+  if(keys.ArrowLeft||keys.KeyA) dx-=PLAYER_SPEED;
+  if(keys.ArrowRight||keys.KeyD) dx+=PLAYER_SPEED;
+  if(keys.ArrowUp||keys.KeyW) dy-=PLAYER_SPEED;
+  if(keys.ArrowDown||keys.KeyS) dy+=PLAYER_SPEED;
+  if(dx&&dy){dx*=.707;dy*=.707;}
+
+  const nx=player.x+dx,ny=player.y+dy;
+  if(!wallAt(nx,player.y,player.r)&&nx>player.r&&nx<W-player.r) player.x=nx;
+  if(!wallAt(player.x,ny,player.r)&&ny>player.r&&ny<H-player.r) player.y=ny;
+
+  /* guard update */
+  player.detected=false;
+  guards.forEach(g=>{
+    /* patrol */
+    g.angle+=g.turnSpeed*g.turnDir;
+    /* periodic direction change */
+    if(Math.random()<.005) g.turnDir*=-1;
+
+    /* try moving */
+    const gspeed=g.speed;
+    const gx=g.x+Math.cos(g.angle)*gspeed,gy=g.y+Math.sin(g.angle)*gspeed;
+    if(!wallAt(gx,g.y,8)&&gx>8&&gx<W-8) g.x=gx;
+    else g.angle+=Math.PI/2;
+    if(!wallAt(g.x,gy,8)&&gy>8&&gy<H-8) g.y=gy;
+
+    /* sight check */
+    const dx2=player.x-g.x,dy2=player.y-g.y;
+    const dist=Math.hypot(dx2,dy2);
+    if(dist<GUARD_VIEW_DIST){
+      const toPlayer=Math.atan2(dy2,dx2);
+      let angleDiff=toPlayer-g.angle;
+      while(angleDiff>Math.PI) angleDiff-=Math.PI*2;
+      while(angleDiff<-Math.PI) angleDiff+=Math.PI*2;
+      if(Math.abs(angleDiff)<GUARD_VIEW_ANGLE/2){
+        /* ray cast — check no wall between */
+        let blocked=false;
+        const steps=Math.ceil(dist/20);
+        for(let s=1;s<steps;s++){
+          const rx=g.x+dx2/dist*(s*20),ry=g.y+dy2/dist*(s*20);
+          if(wallAt(rx,ry,4)){blocked=true;break;}
+        }
+        if(!blocked){
+          player.detected=true;
+          g.alertTimer=60;
+        }
+      }
+    }
+    if(g.alertTimer>0) g.alertTimer--;
+  });
+
+  if(player.detected){
+    player.detTimer++;
+    if(player.detTimer>40){
+      detections++;detEl.textContent=detections;
+      if(detections>=3){gameOver();return;}
+      /* reset player */
+      player.x=36;player.y=H/2;player.detTimer=0;
+    }
+  } else {
+    player.detTimer=Math.max(0,player.detTimer-.5);
+  }
+
+  /* score */
+  score++;scoreEl.textContent=score;
+  if(score>best){best=score;localStorage.setItem('ssBest',best);bestEl.textContent=best;}
+
+  /* exit check */
+  if(Math.hypot(player.x-exit.x,player.y-exit.y)<player.r+exit.r){
+    levelClear();
+  }
+}
+
+function draw(){
+  /* dark background */
+  ctx.fillStyle='#02030a';ctx.fillRect(0,0,W,H);
+
+  /* draw vision cones first */
+  guards.forEach(g=>{
+    const isAlert=g.alertTimer>0;
+    /* vision cone */
+    ctx.save();
+    ctx.globalCompositeOperation='source-over';
+    const coneGrad=ctx.createRadialGradient(g.x,g.y,0,g.x,g.y,GUARD_VIEW_DIST);
+    coneGrad.addColorStop(0,isAlert?'rgba(255,60,20,.22)':'rgba(255,220,80,.14)');
+    coneGrad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=coneGrad;
+    ctx.beginPath();
+    ctx.moveTo(g.x,g.y);
+    ctx.arc(g.x,g.y,GUARD_VIEW_DIST,g.angle-GUARD_VIEW_ANGLE/2,g.angle+GUARD_VIEW_ANGLE/2);
+    ctx.closePath();ctx.fill();
+    ctx.restore();
+  });
+
+  /* fog of war / darkness overlay */
+  const fog=ctx.createRadialGradient(player.x,player.y,30,player.x,player.y,220);
+  fog.addColorStop(0,'rgba(0,0,0,0)');
+  fog.addColorStop(.6,'rgba(2,3,10,.55)');
+  fog.addColorStop(1,'rgba(2,3,10,.88)');
+  ctx.fillStyle=fog;ctx.fillRect(0,0,W,H);
+
+  /* grid hint */
+  ctx.strokeStyle='rgba(80,60,160,.04)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=CELL){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=CELL){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+  /* walls */
+  walls.forEach(w=>{
+    ctx.fillStyle='#0e1830';
+    ctx.beginPath();ctx.roundRect(w.x,w.y,w.w,w.h,8);ctx.fill();
+    ctx.strokeStyle='rgba(74,143,255,.1)';ctx.lineWidth=1;ctx.stroke();
+  });
+
+  /* exit */
+  ctx.save();
+  ctx.shadowColor='#44ffaa';ctx.shadowBlur=30;
+  ctx.fillStyle='rgba(68,255,170,.18)';
+  ctx.beginPath();ctx.arc(exit.x,exit.y,exit.r*1.6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(68,255,170,.85)';
+  ctx.beginPath();ctx.arc(exit.x,exit.y,exit.r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.6)';
+  ctx.beginPath();ctx.arc(exit.x-exit.r*.3,exit.y-exit.r*.3,exit.r*.25,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  /* guards */
+  guards.forEach(g=>{
+    const alert=g.alertTimer>0;
+    ctx.save();
+    /* body */
+    ctx.shadowColor=alert?'#ff4422':'#6644aa';ctx.shadowBlur=alert?28:16;
+    ctx.fillStyle=alert?'#cc2200':'#4422aa';
+    ctx.beginPath();ctx.arc(g.x,g.y,11,0,Math.PI*2);ctx.fill();
+    /* direction indicator */
+    ctx.strokeStyle=alert?'#ff6644':'#8866dd';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.lineTo(g.x+Math.cos(g.angle)*18,g.y+Math.sin(g.angle)*18);ctx.stroke();
+    /* eye dot */
+    ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.beginPath();ctx.arc(g.x+Math.cos(g.angle)*9,g.y+Math.sin(g.angle)*9,4,0,Math.PI*2);ctx.fill();
+    /* alert flash */
+    if(alert){
+      ctx.font='bold 16px Segoe UI';ctx.textAlign='center';ctx.fillStyle='#ff4422';
+      ctx.globalAlpha=Math.sin(frameCount*.3)*.5+.7;
+      ctx.fillText('!',g.x,g.y-18);
+    }
+    ctx.restore();
+  });
+
+  /* player */
+  const detected=player.detected;
+  const detProg=player.detTimer/40;
+  ctx.save();
+  if(detected){
+    ctx.shadowColor='#ff3300';ctx.shadowBlur=30+detProg*40;
+  } else {
+    ctx.shadowColor='#6633cc';ctx.shadowBlur=20;
+  }
+  ctx.fillStyle=detected?`rgba(255,${80-80*detProg|0},20,.9)`:'rgba(100,60,220,.9)';
+  ctx.beginPath();ctx.arc(player.x,player.y,player.r,0,Math.PI*2);ctx.fill();
+  /* player eye */
+  if(!detected){ctx.fillStyle='rgba(200,180,255,.7)';ctx.beginPath();ctx.arc(player.x,player.y-4,4,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+
+  /* detection bar */
+  if(player.detTimer>0){
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,0,.5)';
+    ctx.beginPath();ctx.roundRect(player.x-28,player.y-player.r-20,56,8,4);ctx.fill();
+    ctx.fillStyle=`rgba(255,${60-60*detProg|0},20,.9)`;
+    ctx.beginPath();ctx.roundRect(player.x-28,player.y-player.r-20,56*detProg,8,4);ctx.fill();
+    ctx.restore();
+  }
+
+  /* detection count indicators */
+  for(let i=0;i<3;i++){
+    ctx.save();
+    ctx.fillStyle=i<detections?'#ff3300':'rgba(255,80,20,.15)';
+    ctx.shadowColor='#ff3300';ctx.shadowBlur=i<detections?12:0;
+    ctx.beginPath();ctx.arc(W-40-i*22,20,7,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+}
+
+function gameLoop(){
+  if(!running) return;
+  update();draw();
+  requestAnimationFrame(gameLoop);
+}
+
+function levelClear(){
+  level++;score+=level*500;scoreEl.textContent=score;
+  detections=Math.max(0,detections-1);
+  oTitle.textContent='LEVEL CLEAR! 🎯';
+  oBig.textContent=`Score: ${score}`;oBig.style.display='block';
+  oSub.innerHTML=`Infiltrated level ${level-1} without being caught!<br>Next: Level ${level} — more guards, stay sharp.`;
+  startBtn.textContent='▶ NEXT LEVEL';
+  overlay.classList.remove('hidden');
+}
+
+function gameOver(){
+  running=false;
+  oTitle.textContent='DETECTED! 🚨';
+  oBig.textContent=score;oBig.style.display='block';
+  oSub.innerHTML=`Detected 3 times — mission failed.<br>Score: <strong style="color:#fff">${score}</strong> &nbsp;|&nbsp; Level ${level}`;
+  startBtn.textContent='↺ RETRY';
+  overlay.classList.remove('hidden');
+}
+
+function startGame(){
+  level=1;detections=0;score=0;frameCount=0;
+  detEl.textContent=0;scoreEl.textContent=0;
+  initLevel();running=true;
+  overlay.classList.add('hidden');
+  requestAnimationFrame(gameLoop);
+}
+
+startBtn.addEventListener('click',()=>{
+  if(oTitle.textContent==='LEVEL CLEAR! 🎯'){
+    detEl.textContent=detections;
+    initLevel();running=true;
+    overlay.classList.add('hidden');
+    requestAnimationFrame(gameLoop);
+  } else {
+    startGame();
+  }
+});
+
+window.addEventListener('keydown',e=>{keys[e.code]=true;['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)&&e.preventDefault();});
+window.addEventListener('keyup',e=>{keys[e.code]=false;});
+</script>
+</body>
+</html>

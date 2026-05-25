@@ -4,28 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="A collection of fun mini-games including Sudoku, Tic-Tac-Toe, Snake & Ladders, Dragon Fight, and more.">
+    <meta name="description" content="Mini Games Hub - a futuristic collection of browser mini games with fast access, clean navigation, and room to grow.">
     <title>Mini Games Hub</title>
-    <link rel="icon" href="tictac.png">
+    <link rel="icon" href="assets/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* ── Design Tokens ──────────────────────────────────────────── */
         :root {
-            --bg-dark: #0a0a14;
-            --bg-card: rgba(255, 255, 255, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --accent: #f97316;
-            --accent-2: #a855f7;
-            --text-main: #f1f1f1;
-            --text-muted: #9ca3af;
-            --radius: 16px;
-            --transition: 0.3s ease;
+            /* ── Ice (cool blues) ── */
+            --bg: #02030a;
+            --bg-soft: rgba(6, 8, 18, 0.86);
+            --panel: rgba(10, 13, 26, 0.78);
+            --panel-strong: rgba(6, 9, 20, 0.96);
+            --border: rgba(82, 140, 255, 0.14);
+            --border-strong: rgba(82, 140, 255, 0.36);
+            --text: #f2f6ff;
+            --muted: #8fa0c8;
+            --accent: #4a8fff;
+            --accent-2: #1a6aff;
+            --accent-3: #cfe1ff;
+            --accent-4: #6ec8ff;
+            /* ── Fire (oranges / reds) ── */
+            --fire: #ff6a1a;
+            --fire-2: #e63900;
+            --fire-3: #ffb347;
+            --fire-4: #ff4422;
+            --fire-glow: rgba(255, 100, 20, 0.28);
+            --fire-border: rgba(255, 100, 20, 0.32);
+            /* ── Shared ── */
+            --shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+            --shadow-fire: 0 16px 48px rgba(255, 80, 10, 0.22);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --transition: 220ms ease;
         }
 
-        /* ── Reset & Base ───────────────────────────────────────────── */
         *,
         *::before,
         *::after {
@@ -34,429 +49,1893 @@
             padding: 0;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
             min-height: 100vh;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background:
+                /* fire glow — bottom right */
+                radial-gradient(ellipse at 92% 88%, rgba(255, 80, 10, 0.13), transparent 38%),
+                /* fire glow — top right */
+                radial-gradient(ellipse at 88% 8%, rgba(255, 100, 20, 0.09), transparent 26%),
+                /* ice glow — top left */
+                radial-gradient(ellipse at 4% 5%, rgba(60, 140, 255, 0.18), transparent 32%),
+                /* ice glow — mid left */
+                radial-gradient(ellipse at 0% 60%, rgba(30, 100, 255, 0.08), transparent 28%),
+                linear-gradient(175deg, #03050e 0%, #060910 45%, #080510 100%);
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
             background-image:
-                radial-gradient(ellipse 80% 60% at 50% -20%, rgba(249, 115, 22, 0.18) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 50% at 80% 100%, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+                linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+            background-size: 68px 68px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.38), transparent 88%);
+            opacity: 0.55;
+        }
+
+        /* Subtle animated fire pulse in bottom right corner */
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -120px;
+            right: -120px;
+            width: 520px;
+            height: 520px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,80,10,0.07), transparent 65%);
+            pointer-events: none;
+            animation: firePulse 6s ease-in-out infinite;
+        }
+
+        @keyframes firePulse {
+            0%, 100% { transform: scale(1); opacity: 0.7; }
+            50%       { transform: scale(1.18); opacity: 1; }
         }
 
         a {
-            text-decoration: none;
             color: inherit;
+            text-decoration: none;
         }
 
-        /* ── Header ─────────────────────────────────────────────────── */
+        button,
+        input {
+            font: inherit;
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+        }
+
         header {
             position: sticky;
             top: 0;
-            z-index: 100;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background: rgba(10, 10, 20, 0.8);
-            border-bottom: 1px solid var(--border);
+            z-index: 50;
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            background: linear-gradient(180deg, rgba(3,5,12,0.97), rgba(4,6,14,0.82));
+            /* fire-to-ice gradient border bottom */
+            border-bottom: 1.5px solid transparent;
+            border-image: linear-gradient(90deg, rgba(255,90,15,0.55) 0%, rgba(82,140,255,0.22) 45%, rgba(82,140,255,0.06) 100%) 1;
+            /* fallback for browsers that don't support border-image */
+            box-shadow: 0 1px 0 0 rgba(255,90,15,0.12), 0 2px 24px rgba(0,0,0,0.45);
         }
+
+        /* Fire flare on left edge of header */
+        header::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--fire), var(--fire-4), transparent);
+            border-radius: 0 2px 2px 0;
+            opacity: 0.85;
+        }
+
+        .header-search-wrap {
+            position: relative;
+            margin-left: 14px;
+        }
+
+        .header-search-wrap::before {
+            content: '🔍';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header-search-input {
+            width: 240px;
+            height: 40px;
+            padding: 0 14px 0 40px;
+            border-radius: 999px;
+            border: 1px solid rgba(82, 124, 255, 0.18);
+            background: rgba(6, 8, 18, 0.85);
+            color: var(--text);
+            font: inherit;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition), width var(--transition), background var(--transition);
+        }
+
+        .header-search-input::placeholder {
+            color: var(--muted);
+            opacity: 0.75;
+        }
+
+        .header-search-input:focus {
+            width: 300px;
+            border-color: rgba(79, 140, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.1);
+            background: rgba(4, 6, 14, 0.98);
+        }
+
+        .header-search-clear {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            display: none;
+            line-height: 1;
+        }
+
+        .header-search-clear:hover { color: var(--text); }
+        .header-search-clear.visible { display: block; }
+
+        .header-search-results-count {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background: rgba(4, 6, 14, 0.96);
+            border: 1px solid rgba(82, 124, 255, 0.18);
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 0.76rem;
+            color: var(--accent-3);
+            white-space: nowrap;
+            display: none;
+            backdrop-filter: blur(8px);
+        }
+
+        .header-search-results-count.visible { display: block; }
 
         .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 14px 36px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 16px 32px;
+            gap: 20px;
         }
 
-        #logo {
-            height: 48px;
-            width: 48px;
-            object-fit: contain;
-            border-radius: 10px;
+        .brand-mark {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            object-fit: cover;
+            box-shadow:
+                0 0 0 1.5px rgba(255,100,20,0.35),
+                0 0 0 3px rgba(60,130,255,0.18),
+                0 8px 32px rgba(255,70,10,0.28),
+                0 2px 12px rgba(0,0,0,0.5);
+            transition: transform var(--transition), box-shadow var(--transition);
         }
 
-        .site-title {
-            font-size: clamp(1.4rem, 3vw, 2rem);
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        .brand-mark:hover {
+            transform: scale(1.05) rotate(-1deg);
+            box-shadow:
+                0 0 0 2px rgba(255,120,20,0.5),
+                0 0 0 5px rgba(60,130,255,0.22),
+                0 16px 44px rgba(255,80,10,0.4),
+                0 4px 16px rgba(0,0,0,0.6);
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .brand-title {
+            font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            /* Fire-to-ice gradient text */
+            background: linear-gradient(100deg, var(--fire-3) 0%, var(--fire) 30%, #c8d8ff 65%, var(--accent-4) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
-        .header-badge {
+        .brand-subtitle {
+            color: var(--muted);
+            font-size: 0.84rem;
+            opacity: 0.8;
+        }
+
+        .header-spacer {
             margin-left: auto;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--accent);
-            border: 1px solid var(--accent);
-            border-radius: 999px;
-            padding: 4px 12px;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }
-
-        /* ── Main Content ───────────────────────────────────────────── */
-        main {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 48px 32px 80px;
-        }
-
-        .section-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-
-        .section-title {
-            font-size: clamp(1.5rem, 3vw, 2.2rem);
-            font-weight: 700;
-            margin-bottom: 32px;
-            color: var(--text-main);
-        }
-
-        /* ── Game Grid ──────────────────────────────────────────────── */
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 24px;
-        }
-
-        /* ── Game Card ──────────────────────────────────────────────── */
-        .game-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
-            cursor: pointer;
-        }
-
-        .game-card:hover {
-            transform: translateY(-6px) scale(1.01);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--accent);
-            border-color: var(--accent);
-        }
-
-        .game-card:hover .card-play-btn {
-            background: var(--accent);
-            color: #fff;
-        }
-
-        .card-img-wrap {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .card-img-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease;
-        }
-
-        .game-card:hover .card-img-wrap img {
-            transform: scale(1.06);
-        }
-
-        .coming-soon-overlay {
-            position: absolute;
-            inset: 0;
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: rgba(10, 10, 20, 0.65);
-            backdrop-filter: blur(2px);
+            gap: 12px;
         }
 
-        .coming-soon-badge {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-muted);
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            padding: 6px 14px;
+        .header-pill {
+            padding: 7px 13px;
+            border: 1px solid var(--fire-border);
             border-radius: 999px;
-        }
-
-        .card-placeholder-icon {
-            font-size: 3rem;
-        }
-
-        .card-body {
-            padding: 18px 20px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            gap: 8px;
-        }
-
-        .card-name {
-            font-size: 1.05rem;
+            background: rgba(255,80,10,0.07);
+            color: var(--fire-3);
+            font-size: 0.72rem;
             font-weight: 700;
-            color: var(--text-main);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(255,80,10,0.12);
         }
 
-        .card-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            flex: 1;
+        .nav-links {
+            display: flex;
+            gap: 6px;
+            margin-left: 8px;
         }
 
-        .card-play-btn {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 0;
-            text-align: center;
-            border-radius: 10px;
-            background: rgba(249, 115, 22, 0.15);
-            color: var(--accent);
-            font-weight: 600;
-            font-size: 0.85rem;
-            letter-spacing: 0.03em;
-            transition: background var(--transition), color var(--transition);
-            border: 1px solid rgba(249, 115, 22, 0.3);
+        .nav-links a {
+            color: var(--muted);
+            padding: 9px 14px;
+            border-radius: 999px;
+            transition: color var(--transition), background var(--transition), border-color var(--transition), text-shadow var(--transition);
+            border: 1px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
-        /* ── Coming-soon cards ─────────────────────────────────────── */
-        .game-card.coming-soon {
-            opacity: 0.55;
+        .nav-links a:hover,
+        .nav-links a:focus-visible {
+            color: var(--fire-3);
+            background: rgba(255,90,15,0.07);
+            border-color: rgba(255,90,15,0.18);
+            text-shadow: 0 0 14px rgba(255,120,20,0.4);
+            outline: none;
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 28px 80px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+            gap: 22px;
+            align-items: stretch;
+            margin-top: 14px;
+        }
+
+        .hero-copy,
+        .hero-panel,
+        .controls,
+        .section-block,
+        .insight-card {
+            background: linear-gradient(160deg, rgba(10,13,26,0.92), rgba(6,8,18,0.97));
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+        }
+
+        /* Fire-themed hero copy panel */
+        .hero-copy {
+            border-color: rgba(255,90,15,0.18);
+            box-shadow:
+                var(--shadow),
+                inset 0 1px 0 rgba(255,120,20,0.08),
+                0 0 60px rgba(255,70,10,0.06);
+        }
+
+        .hero-copy {
+            position: relative;
+            overflow: hidden;
+            padding: clamp(28px, 4vw, 44px);
+        }
+
+        /* Ice glow top-left of hero */
+        .hero-copy::before {
+            content: '';
+            position: absolute;
+            inset: -40px auto auto -40px;
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(60,140,255,0.14), transparent 65%);
+            filter: blur(8px);
             pointer-events: none;
         }
 
-        /* ── Divider ────────────────────────────────────────────────── */
+        /* Fire glow bottom-right of hero */
+        .hero-copy::after {
+            content: '';
+            position: absolute;
+            inset: auto -6% -22% auto;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,90,15,0.2), rgba(255,60,0,0.04) 60%, transparent 75%);
+            filter: blur(8px);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(255,90,15,0.1), rgba(60,140,255,0.08));
+            border: 1px solid rgba(255,100,20,0.28);
+            color: var(--fire-3);
+            font-size: 0.73rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            box-shadow: 0 0 16px rgba(255,90,15,0.12), inset 0 1px 0 rgba(255,180,60,0.1);
+        }
+
+        .hero-title {
+            margin-top: 18px;
+            font-size: clamp(2.6rem, 7vw, 5.4rem);
+            line-height: 0.94;
+            letter-spacing: -0.07em;
+            max-width: 11ch;
+        }
+
+        /* Fire accent — "next wave" */
+        .hero-title span:not(.hero-ice) {
+            background: linear-gradient(120deg, var(--fire-3) 0%, var(--fire) 45%, var(--fire-4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 18px rgba(255,80,10,0.35));
+        }
+
+        /* Ice accent — "Play the" and "of mini games." */
+        .hero-ice {
+            background: linear-gradient(110deg, var(--text) 0%, var(--accent-4) 55%, var(--accent-3) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 14px rgba(60,160,255,0.22));
+        }
+
+        .hero-text {
+            margin-top: 18px;
+            max-width: 62ch;
+            color: var(--muted);
+            font-size: clamp(1rem, 1.5vw, 1.12rem);
+            line-height: 1.7;
+        }
+
+        /* Blue tinted emphasis inside hero text */
+        .hero-text strong {
+            color: var(--accent-4);
+            font-weight: 600;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 26px;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+            padding: 0 22px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: transform var(--transition), background var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+        }
+
+        .action-btn:hover,
+        .action-btn:focus-visible {
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .action-btn.primary {
+            /* Starts as fire, animates to ice on hover */
+            background: linear-gradient(130deg, var(--fire) 0%, var(--fire-4) 55%, var(--fire-2) 100%);
+            background-size: 200% 100%;
+            background-position: 0% 50%;
+            color: #fff;
+            box-shadow: 0 10px 32px rgba(255,80,10,0.32), inset 0 1px 0 rgba(255,200,80,0.2);
+            border-color: rgba(255,120,20,0.35);
+            transition:
+                transform var(--transition),
+                box-shadow 320ms ease,
+                background-position 440ms ease,
+                border-color 320ms ease,
+                filter var(--transition);
+        }
+
+        /* The real trick: we switch background to a fire→ice gradient and
+           shift background-position to reveal the ice side */
+        .action-btn.primary:hover,
+        .action-btn.primary:focus-visible {
+            background: linear-gradient(
+                130deg,
+                var(--fire)        0%,
+                var(--fire-3)     20%,
+                #8ab4ff           50%,
+                var(--accent)     70%,
+                var(--accent-2)  100%
+            );
+            background-size: 200% 100%;
+            background-position: 100% 50%;
+            border-color: rgba(60,140,255,0.4);
+            box-shadow:
+                0 16px 44px rgba(60,140,255,0.3),
+                inset 0 1px 0 rgba(180,220,255,0.18);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.secondary {
+            background: rgba(6, 9, 20, 0.9);
+            border-color: rgba(82, 140, 255, 0.26);
+            color: var(--accent-4);
+            box-shadow: 0 0 18px rgba(60,140,255,0.06);
+        }
+
+        .action-btn.secondary:hover,
+        .action-btn.secondary:focus-visible {
+            border-color: rgba(60,140,255,0.5);
+            background: rgba(60,120,255,0.1);
+            color: var(--accent-4);
+            box-shadow: 0 8px 28px rgba(60,140,255,0.18);
+            transform: translateY(-2px);
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            padding: 16px 18px;
+            border-radius: var(--radius-md);
+            background: rgba(6,9,20,0.86);
+            border: 1px solid rgba(82,140,255,0.1);
+            position: relative;
+            overflow: hidden;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--fire), transparent);
+            opacity: 0.6;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255,90,15,0.22);
+            box-shadow: 0 0 20px rgba(255,80,10,0.08);
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            background: linear-gradient(120deg, var(--fire-3), var(--fire));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.45;
+        }
+
+        .hero-panel {
+            padding: 22px;
+            display: grid;
+            gap: 16px;
+            align-content: stretch;
+            border-color: rgba(60,140,255,0.16);
+            box-shadow: var(--shadow), inset 0 1px 0 rgba(60,140,255,0.06);
+        }
+
+        .hero-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            min-height: 165px;
+            padding: 22px;
+            border: 1px solid rgba(82,140,255,0.14);
+            background: linear-gradient(140deg, rgba(6,8,18,0.97), rgba(12,16,30,0.86));
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+
+        .hero-card:hover {
+            border-color: rgba(255,90,15,0.24);
+            box-shadow: 0 8px 32px rgba(255,70,10,0.1);
+        }
+
+        .hero-card::before,
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-card::before {
+            inset: auto -25px -25px auto;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(79, 140, 255, 0.24), transparent 65%);
+        }
+
+        .hero-card::after {
+            inset: 18px auto auto 18px;
+            width: 86px;
+            height: 86px;
+            border: 1px solid rgba(79, 140, 255, 0.26);
+            box-shadow: 0 0 30px rgba(79, 140, 255, 0.12);
+        }
+
+        .hero-card h2 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-card p {
+            margin-top: 8px;
+            max-width: 30ch;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        .hero-meta span {
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(82, 124, 255, 0.12);
+            color: var(--accent-3);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .insight-card {
+            padding: 18px;
+            min-height: 130px;
+        }
+
+        .insight-title {
+            color: var(--accent-4);
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-shadow: 0 0 16px rgba(100,200,255,0.3);
+        }
+
+        .insight-copy {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 0.93rem;
+            line-height: 1.65;
+        }
+
+        /* Blue top-border accent on insight cards */
+        .insight-card {
+            border-top: 2px solid rgba(60,140,255,0.28) !important;
+        }
+
+        .controls,
+        .section-block {
+            margin-top: 24px;
+            padding: 26px;
+        }
+
+        .controls {
+            border-color: rgba(255,90,15,0.14);
+            box-shadow: var(--shadow), 0 0 40px rgba(255,70,10,0.04);
+        }
+
+        .controls-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .section-kicker {
+            color: var(--fire-3);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            text-shadow: 0 0 12px rgba(255,120,20,0.35);
+        }
+
+        .section-title {
+            margin-top: 8px;
+            font-size: clamp(1.5rem, 3vw, 2.3rem);
+            letter-spacing: -0.055em;
+            line-height: 1;
+        }
+
+        /* Blue gradient shimmer on the section titles */
+        .section-block .section-title {
+            background: linear-gradient(100deg, var(--text) 0%, var(--accent-4) 60%, var(--text) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-copy {
+            margin-top: 8px;
+            color: var(--muted);
+            line-height: 1.6;
+            max-width: 68ch;
+        }
+
+        .controls-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            margin-top: 18px;
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap::before {
+            content: 'Search';
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 0.82rem;
+            pointer-events: none;
+        }
+
+        .search-input {
+            width: 100%;
+            min-height: 52px;
+            padding: 0 16px 0 78px;
+            border-radius: 999px;
+            border: 1px solid rgba(82, 124, 255, 0.16);
+            background: rgba(6, 8, 14, 0.88);
+            color: var(--text);
+            outline: none;
+            transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+        }
+
+        .search-input::placeholder {
+            color: rgba(149, 178, 162, 0.7);
+        }
+
+        .search-input:focus {
+            border-color: rgba(79, 140, 255, 0.48);
+            box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.08);
+            background: rgba(6, 8, 14, 0.98);
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .filter-chip {
+            min-height: 40px;
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(82,140,255,0.12);
+            background: rgba(6,9,20,0.85);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: transform var(--transition), border-color var(--transition), background var(--transition), color var(--transition), box-shadow var(--transition);
+        }
+
+        .filter-chip:hover,
+        .filter-chip:focus-visible {
+            transform: translateY(-1px);
+            border-color: rgba(255,90,15,0.3);
+            color: var(--fire-3);
+            background: rgba(255,90,15,0.06);
+            box-shadow: 0 4px 14px rgba(255,70,10,0.1);
+            outline: none;
+        }
+
+        .filter-chip.is-active {
+            background: linear-gradient(130deg, rgba(255,90,15,0.18), rgba(255,60,0,0.1));
+            border-color: rgba(255,100,20,0.42);
+            color: var(--fire-3);
+            box-shadow: 0 0 18px rgba(255,80,10,0.15);
+        }
+
+        .results-meta {
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .games-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+            gap: 18px;
+        }
+
+        .game-card {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            background: linear-gradient(175deg, rgba(9,12,24,0.96), rgba(5,7,16,0.99));
+            border: 1px solid rgba(82,140,255,0.1);
+            border-radius: var(--radius-lg);
+            transition: transform 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        /* Fire shimmer top-edge on hover */
+        .game-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--fire), var(--fire-3), transparent);
+            opacity: 0;
+            transition: opacity 250ms ease;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        }
+
+        .game-card:hover,
+        .game-card:focus-within {
+            transform: translateY(-7px) scale(1.01);
+            /* Blue-dominant border on hover */
+            border-color: rgba(60,140,255,0.45);
+            box-shadow:
+                0 28px 56px rgba(0,0,0,0.44),
+                /* Blue outer ring */
+                0 0 0 2px rgba(60,140,255,0.18),
+                /* Faint blue halo */
+                0 0 48px rgba(50,130,255,0.12),
+                /* Keep subtle fire warmth underneath */
+                0 0 20px rgba(255,70,10,0.06);
+        }
+
+        .game-card:hover::after,
+        .game-card:focus-within::after {
+            opacity: 1;
+        }
+
+        .game-card.clickable {
+            cursor: pointer;
+        }
+
+        .card-link-stretch {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            border-radius: inherit;
+        }
+
+        .card-media {
+            position: relative;
+            aspect-ratio: 16 / 10;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(10,14,26,0.98), rgba(6,8,18,0.98));
+            border-bottom: 1px solid rgba(255,80,10,0.06);
+        }
+
+        .card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 280ms ease, filter 280ms ease;
+        }
+
+        .game-card:hover .card-media img,
+        .game-card:focus-within .card-media img {
+            transform: scale(1.05);
+            filter: saturate(1.05);
+        }
+
+        .card-fallback {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: var(--fire-3);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            font-weight: 800;
+            font-size: 0.85rem;
+            background:
+                radial-gradient(ellipse at top right, rgba(255,80,10,0.18), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(60,130,255,0.14), transparent 50%),
+                linear-gradient(135deg, rgba(7,9,18,0.96), rgba(14,18,32,0.94));
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 11px;
+            border-radius: 999px;
+            background: rgba(255,70,10,0.12);
+            border: 1px solid rgba(255,100,20,0.3);
+            color: var(--fire-3);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 10px rgba(255,70,10,0.14);
+        }
+
+        .card-content {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .card-topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .card-name {
+            font-size: 1.06rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .card-category {
+            color: var(--fire-3);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            opacity: 0.8;
+        }
+
+        .card-desc {
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.92rem;
+            flex: 1;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(82, 124, 255, 0.1);
+            color: var(--accent-3);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .card-play-btn {
+            position: relative;
+            z-index: 2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 999px;
+            /* Orange default — uses a gradient background that we animate */
+            background: linear-gradient(
+                110deg,
+                var(--fire)  0%,
+                var(--fire-3) 50%,
+                var(--accent) 100%
+            );
+            background-size: 220% 100%;
+            background-position: 0% 50%;
+            border: 1px solid rgba(255,100,20,0.32);
+            color: #fff;
+            font-size: 0.86rem;
+            font-weight: 700;
+            transition:
+                background-position 480ms cubic-bezier(0.4,0,0.2,1),
+                border-color 320ms ease,
+                box-shadow 320ms ease,
+                transform 200ms ease;
+        }
+
+        /* Hover: sweep right to reveal the ice-blue end of the gradient */
+        .game-card:hover .card-play-btn,
+        .game-card:focus-within .card-play-btn {
+            background-position: 100% 50%;
+            border-color: rgba(60,140,255,0.5);
+            transform: translateY(-2px);
+            box-shadow:
+                0 6px 22px rgba(60,140,255,0.32),
+                inset 0 1px 0 rgba(180,220,255,0.15);
+        }
+
         .section-divider {
             height: 1px;
-            background: var(--border);
-            margin: 52px 0 40px;
+            margin: 32px 0;
+            background: linear-gradient(90deg, transparent, var(--fire) 25%, rgba(200,220,255,0.3) 50%, var(--accent-4) 75%, transparent);
+            opacity: 0.4;
+            position: relative;
         }
 
-        /* ── Footer ─────────────────────────────────────────────────── */
-        footer {
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            padding: 24px 32px;
-            border-top: 1px solid var(--border);
+        .section-divider::before {
+            content: '⚔';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%,-50%);
+            font-size: 18px;
+            background: var(--bg);
+            padding: 0 10px;
+            opacity: 0.7;
         }
 
-        /* ── Responsive ─────────────────────────────────────────────── */
-        @media (max-width: 600px) {
-            main {
-                padding: 32px 16px 60px;
+        .coming-soon-grid .game-card {
+            opacity: 0.78;
+        }
+
+        .coming-soon-grid .card-badge {
+            background: rgba(79, 140, 255, 0.1);
+        }
+
+        .footer {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 36px 40px;
+        }
+
+        .footer-inner {
+            margin-top: 24px;
+            padding: 20px 28px;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(135deg, rgba(255,70,10,0.05), rgba(6,8,18,0.85));
+            border: 1px solid rgba(255,90,15,0.14);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 0 40px rgba(255,60,10,0.06);
+        }
+
+        .footer-inner strong {
+            background: linear-gradient(100deg, var(--fire-3), var(--fire));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Search wrapper — upgrade */
+        .search-wrap::before {
+            content: '🔍';
+        }
+
+        .search-input {
+            border-color: rgba(255,90,15,0.14);
+        }
+
+        .search-input:focus {
+            border-color: rgba(255,100,20,0.44);
+            box-shadow: 0 0 0 4px rgba(255,80,10,0.08);
+        }
+
+        /* Tags */
+        .tag {
+            border-color: rgba(255,80,10,0.12);
+            color: var(--fire-3);
+            opacity: 0.7;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 1100px) {
+            .hero {
+                grid-template-columns: 1fr;
             }
+        }
 
+        @media (max-width: 820px) {
             .header-inner {
-                padding: 12px 16px;
+                padding: 14px 20px;
+                align-items: flex-start;
+                flex-wrap: wrap;
             }
 
-            .header-badge {
+            .header-spacer {
+                width: 100%;
+                margin-left: 0;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .nav-links {
+                margin-left: 0;
+                flex-wrap: wrap;
+            }
+
+            main {
+                padding: 24px 18px 60px;
+            }
+
+            .hero-stats,
+            .insight-grid,
+            .controls-row {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                justify-content: flex-start;
+            }
+
+            .footer {
+                padding: 0 18px 28px;
+            }
+
+            .brand-mark {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .brand-mark {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+            }
+
+            .header-pill {
                 display: none;
+            }
+
+            .hero-copy,
+            .hero-panel,
+            .controls,
+            .section-block,
+            .insight-card,
+            .footer-inner {
+                border-radius: 22px;
+            }
+
+            .hero-title {
+                max-width: none;
+            }
+
+            .search-wrap::before {
+                content: 'Find';
+            }
+
+            .search-input {
+                padding-left: 60px;
+            }
+
+            .header-search-input {
+                width: 160px;
+            }
+
+            .header-search-input:focus {
+                width: 200px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 
 <body>
-
-    <!-- ── Header ── -->
-    <header>
-        <div class="header-inner">
-            <img src="tictac.png" alt="Mini Games logo" id="logo">
-            <h1 class="site-title">Mini Games Hub</h1>
-            <span class="header-badge">v2.0</span>
-        </div>
-    </header>
-
-    <!-- ── Main ── -->
-    <main>
-
-        <!-- Active Games -->
-        <p class="section-label">Play Now</p>
-        <h2 class="section-title">Available Games</h2>
-
-        <div class="games-grid" id="active-games">
-
-            <!-- Sudoku -->
-            <div class="game-card" id="card-sudoku" onclick="location.href='sudoku3.html'">
-                <div class="card-img-wrap">
-                    <img src="sudoku.jpg" alt="Sudoku puzzle preview">
+    <div class="page-shell">
+        <header>
+            <div class="header-inner">
+                <img src="assets/logo.png" alt="Mini Games Hub logo" class="brand-mark">
+                <div class="brand-copy">
+                    <div class="brand-title">Mini Games Hub</div>
+                    <div class="brand-subtitle">Fast access to puzzles, action, and skill games</div>
                 </div>
-                <div class="card-body">
-                    <span class="card-name">Sudoku</span>
-                    <p class="card-desc">Fill the 9×9 grid so every row, column, and box contains every digit 1–9.</p>
-                    <a class="card-play-btn" href="sudoku3.html" id="btn-sudoku">Play Sudoku →</a>
-                </div>
-            </div>
-
-            <!-- Dragon Fight -->
-            <div class="game-card" id="card-dragon" onclick="location.href='dragon.html'">
-                <div class="card-img-wrap">
-                    <img src="dragon.jpg" alt="Dragon fight scene">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Dragon Fight</span>
-                    <p class="card-desc">Face off against fearsome dragons in this epic turn-based battle game.</p>
-                    <a class="card-play-btn" href="dragon.html" id="btn-dragon">Play Dragon Fight →</a>
-                </div>
-            </div>
-
-            <!-- Tic-Tac-Toe -->
-            <div class="game-card" id="card-tictactoe" onclick="location.href='tic-tac-toe.html'">
-                <div class="card-img-wrap">
-                    <img src="tictac.png" alt="Tic-Tac-Toe board">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Tic-Tac-Toe</span>
-                    <p class="card-desc">Classic X vs O — get three in a row before your opponent does.</p>
-                    <a class="card-play-btn" href="tic-tac-toe.html" id="btn-tictactoe">Play Tic-Tac-Toe →</a>
-                </div>
-            </div>
-
-            <!-- Snake & Ladders -->
-            <div class="game-card" id="card-snake" onclick="location.href='snake.html'">
-                <div class="card-img-wrap">
-                    <img src="snakeladders.jpg" alt="Snake and Ladders board">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Snake &amp; Ladders</span>
-                    <p class="card-desc">Roll the dice, climb the ladders, and avoid the snakes to reach 100!</p>
-                    <a class="card-play-btn" href="snake.html" id="btn-snake">Play Snake &amp; Ladders →</a>
-                </div>
-            </div>
-
-            <!-- Pentest -->
-            <div class="game-card" id="card-pentest" onclick="location.href='pentest.html'">
-                <div class="card-img-wrap" style="background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);">
-
-                    <img src="pentest.jpg" alt="Pentest Challenge">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Pentest Challenge</span>
-                    <p class="card-desc">A hacking-themed puzzle — probe, exploit, and find the flag.</p>
-                    <a class="card-play-btn" href="pentest.html" id="btn-pentest">Play Pentest →</a>
-                </div>
-            </div>
-
-            <!-- Get the Key -->
-            <div class="game-card" id="card-getthekey" onclick="location.href='getthekey.html'">
-                <div class="card-img-wrap" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">
-                    <!-- <span class="card-placeholder-icon"
-                        style="display:flex;align-items:center;justify-content:center;height:100%;">🗝️</span> -->
-                    <img src="getthekey.png" alt="Get the Key">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Get the Key</span>
-                    <p class="card-desc">Navigate through obstacles and puzzles to collect the key and escape.</p>
-                    <a class="card-play-btn" href="getthekey.html" id="btn-getthekey">Play Get the Key →</a>
-                </div>
-            </div>
-
-            <!-- linux -->
-            <div class="game-card" id="card-linux" onclick="location.href='linux.html'">
-                <div class="card-img-wrap" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">
-                    <img src="linux.png" alt="Linux">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Linux</span>
-                    <p class="card-desc">Learn Linux commands and navigate through the terminal.</p>
-                    <a class="card-play-btn" href="linux.html" id="btn-linux">Play Linux →</a>
-                </div>
-            </div>
-
-            <!-- Burger -->
-            <div class="game-card" id="card-burger" onclick="location.href='burger.html'">
-                <div class="card-img-wrap" style="background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">
-                    <img src="burger.jpg" alt="Burger">
-                </div>
-                <div class="card-body">
-                    <span class="card-name">Burger</span>
-                    <p class="card-desc">A simple burger game where you have to collect ingredients and make a burgeras
-                        as per order</p>
-                    <a class="card-play-btn" href="burger.html" id="btn-burger">Play Burger →</a>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Coming Soon -->
-        <div class="section-divider"></div>
-        <p class="section-label">Work in Progress</p>
-        <h2 class="section-title">Coming Soon</h2>
-
-        <div class="games-grid" id="upcoming-games">
-
-            <div class="game-card coming-soon" id="card-soon-1">
-                <div class="card-img-wrap">
-                    <div class="coming-soon-overlay">
-                        <span class="coming-soon-badge">Coming Soon</span>
+                <div class="header-spacer">
+                    <span class="header-pill">v3.0</span>
+                    <nav class="nav-links" aria-label="Site sections">
+                        <a href="#featured-games">Featured</a>
+                        <a href="#game-library">Library</a>
+                        <a href="#coming-soon">Coming Soon</a>
+                    </nav>
+                    <div class="header-search-wrap">
+                        <input
+                            class="header-search-input"
+                            id="header-search"
+                            type="search"
+                            placeholder="Quick search games…"
+                            autocomplete="off"
+                            aria-label="Quick search games"
+                        >
+                        <button class="header-search-clear" id="header-search-clear" aria-label="Clear search" title="Clear">✕</button>
+                        <div class="header-search-results-count" id="header-search-count"></div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <span class="card-name">Mystery Game</span>
-                    <p class="card-desc">Something awesome is in the works. Stay tuned!</p>
-                </div>
             </div>
+        </header>
 
-            <div class="game-card coming-soon" id="card-soon-2">
-                <div class="card-img-wrap">
-                    <div class="coming-soon-overlay">
-                        <span class="coming-soon-badge">Coming Soon</span>
+        <main>
+            <section class="hero" aria-labelledby="hero-title">
+                <div class="hero-copy">
+                    <div class="eyebrow">Futuristic Arcade Hub</div>
+                    <h1 class="hero-title" id="hero-title"><span class="hero-ice">Play the </span><span>next wave</span><span class="hero-ice"> of mini games.</span></h1>
+                    <p class="hero-text">
+                        A sharper, faster home for your game collection. Built to showcase current titles and
+                        scale cleanly as you add more <strong>puzzles</strong>, <strong>reaction games</strong>, strategy experiments, and <strong>browser challenges</strong>.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="action-btn primary" href="#featured-games">Browse games</a>
+                        <a class="action-btn secondary" href="#game-library">Explore library</a>
+                    </div>
+                    <div class="hero-stats" id="hero-stats" aria-label="Site statistics">
+                        <div class="stat-card">
+                            <span class="stat-value" id="stat-active">18+</span>
+                            <div class="stat-label">Playable games ready on the front page</div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="stat-categories">11</span>
+                            <div class="stat-label">Game types to help players find the right challenge</div>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-value" id="stat-soon">4</span>
+                            <div class="stat-label">Coming soon spots reserved for new releases</div>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <span class="card-name">Mystery Game</span>
-                    <p class="card-desc">Something awesome is in the works. Stay tuned!</p>
-                </div>
-            </div>
 
-            <div class="game-card coming-soon" id="card-soon-3">
-                <div class="card-img-wrap">
-                    <div class="coming-soon-overlay">
-                        <span class="coming-soon-badge">Coming Soon</span>
+                <div class="hero-panel">
+                    <article class="hero-card">
+                        <h2>Built for expansion</h2>
+                        <p>One catalog, one search bar, one card system. Add a new game by dropping in a single object.</p>
+                        <div class="hero-meta">
+                            <span>Searchable</span>
+                            <span>Filterable</span>
+                            <span>Mobile-friendly</span>
+                        </div>
+                    </article>
+
+                    <div class="insight-grid">
+                        <article class="insight-card">
+                            <div class="insight-title">Cleaner discovery</div>
+                            <p class="insight-copy">Players can jump straight to a favorite style with chips, counts, and quick scanning.</p>
+                        </article>
+                        <article class="insight-card">
+                            <div class="insight-title">Better visual hierarchy</div>
+                            <p class="insight-copy">Hero, library, and coming-soon sections now read like a product page instead of a raw list.</p>
+                        </article>
                     </div>
                 </div>
-                <div class="card-body">
-                    <span class="card-name">Mystery Game</span>
-                    <p class="card-desc">Something awesome is in the works. Stay tuned!</p>
-                </div>
-            </div>
+            </section>
 
-            <div class="game-card coming-soon" id="card-soon-4">
-                <div class="card-img-wrap">
-                    <div class="coming-soon-overlay">
-                        <span class="coming-soon-badge">Coming Soon</span>
+            <section class="controls" aria-labelledby="game-library-heading">
+                <div class="controls-head">
+                    <div>
+                        <div class="section-kicker">Game Library</div>
+                        <h2 class="section-title" id="game-library-heading">Find the right game faster</h2>
+                        <p class="section-copy">
+                            Search by name or filter by category. This keeps the homepage usable even when the collection grows much larger.
+                        </p>
                     </div>
+                    <div class="filter-bar" id="filter-bar" aria-label="Category filters"></div>
                 </div>
-                <div class="card-body">
-                    <span class="card-name">Mystery Game</span>
-                    <p class="card-desc">Something awesome is in the works. Stay tuned!</p>
+
+                <div class="controls-row">
+                    <label class="search-wrap" for="game-search">
+                        <input class="search-input" id="game-search" type="search" placeholder="Search games, genres, or keywords" autocomplete="off">
+                    </label>
+                    <div class="results-meta" id="results-meta">Loading games...</div>
                 </div>
+            </section>
+
+            <section class="section-block" id="featured-games" aria-labelledby="featured-title">
+                <div class="section-kicker">Featured</div>
+                <h2 class="section-title" id="featured-title">Available Games</h2>
+                <p class="section-copy">
+                    These are the playable titles on the homepage right now. The grid is rendered from a single data list, so future additions stay simple.
+                </p>
+                <div class="games-grid" id="active-games"></div>
+            </section>
+
+            <div class="section-divider" aria-hidden="true"></div>
+
+            <section class="section-block" id="coming-soon" aria-labelledby="coming-soon-title">
+                <div class="section-kicker">Work in Progress</div>
+                <h2 class="section-title" id="coming-soon-title">Coming Soon</h2>
+                <p class="section-copy">
+                    Reserve space for new drops, experiments, and special builds before they are ready to launch.
+                </p>
+                <div class="games-grid coming-soon-grid" id="upcoming-games"></div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-inner">
+                <span><strong>Mini Games Hub</strong> - built for quick play and future expansion.</span>
+                <span>2026</span>
             </div>
+        </footer>
+    </div>
 
-        </div>
+    <script>
+        const games = [
+            {
+                title: 'Sudoku',
+                category: 'Puzzle',
+                tags: ['Logic', 'Classic', 'Focus'],
+                description: 'Fill the 9x9 grid so every row, column, and box contains the digits 1-9.',
+                href: 'sudoku3.html',
+                image: 'assets/sudoku.jpg',
+                alt: 'Sudoku puzzle preview',
+                badge: 'Featured'
+            },
+            {
+                title: 'Dragon Fight',
+                category: 'RPG',
+                tags: ['Battle', 'Turn-based', 'Adventure'],
+                description: 'Face off against fearsome dragons in a tactical, story-driven battle loop.',
+                href: 'dragon.html',
+                image: 'assets/dragon.jpg',
+                alt: 'Dragon fight scene',
+                badge: 'Boss Fight'
+            },
+            {
+                title: 'Tic-Tac-Toe',
+                category: 'Classic',
+                tags: ['Board', 'Quick Match', '1v1'],
+                description: 'A timeless X vs O match that is perfect for fast rematches and casual play.',
+                href: 'tic-tac-toe.html',
+                image: 'assets/tictac.png',
+                alt: 'Tic-Tac-Toe board',
+                badge: 'Fast Play'
+            },
+            {
+                title: 'Snake & Ladders',
+                category: 'Board',
+                tags: ['Dice', 'Multiplayer', 'Family'],
+                description: 'Roll, climb, and dodge snakes while racing to the finish line at 100.',
+                href: 'snake.html',
+                image: 'assets/snakeladders.jpg',
+                alt: 'Snake and Ladders board',
+                badge: 'Multiplayer'
+            },
+            {
+                title: 'Pentest Challenge',
+                category: 'Strategy',
+                tags: ['Security', 'Puzzle', 'Investigation'],
+                description: 'Probe the environment, uncover the path, and solve the hacking-themed challenge.',
+                href: 'pentest.html',
+                image: 'assets/pentest.jpg',
+                alt: 'Pentest Challenge',
+                badge: 'Hack'
+            },
+            {
+                title: 'Get the Key',
+                category: 'Adventure',
+                tags: ['Escape', 'Maze', 'Exploration'],
+                description: 'Move through obstacles, collect the key, and escape before the path closes in.',
+                href: 'getthekey.html',
+                image: 'assets/getthekey.png',
+                alt: 'Get the Key',
+                badge: 'Escape'
+            },
+            {
+                title: 'Linux',
+                category: 'Educational',
+                tags: ['Terminal', 'Commands', 'Learning'],
+                description: 'Learn Linux commands and navigate the terminal in a guided game format.',
+                href: 'linux.html',
+                image: 'assets/linux.png',
+                alt: 'Linux simulator',
+                badge: 'Learn'
+            },
+            {
+                title: 'Burger',
+                category: 'Arcade',
+                tags: ['Timing', 'Clicker', 'Orders'],
+                description: 'Collect ingredients and build the right burger before the order times out.',
+                href: 'burger.html',
+                image: 'assets/burger.jpg',
+                alt: 'Burger game',
+                badge: 'Arcade'
+            },
+            {
+                title: 'Tetris',
+                category: 'Puzzle',
+                tags: ['Blocks', 'Classic', 'Flow'],
+                description: 'Drop blocks, clear lines, and keep the stack under control.',
+                href: 'tetris.html',
+                image: 'assets/tetris.png',
+                badge: 'Arcade'
+            },
+            {
+                title: 'Typing Test',
+                category: 'Skill',
+                tags: ['Typing', 'Speed', 'Accuracy'],
+                description: 'Measure typing speed and precision in a fast browser challenge.',
+                href: 'typing_test.html',
+                image: 'assets/typing.png',
+                badge: 'Speed'
+            },
+            {
+                title: 'Word Game',
+                category: 'Word',
+                tags: ['Letters', 'Brain', 'Puzzle'],
+                description: 'A word-focused game that tests vocabulary, memory, and pattern spotting.',
+                href: 'word3.html',
+                image: 'assets/word.png',
+                badge: 'Word'
+            },
+            {
+                title: 'Pixel Art',
+                category: 'Creative',
+                tags: ['Draw', 'Pixel', 'Art', 'Challenge'],
+                description: 'Paint pixel-by-pixel in Free Play, tackle image recreation Challenges, or use Code It to draw with JavaScript.',
+                href: 'pixel3.html',
+                image: 'assets/pixel.png',
+                alt: 'Pixel Art game preview',
+                badge: 'Creative'
+            },
+            {
+                title: 'Reflex Arena',
+                category: 'Reaction',
+                tags: ['Reflex', 'Aim', 'Memory', 'IQ', 'Speed'],
+                description: 'A 11-game skill suite: reaction time, click counter, aim trainer, fruit cutter, bubble shooter, sequence memory, math sprint, and more.',
+                href: 'reflex_arena.html',
+                image: 'assets/reflex.png',
+                alt: 'Reflex Arena preview',
+                badge: 'Suite'
+            },
+            {
+                title: 'Whack Reflex',
+                category: 'Reaction',
+                tags: ['Hits', 'Timing', 'Score'],
+                description: 'Whack the targets quickly and chain together a high score.',
+                href: 'whack_reflex.html',
+                image: 'assets/whack.png',
+                badge: 'Quick'
+            },
+            {
+                title: 'Archery Aim',
+                category: 'Arcade',
+                tags: ['Aim', 'Precision', 'Skill'],
+                description: 'Line up your shot and land arrows with steady timing and accuracy.',
+                href: 'archery_aim.html',
+                image: 'assets/archery.png',
+                badge: 'Aim'
+            },
+            {
+                title: 'Bubble Shooter',
+                category: 'Puzzle',
+                tags: ['Arcade', 'Color Match', 'Classic'],
+                description: 'Pop bubbles by matching colors and clearing the board efficiently.',
+                href: 'bubble_shooter.html',
+                image: 'assets/bubble.png',
+                badge: 'Pop'
+            },
+            {
+                title: 'Chain Reaction',
+                category: 'Puzzle',
+                tags: ['Cascade', 'Logic', 'Strategy'],
+                description: 'Trigger chain reactions and watch the board unravel in sequence.',
+                href: 'chainreaction.html',
+                image: 'assets/chainreaction.png',
+                badge: 'Chain'
+            },
+            {
+                title: 'Combo',
+                category: 'Puzzle',
+                tags: ['Match 3', 'Gems', 'Chains'],
+                description: 'Swap gems, trigger matches, and build big combo streaks.',
+                href: 'combo.html',
+                image: 'assets/combo.png',
+                badge: 'Match 3'
+            },
+            {
+                title: 'Flappy Click',
+                category: 'Arcade',
+                tags: ['Tap', 'Timing', 'Endless'],
+                description: 'Keep the run alive with quick taps and tight timing.',
+                href: 'flappy_click.html',
+                image: 'assets/flappy.png',
+                badge: 'Tap'
+            }
+            ,
+            {
+                title: 'Neon Runner',
+                category: 'Arcade',
+                tags: ['Dash', 'Jump', 'Endless'],
+                description: 'A short, fast-paced runner — jump obstacles and chase high scores.',
+                href: 'neon_runner.html',
+                image: 'assets/logo.png',
+                alt: 'Neon Runner preview',
+                badge: 'New'
+            },
+            {
+                title: 'Beat Tap',
+                category: 'Rhythm',
+                tags: ['Music', 'Timing', 'Skill'],
+                description: 'Tap to the beat. Accurate timing chains build higher scores.',
+                href: 'beat_tap.html',
+                image: 'assets/logo.png',
+                alt: 'Beat Tap preview',
+                badge: 'New'
+            },
+            {
+                title: 'Tower Pulse',
+                category: 'Arcade',
+                tags: ['Stack', 'Timing', 'Precision'],
+                description: 'Stack tower floors floor by floor from a moving crane. Align them perfectly!',
+                href: 'tower_pulse.html',
+                image: 'assets/logo.png',
+                alt: 'Tower Pulse preview',
+                badge: 'New'
+            },
+            {
+                title: 'Kill Snake',
+                category: 'Strategy',
+                tags: ['Defense', 'Towers', 'Waves', 'Action'],
+                description: 'Defend your base by building towers along the path to stop the marching enemies.',
+                href: 'killsnake.html',
+                image: 'assets/logo.png',
+                alt: 'Kill Snake preview',
+                badge: 'Defense'
+            },
+            {
+                title: 'Merge Lab',
+                category: 'Puzzle',
+                tags: ['Merge', 'Numbers', 'Casual'],
+                description: 'Merge items to evolve them — simple rules, deep combos.',
+                href: 'merge_lab.html',
+                image: 'assets/logo.png',
+                alt: 'Merge Lab preview',
+                badge: 'New'
+            },
+            {
+                title: 'Quiz Rush',
+                category: 'Trivia',
+                tags: ['Questions', 'Speed', 'Knowledge'],
+                description: 'Quick-fire trivia rounds — answer fast to rack up points.',
+                href: 'quiz_rush.html',
+                image: 'assets/logo.png',
+                alt: 'Quiz Rush preview',
+                badge: 'New'
+            },
+            {
+                title: 'Escape Grid',
+                category: 'Maze',
+                tags: ['Escape', 'Key', 'Logic'],
+                description: 'Navigate the grid, dodge blockers, and find the exit.',
+                href: 'escape_grid.html',
+                image: 'assets/logo.png',
+                alt: 'Escape Grid preview',
+                badge: 'New'
+            },
+            {
+                title: 'Shadow Stealth',
+                category: 'Stealth',
+                tags: ['Vision', 'Avoid', 'Exit'],
+                description: 'Slip past the vision cone and reach the exit without getting caught.',
+                href: 'shadow_stealth.html',
+                image: 'assets/logo.png',
+                alt: 'Shadow Stealth preview',
+                badge: 'New'
+            },
+            {
+                title: 'Orbit Survival',
+                category: 'Survival',
+                tags: ['Health', 'Oxygen', 'Resource'],
+                description: 'Collect resources while you manage health, stamina, and oxygen.',
+                href: 'orbit_survival.html',
+                image: 'assets/logo.png',
+                alt: 'Orbit Survival preview',
+                badge: 'New'
+            },
+            {
+                title: 'Card Clash',
+                category: 'Card',
+                tags: ['Memory', 'Pairs', 'Logic'],
+                description: 'Flip and match cards in a quick memory-style challenge.',
+                href: 'card_clash.html',
+                image: 'assets/logo.png',
+                alt: 'Card Clash preview',
+                badge: 'New'
+            },
+            {
+                title: 'Gravity Drop',
+                category: 'Physics',
+                tags: ['Bounce', 'Stack', 'Drop'],
+                description: 'Drop blocks, watch them bounce, and build unstable stacks.',
+                href: 'gravity_drop.html',
+                image: 'assets/logo.png',
+                alt: 'Gravity Drop preview',
+                badge: 'New'
+            },
+            {
+                title: 'Boss Rush',
+                category: 'Action',
+                tags: ['Phases', 'Fight', 'Short'],
+                description: 'A fast boss fight with multiple phases and rapid attacks.',
+                href: 'boss_rush.html',
+                image: 'assets/logo.png',
+                alt: 'Boss Rush preview',
+                badge: 'New'
+            },
+            {
+                title: 'Gem Dash',
+                category: 'Arcade',
+                tags: ['Collect', 'Timer', 'Move'],
+                description: 'Dash around the arena to collect gems and stars while avoiding hazardous cells.',
+                href: 'gemdash.html',
+                image: 'assets/logo.png',
+                alt: 'Gem Dash preview',
+                badge: 'New'
+            },
+            {
+                title: 'Stop Timer',
+                category: 'Skill',
+                tags: ['Timing', 'Precision', 'Challenge'],
+                description: 'Start the timer, stop it as close to the target as possible.',
+                href: 'stop_timer.html',
+                image: 'assets/logo.png',
+                alt: 'Stop Timer preview',
+                badge: 'New'
+            }
+        ];
 
-    </main>
+        const upcomingGames = [
+            {
+                title: 'Neon Runner',
+                category: 'Arcade',
+                tags: ['Dash', 'Timing', 'Endless'],
+                description: 'A fast movement challenge built for short bursts and replayable runs.',
+                badge: 'Next Drop'
+            },
+            {
+                title: 'Maze Signal',
+                category: 'Puzzle',
+                tags: ['Navigate', 'Logic', 'Escape'],
+                description: 'A future puzzle build focused on routes, clues, and fast decision-making.',
+                badge: 'Coming Soon'
+            },
+            {
+                title: 'Orbit Shift',
+                category: 'Strategy',
+                tags: ['Control', 'Timing', 'Plan'],
+                description: 'A planning-focused experiment for players who like controlled movement.',
+                badge: 'Prototype'
+            },
+            {
+                title: 'Word Forge',
+                category: 'Word',
+                tags: ['Letters', 'Brain', 'Daily'],
+                description: 'A new word-based challenge reserved for future daily puzzle style updates.',
+                badge: 'In Queue'
+            }
+        ];
 
-    <!-- ── Footer ── -->
-    <footer>
-        <p>Mini Games Hub &copy; 2026 &mdash; Built for fun 🎮</p>
-    </footer>
+        const categories = ['All', ...new Set(games.map((game) => game.category))];
+        const filterBar = document.getElementById('filter-bar');
+        const activeGamesEl = document.getElementById('active-games');
+        const upcomingGamesEl = document.getElementById('upcoming-games');
+        const gameSearch = document.getElementById('game-search');
+        const resultsMeta = document.getElementById('results-meta');
+        const statActive = document.getElementById('stat-active');
+        const statCategories = document.getElementById('stat-categories');
+        const statSoon = document.getElementById('stat-soon');
 
+        let activeFilter = 'All';
+        let searchTerm = '';
+
+        const escapeHtml = (value) => value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+        const buildTags = (tags) => tags.map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join('');
+
+        const trackGamePlay = (title) => {
+            const plays = JSON.parse(localStorage.getItem('gamePlayHistory') || '{}');
+            plays[title] = Date.now();
+            localStorage.setItem('gamePlayHistory', JSON.stringify(plays));
+        };
+
+        const getLastPlayed = (title) => {
+            const plays = JSON.parse(localStorage.getItem('gamePlayHistory') || '{}');
+            const timestamp = plays[title];
+            if (!timestamp) return '';
+            const now = Date.now();
+            const diff = now - timestamp;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            let label = '';
+            if (days > 0) label = `${days}d ago`;
+            else if (hours > 0) label = `${hours}h ago`;
+            else if (minutes > 0) label = `${minutes}m ago`;
+            else label = 'Just now';
+            return label;
+        };
+
+        const renderGameCard = (game) => {
+            const tags = buildTags(game.tags || []);
+            const hasImage = Boolean(game.image);
+            const media = hasImage
+                ? `<img src="${escapeHtml(game.image)}" alt="${escapeHtml(game.alt || game.title)}" loading="lazy">`
+                : `<div class="card-fallback">${escapeHtml(game.title)}</div>`;
+            const lastPlayed = getLastPlayed(game.title);
+            const lastPlayedLabel = lastPlayed ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">Last: ${escapeHtml(lastPlayed)}</div>` : '';
+
+            return `
+                <article class="game-card clickable" data-category="${escapeHtml(game.category)}" data-name="${escapeHtml(game.title).toLowerCase()}" data-tags="${escapeHtml([game.title, game.category, ...(game.tags || [])].join(' ')).toLowerCase()}">
+                    <a class="card-link-stretch" href="${escapeHtml(game.href)}" aria-label="Open ${escapeHtml(game.title)}" data-track-game="${escapeHtml(game.title)}"></a>
+                    <div class="card-media">
+                        <span class="card-badge">${escapeHtml(game.badge || game.category)}</span>
+                        ${media}
+                    </div>
+                    <div class="card-content">
+                        <div class="card-topline">
+                            <span class="card-name">${escapeHtml(game.title)}</span>
+                            <span class="card-category">${escapeHtml(game.category)}</span>
+                        </div>
+                        <p class="card-desc">${escapeHtml(game.description)}</p>
+                        <div class="card-tags">${tags}</div>
+                        ${lastPlayedLabel}
+                        <a class="card-play-btn" href="${escapeHtml(game.href)}">Play now</a>
+                    </div>
+                </article>
+            `;
+        };
+
+        const renderComingSoonCard = (game) => {
+            const tags = buildTags(game.tags || []);
+            const fallbackLabel = `${game.title} preview`;
+
+            return `
+                <article class="game-card" data-category="${escapeHtml(game.category)}" data-name="${escapeHtml(game.title).toLowerCase()}" data-tags="${escapeHtml([game.title, game.category, ...(game.tags || [])].join(' ')).toLowerCase()}">
+                    <div class="card-media">
+                        <span class="card-badge">${escapeHtml(game.badge || 'Coming Soon')}</span>
+                        <div class="card-fallback">${escapeHtml(fallbackLabel)}</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-topline">
+                            <span class="card-name">${escapeHtml(game.title)}</span>
+                            <span class="card-category">${escapeHtml(game.category)}</span>
+                        </div>
+                        <p class="card-desc">${escapeHtml(game.description)}</p>
+                        <div class="card-tags">${tags}</div>
+                    </div>
+                </article>
+            `;
+        };
+
+        const applyFilters = () => {
+            const cards = Array.from(activeGamesEl.querySelectorAll('.game-card'));
+            const searchValue = searchTerm.trim().toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach((card) => {
+                const category = card.dataset.category || '';
+                const searchable = `${card.dataset.name || ''} ${card.dataset.tags || ''}`;
+                const matchesCategory = activeFilter === 'All' || category === activeFilter;
+                const matchesSearch = !searchValue || searchable.includes(searchValue);
+                const visible = matchesCategory && matchesSearch;
+                card.hidden = !visible;
+                if (visible) {
+                    visibleCount += 1;
+                }
+            });
+
+            resultsMeta.textContent = `${visibleCount} of ${games.length} games shown`;
+        };
+
+        const buildFilters = () => {
+            filterBar.innerHTML = categories.map((category) => `
+                <button class="filter-chip${category === 'All' ? ' is-active' : ''}" type="button" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>
+            `).join('');
+        };
+
+        const attachFilterHandlers = () => {
+            filterBar.addEventListener('click', (event) => {
+                const button = event.target.closest('.filter-chip');
+                if (!button) {
+                    return;
+                }
+
+                activeFilter = button.dataset.category || 'All';
+                filterBar.querySelectorAll('.filter-chip').forEach((chip) => {
+                    chip.classList.toggle('is-active', chip === button);
+                });
+                applyFilters();
+            });
+        };
+
+        const init = () => {
+            activeGamesEl.innerHTML = games.map(renderGameCard).join('');
+            upcomingGamesEl.innerHTML = upcomingGames.map(renderComingSoonCard).join('');
+            buildFilters();
+            attachFilterHandlers();
+            applyFilters();
+            statActive.textContent = `${games.length}+`;
+            statCategories.textContent = `${categories.length - 1}`;
+            statSoon.textContent = `${upcomingGames.length}`;
+            // Attach play tracking to all game links
+            activeGamesEl.addEventListener('click', (event) => {
+                const link = event.target.closest('[data-track-game]');
+                if (link) {
+                    const gameTitle = link.dataset.trackGame;
+                    trackGamePlay(gameTitle);
+                }
+            });
+        };
+
+        gameSearch.addEventListener('input', (event) => {
+            searchTerm = event.target.value || '';
+            applyFilters();
+        });
+
+        // ---- Header search bar (syncs with main search + scrolls to library) ----
+        const headerSearch = document.getElementById('header-search');
+        const headerClear = document.getElementById('header-search-clear');
+        const headerCount = document.getElementById('header-search-count');
+
+        function syncHeaderSearch(val) {
+            // Sync to main search
+            gameSearch.value = val;
+            searchTerm = val;
+            applyFilters();
+
+            // Update header clear button
+            headerClear.classList.toggle('visible', val.length > 0);
+
+            // Update result count badge
+            if (val.trim()) {
+                const visible = Array.from(activeGamesEl.querySelectorAll('.game-card')).filter(c => !c.hidden).length;
+                headerCount.textContent = visible + ' result' + (visible !== 1 ? 's' : '');
+                headerCount.classList.add('visible');
+            } else {
+                headerCount.classList.remove('visible');
+            }
+        }
+
+        headerSearch.addEventListener('input', (e) => {
+            syncHeaderSearch(e.target.value || '');
+        });
+
+        headerSearch.addEventListener('focus', () => {
+            // Scroll down to game library so results are in view
+            const lib = document.getElementById('featured-games');
+            if (lib) lib.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        headerSearch.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                headerSearch.value = '';
+                syncHeaderSearch('');
+                headerSearch.blur();
+            }
+        });
+
+        headerClear.addEventListener('click', () => {
+            headerSearch.value = '';
+            syncHeaderSearch('');
+            headerSearch.focus();
+        });
+
+        // Also keep main search bar in sync back to header
+        gameSearch.addEventListener('input', (event) => {
+            const val = event.target.value || '';
+            headerSearch.value = val;
+            headerClear.classList.toggle('visible', val.length > 0);
+        });
+
+        init();
+    </script>
 </body>
 
 </html>
