@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequence Memory — Reflex Arena Standalone</title>
+  <meta name="description" content="Watch the pattern, repeat the sequence. Test your cognitive memory and recall speed.">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080810;
+      --bg2: #0f0e1a;
+      --bg3: #16152a;
+      --bg4: #1c1b33;
+      --purple: #7c6fdd;
+      --purple2: #a99ef5;
+      --purple3: #3d3580;
+      --green: #34d399;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --cyan: #22d3ee;
+      --text: #e8e4ff;
+      --text2: #9990cc;
+      --text3: #4a4480;
+      --border: #2a2840;
+      --glow: rgba(124, 111, 221, 0.15);
+    }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(124, 111, 221, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(34, 211, 238, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 640px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 50px var(--glow);
+      position: relative;
+      animation: fadeIn 0.4s ease-out;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+    }
+    .back-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover {
+      border-color: var(--purple);
+      color: var(--purple2);
+      box-shadow: 0 0 10px rgba(124, 111, 221, 0.2);
+    }
+    .title-wrap h1 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--purple2), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title-wrap p {
+      font-size: 0.65rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .stat-box {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .stat-lbl {
+      font-size: 0.6rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      color: var(--purple2);
+    }
+    .game-area {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      min-height: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .instr {
+      font-size: 0.85rem;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-family: 'Space Mono', monospace;
+      max-width: 420px;
+    }
+    .seq-status {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+    }
+    .seq-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 85px);
+      gap: 12px;
+      justify-content: center;
+    }
+    .seq-btn {
+      width: 85px;
+      height: 85px;
+      border-radius: 14px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.12s;
+      font-size: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .seq-btn.lit {
+      filter: brightness(2.2);
+      border-color: #fff;
+      transform: scale(1.06);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    }
+    .seq-btn.wrong-sq {
+      border-color: var(--red) !important;
+      animation: shake 0.3s;
+    }
+    .big-btn {
+      background: var(--purple3);
+      border: 1px solid var(--purple);
+      color: #fff;
+      padding: 1rem 3rem;
+      border-radius: 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(124, 111, 221, 0.25);
+    }
+    .big-btn:hover {
+      background: var(--purple);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 111, 221, 0.4);
+    }
+    .big-btn:active {
+      transform: scale(0.97);
+    }
+    .sm-btn {
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      color: var(--purple2);
+      padding: 0.7rem 1.4rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .sm-btn:hover {
+      border-color: var(--purple);
+      background: var(--bg3);
+      color: #fff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .result-score {
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: var(--purple2);
+      font-family: 'Space Mono', monospace;
+      line-height: 1;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(124, 111, 221, 0.3);
+    }
+    .result-lbl {
+      font-size: 0.75rem;
+      color: var(--text3);
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 1.25rem;
+    }
+    .result-sub {
+      font-size: 0.95rem;
+      color: var(--text2);
+      margin-bottom: 0.5rem;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <header class="header">
+      <div class="title-wrap">
+        <h1>Sequence Memory</h1>
+        <p>🧩 memory pattern recall</p>
+      </div>
+      <a href="index.html" class="back-btn">← Main Hub</a>
+    </header>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-lbl">Score</div>
+        <div class="stat-val" id="gs-score">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Current Level</div>
+        <div class="stat-val" id="gs-round">lvl 0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Best Level</div>
+        <div class="stat-val" id="gs-pb">—</div>
+      </div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+      <div class="instr">
+        Watch the flashing pattern sequence, then repeat it.<br>
+        The sequence gets one block longer every level!
+      </div>
+      <button class="big-btn" onclick="startSeqRound()">Begin Challenge</button>
+    </div>
+  </div>
+
+  <script>
+    const SQCOLS = [
+      '#e03b3b', '#5b4fe0', '#1a8a5a',
+      '#d4a017', '#c084fc', '#34d399',
+      '#f87171', '#60a5fa', '#fbbf24'
+    ];
+
+    let gameState = {
+      sequence: [],
+      playerSeq: [],
+      level: 0,
+      phase: 'idle',
+      score: 0
+    };
+    let activeTimers = [];
+
+    function loadPB() {
+      const pb = localStorage.getItem('pb_sequence_memory') || '—';
+      document.getElementById('gs-pb').textContent = pb !== '—' ? `lvl ${pb}` : pb;
+    }
+    loadPB();
+
+    function T(fn, ms) {
+      const id = setTimeout(fn, ms);
+      activeTimers.push(id);
+      return id;
+    }
+
+    function clearAllTimers() {
+      activeTimers.forEach(clearTimeout);
+      activeTimers = [];
+    }
+
+    function seqRenderGrid(inputEnabled) {
+      const statusText = inputEnabled ? 'Your turn — repeat the sequence!' : 'Watch carefully...';
+      const statusColor = inputEnabled ? 'var(--green)' : 'var(--amber)';
+      
+      const btns = SQCOLS.map((c, i) => `
+        <div class="seq-btn" id="sb${i}" style="background: ${c}22; border-color: ${c}44;" onclick="${inputEnabled ? `seqPlayerClick(${i})` : ''}"></div>
+      `).join('');
+
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="seq-status" style="color: ${statusColor};">${statusText}</div>
+        <div class="seq-grid">${btns}</div>
+      `;
+    }
+
+    function startSeqRound() {
+      clearAllTimers();
+      gameState.level++;
+      gameState.sequence.push(Math.floor(Math.random() * 9));
+      gameState.playerSeq = [];
+      gameState.phase = 'show';
+      
+      document.getElementById('gs-round').textContent = 'lvl ' + gameState.level;
+      
+      seqRenderGrid(false);
+      playSequence();
+    }
+
+    function playSequence() {
+      let index = 0;
+      function next() {
+        if (index >= gameState.sequence.length) {
+          T(() => {
+            gameState.phase = 'input';
+            seqRenderGrid(true);
+          }, 500);
+          return;
+        }
+        
+        const idx = gameState.sequence[index];
+        T(() => {
+          const btn = document.getElementById('sb' + idx);
+          if (btn) {
+            btn.classList.add('lit');
+            btn.style.background = SQCOLS[idx] + 'cc';
+          }
+          T(() => {
+            if (btn) {
+              btn.classList.remove('lit');
+              btn.style.background = SQCOLS[idx] + '22';
+            }
+            index++;
+            T(next, 300);
+          }, 550);
+        }, index === 0 ? 400 : 0);
+      }
+      next();
+    }
+
+    function seqPlayerClick(idx) {
+      if (gameState.phase !== 'input') return;
+      
+      const btn = document.getElementById('sb' + idx);
+      btn.style.background = SQCOLS[idx] + 'cc';
+      T(() => {
+        btn.style.background = SQCOLS[idx] + '22';
+      }, 180);
+      
+      gameState.playerSeq.push(idx);
+      const pos = gameState.playerSeq.length - 1;
+      
+      if (gameState.playerSeq[pos] !== gameState.sequence[pos]) {
+        // Wrong sequence match
+        btn.classList.add('wrong-sq');
+        gameState.phase = 'gameover';
+        
+        T(() => {
+          endSequence();
+        }, 600);
+        return;
+      }
+      
+      if (gameState.playerSeq.length === gameState.sequence.length) {
+        gameState.score = gameState.level;
+        document.getElementById('gs-score').textContent = gameState.score;
+        T(startSeqRound, 800);
+      }
+    }
+
+    function endSequence() {
+      clearAllTimers();
+      
+      // Save PB
+      const pb = localStorage.getItem('pb_sequence_memory');
+      if (!pb || gameState.score > parseInt(pb)) {
+        localStorage.setItem('pb_sequence_memory', gameState.score);
+      }
+      loadPB();
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="fade-in" style="text-align: center; width: 100%;">
+          <div class="result-score">${gameState.score}</div>
+          <div class="result-lbl">levels completed</div>
+          <div class="result-sub" style="margin-bottom: 1.5rem;">
+            Successfully recalled up to <strong>${gameState.score} patterns</strong> under pressure.
+          </div>
+          <div class="btn-row">
+            <button class="sm-btn" onclick="resetGame()">Play Again</button>
+            <a href="reflex_arena.html" class="sm-btn">Reflex Arena</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetGame() {
+      gameState = {
+        sequence: [],
+        playerSeq: [],
+        level: 0,
+        phase: 'idle',
+        score: 0
+      };
+      
+      document.getElementById('gs-score').textContent = '0';
+      document.getElementById('gs-round').textContent = 'lvl 0';
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="instr">
+          Watch the flashing pattern sequence, then repeat it.<br>
+          The sequence gets one block longer every level!
+        </div>
+        <button class="big-btn" onclick="startSeqRound()">Begin Challenge</button>
+      `;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Click When Green — Reflex Arena Standalone</title>
+  <meta name="description" content="Test your reaction time to the millisecond. Click the instant the color changes to green.">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080810;
+      --bg2: #0f0e1a;
+      --bg3: #16152a;
+      --bg4: #1c1b33;
+      --purple: #7c6fdd;
+      --purple2: #a99ef5;
+      --purple3: #3d3580;
+      --green: #34d399;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --cyan: #22d3ee;
+      --text: #e8e4ff;
+      --text2: #9990cc;
+      --text3: #4a4480;
+      --border: #2a2840;
+      --glow: rgba(124, 111, 221, 0.15);
+    }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(124, 111, 221, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(34, 211, 238, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 640px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 50px var(--glow);
+      position: relative;
+      animation: fadeIn 0.4s ease-out;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+    }
+    .back-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover {
+      border-color: var(--purple);
+      color: var(--purple2);
+      box-shadow: 0 0 10px rgba(124, 111, 221, 0.2);
+    }
+    .title-wrap h1 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--purple2), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title-wrap p {
+      font-size: 0.65rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+    .stat-box {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .stat-lbl {
+      font-size: 0.6rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      color: var(--purple2);
+    }
+    .game-area {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1rem;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .instr {
+      font-size: 0.85rem;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-family: 'Space Mono', monospace;
+      max-width: 420px;
+    }
+    .big-btn {
+      background: var(--purple3);
+      border: 1px solid var(--purple);
+      color: #fff;
+      padding: 1rem 3rem;
+      border-radius: 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(124, 111, 221, 0.25);
+    }
+    .big-btn:hover {
+      background: var(--purple);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 111, 221, 0.4);
+    }
+    .big-btn:active {
+      transform: scale(0.97);
+    }
+    .sm-btn {
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      color: var(--purple2);
+      padding: 0.7rem 1.4rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .sm-btn:hover {
+      border-color: var(--purple);
+      background: var(--bg3);
+      color: #fff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .reflex-zone {
+      width: 100%;
+      height: 250px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.6rem;
+      font-weight: 800;
+      user-select: none;
+      transition: background 0.05s;
+      flex-direction: column;
+      gap: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .rz-wait {
+      background: #1a0f30;
+      color: #7c6fdd;
+      border-color: rgba(124, 111, 221, 0.2);
+    }
+    .rz-go {
+      background: #092e1b;
+      color: var(--green);
+      border-color: rgba(52, 211, 153, 0.3);
+      text-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+    }
+    .rz-done {
+      background: var(--bg2);
+      color: var(--purple2);
+    }
+    .rz-early {
+      background: #360f0f;
+      color: var(--red);
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+    .result-score {
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: var(--purple2);
+      font-family: 'Space Mono', monospace;
+      line-height: 1;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(124, 111, 221, 0.3);
+    }
+    .result-lbl {
+      font-size: 0.75rem;
+      color: var(--text3);
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 1.25rem;
+    }
+    .result-sub {
+      font-size: 0.95rem;
+      color: var(--text2);
+      margin-bottom: 0.5rem;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <header class="header">
+      <div class="title-wrap">
+        <h1>Click When Green</h1>
+        <p>⚡ reaction time test</p>
+      </div>
+      <a href="index.html" class="back-btn">← Main Hub</a>
+    </header>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-lbl">Round</div>
+        <div class="stat-val" id="gs-round">0/5</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Last Response</div>
+        <div class="stat-val" id="gs-score">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Best Attempt</div>
+        <div class="stat-val" id="gs-best">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Personal Best</div>
+        <div class="stat-val" id="gs-pb">—</div>
+      </div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+      <div class="instr">
+        5 rounds · Click the screen the instant it changes to green.<br>
+        Avoid clicking early, or you'll get a <strong>+200ms penalty</strong>!
+      </div>
+      <button class="big-btn" onclick="startReflexRound()">Start Reaction Test</button>
+    </div>
+  </div>
+
+  <script>
+    let gameState = {
+      results: [],
+      phase: 'idle',
+      startTime: 0,
+      count: 0,
+      max: 5
+    };
+    let timerId = null;
+
+    // Load personal best from localStorage
+    function loadPB() {
+      const pb = localStorage.getItem('pb_click_green');
+      if (pb) {
+        document.getElementById('gs-pb').textContent = pb + 'ms';
+      } else {
+        document.getElementById('gs-pb').textContent = '—';
+      }
+    }
+    loadPB();
+
+    function startReflexRound() {
+      if (timerId) clearTimeout(timerId);
+      
+      if (gameState.count >= gameState.max) {
+        finishReflex();
+        return;
+      }
+      
+      gameState.phase = 'wait';
+      document.getElementById('gs-round').textContent = `${gameState.count + 1}/${gameState.max}`;
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="reflex-zone rz-wait pulse" id="rz" onclick="earlyClick()">
+          <span style="font-size: 2.5rem; margin-bottom: 8px;">⏳</span>
+          <span style="font-size: 1rem; font-weight: 700;">Wait for green...</span>
+          <span style="font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--text3)">Clicking now counts as early penalty!</span>
+        </div>
+      `;
+      
+      const delay = 1500 + Math.random() * 2500;
+      timerId = setTimeout(() => {
+        if (gameState.phase !== 'wait') return;
+        gameState.phase = 'go';
+        gameState.startTime = performance.now();
+        area.innerHTML = `
+          <div class="reflex-zone rz-go" id="rz" onclick="clickReflex()">
+            <span style="font-size: 2.5rem; margin-bottom: 8px;">🟢</span>
+            <span style="font-size: 1.4rem; font-weight: 800;">CLICK NOW!</span>
+          </div>
+        `;
+      }, delay);
+    }
+
+    function earlyClick() {
+      if (gameState.phase !== 'wait') return;
+      if (timerId) clearTimeout(timerId);
+      
+      gameState.phase = 'early';
+      gameState.results.push(200);
+      gameState.count++;
+      
+      document.getElementById('gs-score').textContent = '+200ms';
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="reflex-zone rz-early">
+          <span style="font-size: 2.5rem; margin-bottom: 8px;">😤</span>
+          <span style="font-size: 1.2rem; font-weight: 800;">Too early!</span>
+          <span style="font-size: 0.8rem; font-family: 'Space Mono', monospace;">+200ms penalty added</span>
+        </div>
+      `;
+      
+      const nextDelay = gameState.count >= gameState.max ? 1400 : 1200;
+      timerId = setTimeout(startReflexRound, nextDelay);
+    }
+
+    function clickReflex() {
+      if (gameState.phase !== 'go') return;
+      
+      const rt = Math.round(performance.now() - gameState.startTime);
+      gameState.results.push(rt);
+      gameState.count++;
+      
+      const best = Math.min(...gameState.results);
+      document.getElementById('gs-score').textContent = rt + 'ms';
+      document.getElementById('gs-best').textContent = best + 'ms';
+      
+      const grade = rt < 150 ? '⚡ Lightning fast!' : rt < 250 ? '🔥 Fast response!' : rt < 350 ? '👍 Good timing' : rt < 500 ? '🙂 OK' : '😴 Slow reaction';
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="reflex-zone rz-done">
+          <span class="result-score" style="font-size: 3.5rem;">${rt}ms</span>
+          <span style="font-size: 0.95rem; font-weight: 700; color: var(--text2)">${grade}</span>
+        </div>
+      `;
+      
+      const nextDelay = gameState.count >= gameState.max ? 1400 : 1200;
+      timerId = setTimeout(startReflexRound, nextDelay);
+    }
+
+    function finishReflex() {
+      if (timerId) clearTimeout(timerId);
+      
+      const avg = Math.round(gameState.results.reduce((a, b) => a + b, 0) / gameState.results.length);
+      const best = Math.min(...gameState.results);
+      
+      // Update local storage PB
+      const storedPB = localStorage.getItem('pb_click_green');
+      if (!storedPB || avg < parseInt(storedPB)) {
+        localStorage.setItem('pb_click_green', avg);
+      }
+      loadPB();
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="fade-in" style="text-align: center; width: 100%;">
+          <div class="result-score">${avg}ms</div>
+          <div class="result-lbl">average reaction time</div>
+          <div class="result-sub" style="margin-bottom: 1.5rem;">
+            Best Attempt: <strong>${best}ms</strong><br>
+            Rounds: <span style="font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--purple2);">${gameState.results.map(r => r + 'ms').join(' · ')}</span>
+          </div>
+          <div class="btn-row">
+            <button class="sm-btn" onclick="resetGame()">Play Again</button>
+            <a href="reflex_arena.html" class="sm-btn">Reflex Arena</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetGame() {
+      gameState = {
+        results: [],
+        phase: 'idle',
+        startTime: 0,
+        count: 0,
+        max: 5
+      };
+      document.getElementById('gs-round').textContent = '0/5';
+      document.getElementById('gs-score').textContent = '—';
+      document.getElementById('gs-best').textContent = '—';
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="instr">
+          5 rounds · Click the screen the instant it changes to green.<br>
+          Avoid clicking early, or you'll get a <strong>+200ms penalty</strong>!
+        </div>
+        <button class="big-btn" onclick="startReflexRound()">Start Reaction Test</button>
+      `;
+    }
+  </script>
+</body>
+</html>

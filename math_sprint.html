@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Math Sprint — Reflex Arena Standalone</title>
+  <meta name="description" content="Solve 15 arithmetic questions in 60 seconds. Choose the correct answers as fast as you can.">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080810;
+      --bg2: #0f0e1a;
+      --bg3: #16152a;
+      --bg4: #1c1b33;
+      --purple: #7c6fdd;
+      --purple2: #a99ef5;
+      --purple3: #3d3580;
+      --green: #34d399;
+      --red: #f87171;
+      --amber: #fbbf24;
+      --cyan: #22d3ee;
+      --text: #e8e4ff;
+      --text2: #9990cc;
+      --text3: #4a4480;
+      --border: #2a2840;
+      --glow: rgba(124, 111, 221, 0.15);
+    }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(124, 111, 221, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(34, 211, 238, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      overflow-x: hidden;
+    }
+    .game-container {
+      width: 100%;
+      max-width: 640px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 50px var(--glow);
+      position: relative;
+      animation: fadeIn 0.4s ease-out;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.25rem;
+    }
+    .back-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover {
+      border-color: var(--purple);
+      color: var(--purple2);
+      box-shadow: 0 0 10px rgba(124, 111, 221, 0.2);
+    }
+    .title-wrap h1 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, var(--purple2), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .title-wrap p {
+      font-size: 0.65rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .stat-box {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .stat-lbl {
+      font-size: 0.6rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .stat-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+      color: var(--purple2);
+    }
+    .timer-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--bg3);
+      border-radius: 3px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+    .timer-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 3px;
+      width: 100%;
+      transition: width 0.1s linear, background 0.3s;
+    }
+    .game-area {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .instr {
+      font-size: 0.85rem;
+      color: var(--text2);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      font-family: 'Space Mono', monospace;
+      max-width: 420px;
+    }
+    .big-btn {
+      background: var(--purple3);
+      border: 1px solid var(--purple);
+      color: #fff;
+      padding: 1rem 3rem;
+      border-radius: 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(124, 111, 221, 0.25);
+    }
+    .big-btn:hover {
+      background: var(--purple);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(124, 111, 221, 0.4);
+    }
+    .big-btn:active {
+      transform: scale(0.97);
+    }
+    .sm-btn {
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      color: var(--purple2);
+      padding: 0.7rem 1.4rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .sm-btn:hover {
+      border-color: var(--purple);
+      background: var(--bg3);
+      color: #fff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .math-q {
+      font-size: 2.5rem;
+      font-weight: 900;
+      font-family: 'Space Mono', monospace;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+    .math-opts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .math-opt {
+      background: var(--bg4);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      padding: 1rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      transition: all 0.15s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    .math-opt:hover:not(:disabled) {
+      border-color: var(--purple);
+      background: var(--bg3);
+      transform: translateY(-2px);
+    }
+    .math-opt.correct {
+      border-color: var(--green) !important;
+      background: #092e1b !important;
+      color: var(--green) !important;
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+    }
+    .math-opt.wrong {
+      border-color: var(--red) !important;
+      background: #360f0f !important;
+      color: var(--red) !important;
+      box-shadow: 0 0 15px rgba(248, 113, 113, 0.2);
+    }
+    .result-score {
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: var(--purple2);
+      font-family: 'Space Mono', monospace;
+      line-height: 1;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(124, 111, 221, 0.3);
+    }
+    .result-lbl {
+      font-size: 0.75rem;
+      color: var(--text3);
+      font-family: 'Space Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 1.25rem;
+    }
+    .result-sub {
+      font-size: 0.95rem;
+      color: var(--text2);
+      margin-bottom: 0.5rem;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <header class="header">
+      <div class="title-wrap">
+        <h1>Math Sprint</h1>
+        <p>🔢 speed arithmetic challenge</p>
+      </div>
+      <a href="index.html" class="back-btn">← Main Hub</a>
+    </header>
+
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-lbl">Score</div>
+        <div class="stat-val" id="gs-score">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Question</div>
+        <div class="stat-val" id="gs-round">0/15</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Time Left</div>
+        <div class="stat-val" id="gs-stat3">60s</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-lbl">Personal Best</div>
+        <div class="stat-val" id="gs-pb">—</div>
+      </div>
+    </div>
+
+    <div class="timer-bar">
+      <div class="timer-fill" id="timerFill"></div>
+    </div>
+
+    <div class="game-area" id="gameArea">
+      <div class="instr">
+        15 math questions in 60 seconds.<br>
+        Select the correct answer as quickly as possible. Every correct answer gives 10 points!
+      </div>
+      <button class="big-btn" onclick="startMath()">Start Arithmetic Quiz</button>
+    </div>
+  </div>
+
+  <script>
+    const MQS = [
+      [7, '+', 8, 15], [13, '-', 5, 8], [6, '×', 7, 42], [48, '÷', 6, 8], [15, '+', 27, 42],
+      [34, '-', 17, 17], [9, '×', 8, 72], [56, '÷', 7, 8], [23, '+', 49, 72], [81, '-', 36, 45],
+      [12, '×', 11, 132], [144, '÷', 12, 12], [17, '+', 58, 75], [92, '-', 37, 55], [7, '×', 13, 91],
+      [11, '×', 11, 121], [35, '+', 47, 82], [100, '-', 63, 37], [8, '×', 9, 72], [63, '÷', 9, 7],
+      [24, '+', 78, 102], [150, '-', 75, 75], [6, '×', 12, 72], [84, '÷', 7, 12], [47, '+', 36, 83],
+      [200, '-', 137, 63], [25, '×', 4, 100], [36, '÷', 4, 9], [45, '+', 55, 100], [120, '-', 45, 75]
+    ];
+
+    let gameState = {
+      score: 0,
+      round: 0,
+      total: 15,
+      timeLeft: 60,
+      active: false,
+      questions: []
+    };
+    let timerInterval = null;
+    let transitionTimeout = null;
+
+    function loadPB() {
+      const pb = localStorage.getItem('pb_math_sprint') || '—';
+      document.getElementById('gs-pb').textContent = pb + ' pts';
+    }
+    loadPB();
+
+    function startMath() {
+      if (timerInterval) clearInterval(timerInterval);
+      if (transitionTimeout) clearTimeout(transitionTimeout);
+      
+      gameState.questions = [...MQS].sort(() => Math.random() - 0.5).slice(0, 15);
+      gameState.active = true;
+      gameState.timeLeft = 60;
+      gameState.score = 0;
+      gameState.round = 0;
+      
+      document.getElementById('gs-score').textContent = '0';
+      document.getElementById('gs-round').textContent = '1/15';
+      document.getElementById('gs-stat3').textContent = '60s';
+      
+      const timerFill = document.getElementById('timerFill');
+      timerFill.style.width = '100%';
+      timerFill.style.background = 'var(--purple)';
+
+      timerInterval = setInterval(() => {
+        gameState.timeLeft--;
+        document.getElementById('gs-stat3').textContent = gameState.timeLeft + 's';
+        
+        const pct = (gameState.timeLeft / 60) * 100;
+        timerFill.style.width = pct + '%';
+        if (gameState.timeLeft <= 15) {
+          timerFill.style.background = 'var(--red)';
+        }
+        
+        if (gameState.timeLeft <= 0) {
+          clearInterval(timerInterval);
+          gameState.active = false;
+          endMath();
+        }
+      }, 1000);
+      
+      showMathQ();
+    }
+
+    function showMathQ() {
+      if (!gameState.active || gameState.round >= gameState.total) {
+        clearInterval(timerInterval);
+        endMath();
+        return;
+      }
+      
+      const q = gameState.questions[gameState.round];
+      const correct = q[3];
+      
+      // Generate unique incorrect choices
+      const wrongs = new Set();
+      while (wrongs.size < 3) {
+        const offset = Math.floor(Math.random() * 20) - 10;
+        const wrongVal = correct + offset;
+        if (wrongVal !== correct && wrongVal > 0) {
+          wrongs.add(wrongVal);
+        }
+      }
+      
+      const opts = [...wrongs, correct].sort(() => Math.random() - 0.5);
+      document.getElementById('gs-round').textContent = `${gameState.round + 1}/15`;
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="math-q">${q[0]} ${q[1]} ${q[2]} = ?</div>
+        <div style="font-size: 0.75rem; color: var(--text3); font-family: 'Space Mono', monospace; margin-bottom: 1.5rem">Question ${gameState.round + 1} of 15</div>
+        <div class="math-opts">
+          ${opts.map(o => `<button class="math-opt" onclick="answerMath(this, ${o}, ${correct})">${o}</button>`).join('')}
+        </div>
+      `;
+    }
+
+    function answerMath(el, val, correct) {
+      if (!gameState.active) return;
+      
+      document.querySelectorAll('.math-opt').forEach(b => b.disabled = true);
+      
+      if (val === correct) {
+        el.classList.add('correct');
+        gameState.score += 10;
+        document.getElementById('gs-score').textContent = gameState.score;
+      } else {
+        el.classList.add('wrong');
+        // Highlight correct option
+        document.querySelectorAll('.math-opt').forEach(b => {
+          if (parseInt(b.textContent) === correct) {
+            b.classList.add('correct');
+          }
+        });
+      }
+      
+      gameState.round++;
+      transitionTimeout = setTimeout(showMathQ, 550);
+    }
+
+    function endMath() {
+      if (timerInterval) clearInterval(timerInterval);
+      if (transitionTimeout) clearTimeout(transitionTimeout);
+      
+      // Save PB
+      const pb = localStorage.getItem('pb_math_sprint');
+      if (!pb || gameState.score > parseInt(pb)) {
+        localStorage.setItem('pb_math_sprint', gameState.score);
+      }
+      loadPB();
+      
+      const pct = Math.round((gameState.score / (gameState.total * 10)) * 100);
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="fade-in" style="text-align: center; width: 100%;">
+          <div class="result-score">${gameState.score}</div>
+          <div class="result-lbl">points scored</div>
+          <div class="result-sub" style="margin-bottom: 1.5rem;">
+            Accuracy: <strong>${pct}%</strong> (${gameState.score/10} of ${gameState.round} correct)<br>
+            Time Remaining: <strong>${gameState.timeLeft} seconds</strong>
+          </div>
+          <div class="btn-row">
+            <button class="sm-btn" onclick="resetGame()">Try Again</button>
+            <a href="reflex_arena.html" class="sm-btn">Reflex Arena</a>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetGame() {
+      document.getElementById('gs-score').textContent = '0';
+      document.getElementById('gs-round').textContent = '0/15';
+      document.getElementById('gs-stat3').textContent = '60s';
+      document.getElementById('timerFill').style.width = '100%';
+      document.getElementById('timerFill').style.background = 'var(--purple)';
+      
+      const area = document.getElementById('gameArea');
+      area.innerHTML = `
+        <div class="instr">
+          15 math questions in 60 seconds.<br>
+          Select the correct answer as quickly as possible. Every correct answer gives 10 points!
+        </div>
+        <button class="big-btn" onclick="startMath()">Start Arithmetic Quiz</button>
+      `;
+    }
+  </script>
+</body>
+</html>
