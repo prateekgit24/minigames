@@ -6,18 +6,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#0a0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Outfit',sans-serif;color:#fff;overflow:hidden;user-select:none}
-h1{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:3px;color:#5eb8ff;text-shadow:0 0 30px rgba(94,184,255,0.5);margin-bottom:2px}
+body{background:#060a12;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Outfit',sans-serif;color:#fff;overflow:hidden;user-select:none}
+.header-container{display:flex;align-items:center;justify-content:center;gap:1.2rem;margin-bottom:2px}
+h1{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;letter-spacing:3px;color:#5eb8ff;text-shadow:0 0 30px rgba(94,184,255,0.5)}
+.mute-btn{background:rgba(15,24,36,0.8);border:1px solid #1a2a44;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#5eb8ff;cursor:pointer;font-size:1.1rem;transition:all 0.2s ease;box-shadow:0 0 10px rgba(94,184,255,0.1);outline:none}
+.mute-btn:hover{background:#1e6bb5;color:#fff;box-shadow:0 0 15px rgba(94,184,255,0.4);border-color:#5eb8ff}
+.mute-btn:active{transform:scale(0.9)}
 .sub{font-size:0.72rem;color:#334466;letter-spacing:3px;text-transform:uppercase;margin-bottom:1rem}
-#gameCanvas{border-radius:16px;border:2px solid #1a2a4a;box-shadow:0 0 60px rgba(94,184,255,0.15);cursor:pointer;display:block}
+#gameCanvas{border-radius:16px;border:2px solid #1a2a4a;box-shadow:0 0 60px rgba(94,184,255,0.15);cursor:pointer;display:block;transition:all 0.3s ease}
+#gameCanvas.frenzy{border-color:#ff0055;box-shadow:0 0 60px rgba(255,0,85,0.35)}
 .info-row{display:flex;gap:1.5rem;margin-top:0.9rem}
-.info-box{background:#0f1824;border:1px solid #1a2a44;border-radius:10px;padding:0.5rem 1.1rem;text-align:center}
-.info-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#5eb8ff}
+.info-box{background:#0f1824;border:1px solid #1a2a44;border-radius:10px;padding:0.5rem 1.1rem;text-align:center;transition:all 0.3s ease}
+.info-box.frenzy{border-color:#ff0055;box-shadow:0 0 15px rgba(255,0,85,0.4);background:#1a0f1d}
+.info-box.frenzy .info-val{color:#ff0055;text-shadow:0 0 10px rgba(255,0,85,0.6)}
+.info-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:#5eb8ff;transition:color 0.3s ease}
 .info-lbl{font-size:0.6rem;color:#334466;letter-spacing:1px;text-transform:uppercase}
 </style>
 </head>
 <body>
-<h1>FLAPPY CLICK</h1>
+<div class="header-container">
+  <h1>FLAPPY CLICK</h1>
+  <button id="muteBtn" class="mute-btn" title="Toggle Sound">🔊</button>
+</div>
 <div class="sub">// click fast to fly · dodge the pipes</div>
 <canvas id="gameCanvas" width="480" height="520"></canvas>
 <div class="info-row">
@@ -32,7 +42,7 @@ const ctx = cv.getContext('2d');
 const W = cv.width, H = cv.height;
 
 // ── ASSETS / THEME ──
-const SKY_TOP = '#0a1628', SKY_BOT = '#0f2040';
+const SKY_TOP = '#060a12', SKY_BOT = '#0b1626';
 const PIPE_COL = '#1e6bb5', PIPE_DARK = '#0d3a6e', PIPE_LIGHT = '#3a9eff';
 const BIRD_BODY = '#ffcc00', BIRD_WING = '#ff9900', BIRD_EYE = '#1a1a2e';
 const GROUND_COL = '#0d2040', GROUND_LINE = '#1a3a6a';
@@ -41,8 +51,16 @@ let state = 'idle'; // idle, playing, dead
 let bird, pipes, score, best = 0, frame = 0, raf;
 let clickTimes = [];
 
+// New enhancements state variables
+let audioCtx = null;
+let soundMuted = false;
+let particles = [];
+let scorePopups = [];
+let screenShake = 0;
+let frenzyActive = false;
+
 function initBird() {
-  return { x: 90, y: H / 2, vy: 0, angle: 0, wingPhase: 0, trail: [] };
+  return { x: 90, y: H / 2, vy: 0, angle: 0, wingPhase: 0 };
 }
 
 function initGame() {
@@ -52,18 +70,123 @@ function initGame() {
   frame = 0;
   clickTimes = [];
   state = 'idle';
+  particles = [];
+  scorePopups = [];
+  screenShake = 0;
+  frenzyActive = false;
+
+  // reset element classes
+  const fBox = document.getElementById('cpsLbl').parentNode;
+  const canvasEl = document.getElementById('gameCanvas');
+  fBox.classList.remove('frenzy');
+  canvasEl.classList.remove('frenzy');
+
   document.getElementById('scoreLbl').textContent = '0';
   document.getElementById('cpsLbl').textContent = '0';
 }
 
+// ── AUDIO SYNTHESIZER ──
+function initAudio() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch (err) {
+    console.warn("Web Audio API not supported:", err);
+  }
+}
+
+function playSound(type) {
+  if (soundMuted) return;
+  initAudio();
+  if (!audioCtx) return;
+
+  try {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'flap') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(360, now + 0.1);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'score') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.setValueAtTime(880.00, now + 0.08); // A5
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } else if (type === 'hit') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.linearRampToValueAtTime(40, now + 0.35);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === 'frenzy') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(330, now);
+      osc.frequency.setValueAtTime(440, now + 0.06);
+      osc.frequency.setValueAtTime(660, now + 0.12);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    }
+  } catch (err) {
+    console.warn("Sound playback failed:", err);
+  }
+}
+
+function toggleMute(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  soundMuted = !soundMuted;
+  const btn = document.getElementById('muteBtn');
+  btn.textContent = soundMuted ? '🔇' : '🔊';
+  if (soundMuted) {
+    btn.style.borderColor = '#ff5e6c';
+    btn.style.color = '#ff5e6c';
+  } else {
+    btn.style.borderColor = '#1a2a44';
+    btn.style.color = '#5eb8ff';
+  }
+}
+
 // ── CLICK HANDLER ──
 function onInput(e) {
-  e.preventDefault();
-  if (state === 'dead') { initGame(); loop(); return; }
-  if (state === 'idle') { state = 'playing'; }
+  if (e) {
+    e.preventDefault();
+  }
+  initAudio();
+
+  if (state === 'dead') {
+    initGame();
+    return;
+  }
+  if (state === 'idle') {
+    state = 'playing';
+  }
 
   // flap
-  bird.vy = -7.5;
+  bird.vy = -7.2;
+  bird.angle = -0.45;
+  playSound('flap');
 
   // track CPS
   const now = performance.now();
@@ -74,7 +197,19 @@ function onInput(e) {
 
 cv.addEventListener('click', onInput);
 cv.addEventListener('touchstart', onInput, { passive: false });
-document.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'ArrowUp') onInput(e); });
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    onInput(e);
+  }
+});
+
+// Prevent focus behaviors on keydown for mute button
+document.getElementById('muteBtn').addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+  }
+});
+document.getElementById('muteBtn').addEventListener('click', toggleMute);
 
 // ── PIPE SPAWNING ──
 const GAP = 155, PIPE_W = 62, SPEED = 2.8;
@@ -85,29 +220,148 @@ function spawnPipe() {
   pipes.push({ x: W + 20, topH, scored: false });
 }
 
-// ── DRAWING ──
+// ── PARTICLE ENGINE ──
+function spawnParticles(x, y, color, count, type = 'normal') {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    let speed;
+    if (type === 'explosion') speed = Math.random() * 4.5 + 1.5;
+    else if (type === 'trail') speed = Math.random() * 0.8 + 0.2;
+    else speed = Math.random() * 2 + 0.5;
+
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed + (type === 'trail' ? -1.8 : 0),
+      vy: Math.sin(angle) * speed + (type === 'trail' ? -0.2 : 0),
+      size: type === 'trail' ? Math.random() * 3 + 1 : Math.random() * 4 + 2,
+      alpha: 1,
+      color,
+      decay: type === 'trail' ? Math.random() * 0.04 + 0.03 : Math.random() * 0.02 + 0.015,
+      gravity: type === 'explosion' ? 0.12 : 0
+    });
+  }
+}
+
+function updateParticles() {
+  particles.forEach(p => {
+    p.x += p.vx - SPEED; // drift backward with scrolling ground
+    p.y += p.vy;
+    p.vy += p.gravity;
+    p.alpha -= p.decay;
+  });
+  particles = particles.filter(p => p.alpha > 0);
+}
+
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ── FLOATING SCORE POPUPS ──
+function spawnScorePopup(x, y, text, color = '#ffcc00') {
+  scorePopups.push({ x, y, text, color, alpha: 1, vy: -1.2 });
+}
+
+function updateScorePopups() {
+  scorePopups.forEach(p => {
+    p.y += p.vy;
+    p.alpha -= 0.025;
+  });
+  scorePopups = scorePopups.filter(p => p.alpha > 0);
+}
+
+function drawScorePopups() {
+  scorePopups.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.font = `bold 24px 'Bebas Neue', sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = p.color;
+    ctx.shadowBlur = 8;
+    ctx.fillText(p.text, p.x, p.y);
+    ctx.restore();
+  });
+}
+
+// ── PARALLAX BACKGROUND SKYLINE ──
+function drawSkyline(scrollX, speedMult, heightScale, color, drawWindows) {
+  ctx.fillStyle = color;
+  const bw = 35; // width of each building
+  const gap = 6;
+  const step = bw + gap;
+  const startIdx = Math.floor(scrollX / step);
+  const endIdx = startIdx + Math.ceil(W / step) + 1;
+
+  for (let i = startIdx; i <= endIdx; i++) {
+    // Seeded pseudo-random building height
+    const height = 40 + ((Math.abs(Math.sin(i * 12.3)) * 100) % 90) * heightScale;
+    const bx = i * step - scrollX;
+    const by = H - 60 - height;
+
+    ctx.fillRect(bx, by, bw, height);
+
+    // Light beacon on taller buildings
+    if (height > 105) {
+      const flash = (frame + i * 15) % 60 < 25;
+      if (flash) {
+        ctx.fillStyle = '#ff5e6c';
+        ctx.fillRect(bx + bw / 2 - 1, by - 4, 2, 4);
+        ctx.fillStyle = 'rgba(255, 94, 108, 0.5)';
+        ctx.beginPath();
+        ctx.arc(bx + bw / 2, by - 4, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = color;
+      }
+    }
+
+    // Windows
+    if (drawWindows && height > 60) {
+      ctx.fillStyle = 'rgba(94, 184, 255, 0.22)';
+      const cols = 2;
+      const rows = Math.floor((height - 20) / 14);
+      const winSize = 2;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const seed = Math.sin(i * 7 + r * 13 + c * 3);
+          if (seed > -0.25) {
+            const wx = bx + 6 + c * 12 + (seed > 0.45 ? 2 : 0);
+            const wy = by + 12 + r * 12;
+            ctx.fillRect(wx, wy, winSize, winSize);
+          }
+        }
+      }
+      ctx.fillStyle = color; // restore
+    }
+  }
+}
+
 function drawBg() {
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, SKY_TOP); g.addColorStop(1, SKY_BOT);
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
-  // stars
+  // stars (Layer 1)
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
-  for (let i = 0; i < 60; i++) {
-    const sx = ((i * 137 + frame * 0.05) % W);
-    const sy = (i * 73) % (H * 0.6);
-    ctx.beginPath(); ctx.arc(sx, sy, 0.8, 0, Math.PI * 2); ctx.fill();
+  for (let i = 0; i < 45; i++) {
+    const sx = ((i * 137 + frame * 0.05) % W + W) % W;
+    const sy = (i * 73) % (H * 0.55);
+    ctx.beginPath(); ctx.arc(sx, sy, 0.7, 0, Math.PI * 2); ctx.fill();
   }
 
-  // distant city silhouette
-  ctx.fillStyle = '#0d1e38';
-  const buildings = [30,60,45,80,55,70,40,90,65,50,75,85,35,55,70];
-  let bx = 0;
-  buildings.forEach((bh, i) => {
-    const bw = 28 + (i % 3) * 8;
-    ctx.fillRect(bx, H - 80 - bh, bw, bh);
-    bx += bw + 4;
-  });
+  // Parallax Distant Skyline (Layer 2) - scrolls slowly
+  drawSkyline(frame * 0.28, 1.0, 0.9, '#08101d', false);
+
+  // Parallax Closer Skyline (Layer 3) - scrolls moderately with lit windows
+  drawSkyline(frame * 1.05, 1.0, 1.25, '#0d192c', true);
 }
 
 function drawGround() {
@@ -125,35 +379,42 @@ function drawGround() {
 
 function drawPipe(p) {
   const rx = 8;
+  const isFrenzy = frenzyActive;
+  const primaryColor = isFrenzy ? '#ff0055' : PIPE_COL;
+  const lightColor = isFrenzy ? '#ff66aa' : PIPE_LIGHT;
+  const darkColor = isFrenzy ? '#80002a' : PIPE_DARK;
+
   // top pipe
-  ctx.fillStyle = PIPE_COL;
+  ctx.fillStyle = primaryColor;
   roundRect(ctx, p.x, 0, PIPE_W, p.topH, rx);
-  ctx.fillStyle = PIPE_DARK;
+  ctx.fillStyle = darkColor;
   roundRect(ctx, p.x, 0, PIPE_W * 0.15, p.topH, rx);
   // top cap
-  ctx.fillStyle = PIPE_LIGHT;
+  ctx.fillStyle = lightColor;
   roundRect(ctx, p.x - 6, p.topH - 28, PIPE_W + 12, 28, 5);
-  ctx.fillStyle = PIPE_COL;
-  roundRect(ctx, p.x - 6, p.topH - 28, PIPE_W * 0.15, 28, 5);
+  ctx.fillStyle = primaryColor;
+  roundRect(ctx, p.x - 6, p.topH - 28, (PIPE_W + 12) * 0.15, 28, 5);
 
   // bottom pipe
   const botY = p.topH + GAP;
   const botH = H - 60 - botY;
   // bottom cap
-  ctx.fillStyle = PIPE_LIGHT;
+  ctx.fillStyle = lightColor;
   roundRect(ctx, p.x - 6, botY, PIPE_W + 12, 28, 5);
-  ctx.fillStyle = PIPE_COL;
-  roundRect(ctx, p.x - 6, botY, PIPE_W * 0.15, 28, 5);
-  ctx.fillStyle = PIPE_COL;
+  ctx.fillStyle = primaryColor;
+  roundRect(ctx, p.x - 6, botY, (PIPE_W + 12) * 0.15, 28, 5);
+  ctx.fillStyle = primaryColor;
   roundRect(ctx, p.x, botY + 28, PIPE_W, botH - 28, rx);
-  ctx.fillStyle = PIPE_DARK;
+  ctx.fillStyle = darkColor;
   roundRect(ctx, p.x, botY + 28, PIPE_W * 0.15, botH - 28, rx);
 
   // gap glow
   const gg = ctx.createLinearGradient(0, p.topH, 0, botY);
-  gg.addColorStop(0, 'rgba(94,184,255,0.04)');
-  gg.addColorStop(0.5, 'rgba(94,184,255,0.08)');
-  gg.addColorStop(1, 'rgba(94,184,255,0.04)');
+  const glowCol = isFrenzy ? 'rgba(255, 0, 85, 0.08)' : 'rgba(94, 184, 255, 0.05)';
+  const glowColMid = isFrenzy ? 'rgba(255, 0, 85, 0.16)' : 'rgba(94, 184, 255, 0.1)';
+  gg.addColorStop(0, glowCol);
+  gg.addColorStop(0.5, glowColMid);
+  gg.addColorStop(1, glowCol);
   ctx.fillStyle = gg;
   ctx.fillRect(p.x - 6, p.topH, PIPE_W + 12, GAP);
 }
@@ -169,31 +430,35 @@ function drawBird(b) {
   ctx.translate(b.x, b.y);
   ctx.rotate(b.angle);
 
-  // trail
-  b.trail.forEach((t, i) => {
-    ctx.globalAlpha = (i / b.trail.length) * 0.3;
-    ctx.fillStyle = '#ffcc00';
-    ctx.beginPath(); ctx.arc(t.x - b.x, t.y - b.y, 8 * (i / b.trail.length), 0, Math.PI * 2); ctx.fill();
-  });
-  ctx.globalAlpha = 1;
+  const isFrenzy = frenzyActive;
+  const bodyGrad = ctx.createRadialGradient(-2, -3, 2, 0, 0, 18);
+
+  if (isFrenzy) {
+    bodyGrad.addColorStop(0, '#ff99cc');
+    bodyGrad.addColorStop(1, '#ff0066');
+    ctx.fillStyle = bodyGrad;
+    ctx.shadowColor = '#ff0066';
+    ctx.shadowBlur = 12;
+  } else {
+    bodyGrad.addColorStop(0, '#ffe066');
+    bodyGrad.addColorStop(1, '#cc8800');
+    ctx.fillStyle = bodyGrad;
+  }
+
+  // body
+  ctx.beginPath(); ctx.ellipse(0, 0, 18, 15, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur = 0; // disable shadow for details
+
+  // belly
+  ctx.fillStyle = isFrenzy ? '#ffccff' : '#ffeebb';
+  ctx.beginPath(); ctx.ellipse(4, 3, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
 
   // wing shadow
   const wingY = Math.sin(b.wingPhase) * 10;
-  ctx.fillStyle = BIRD_WING;
+  ctx.fillStyle = isFrenzy ? '#cc0055' : BIRD_WING;
   ctx.beginPath();
   ctx.ellipse(-6, wingY, 16, 8, -0.4, 0, Math.PI * 2);
   ctx.fill();
-
-  // body
-  const bodyGrad = ctx.createRadialGradient(-2, -3, 2, 0, 0, 18);
-  bodyGrad.addColorStop(0, '#ffe066');
-  bodyGrad.addColorStop(1, '#cc8800');
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath(); ctx.ellipse(0, 0, 18, 15, 0, 0, Math.PI * 2); ctx.fill();
-
-  // belly
-  ctx.fillStyle = '#ffeebb';
-  ctx.beginPath(); ctx.ellipse(4, 3, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
 
   // eye
   ctx.fillStyle = '#fff';
@@ -204,7 +469,7 @@ function drawBird(b) {
   ctx.beginPath(); ctx.arc(11, -5.5, 1.2, 0, Math.PI * 2); ctx.fill();
 
   // beak
-  ctx.fillStyle = '#ff8800';
+  ctx.fillStyle = isFrenzy ? '#ff3300' : '#ff8800';
   ctx.beginPath(); ctx.moveTo(14, -2); ctx.lineTo(22, 1); ctx.lineTo(14, 4); ctx.closePath(); ctx.fill();
 
   ctx.restore();
@@ -215,10 +480,21 @@ function drawHUD() {
   ctx.textAlign = 'center';
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.font = `bold 42px 'Bebas Neue', sans-serif`;
-  ctx.shadowColor = 'rgba(94,184,255,0.6)';
+  ctx.shadowColor = frenzyActive ? 'rgba(255,0,85,0.6)' : 'rgba(94,184,255,0.6)';
   ctx.shadowBlur = 15;
   ctx.fillText(score, W / 2, 60);
   ctx.shadowBlur = 0;
+
+  if (frenzyActive) {
+    ctx.fillStyle = '#ff0055';
+    ctx.font = `bold 16px 'Bebas Neue', sans-serif`;
+    ctx.shadowColor = 'rgba(255,0,85,0.5)';
+    ctx.shadowBlur = 10;
+    ctx.globalAlpha = 0.7 + 0.3 * Math.sin(frame * 0.2);
+    ctx.fillText("FRENZY x2", W / 2, 85);
+    ctx.globalAlpha = 1.0;
+    ctx.shadowBlur = 0;
+  }
 }
 
 function drawIdle() {
@@ -236,7 +512,7 @@ function drawIdle() {
   ctx.fillText('CLICK TO FLY', W / 2, H / 2 - 70);
   ctx.font = `14px 'Outfit', sans-serif`;
   ctx.fillStyle = '#5588aa';
-  ctx.fillText('Click fast → fly higher', W / 2, H / 2 - 45);
+  ctx.fillText('Click fast → activate Frenzy mode', W / 2, H / 2 - 45);
   ctx.fillText('Click slow → fall down', W / 2, H / 2 - 25);
   ctx.font = `12px 'Outfit', sans-serif`;
   ctx.fillStyle = '#334466';
@@ -244,7 +520,6 @@ function drawIdle() {
 }
 
 function drawDead() {
-  // dim overlay
   ctx.fillStyle = 'rgba(0,0,0,0.55)';
   ctx.fillRect(0, 0, W, H);
 
@@ -296,6 +571,29 @@ function loop() {
   frame++;
   ctx.clearRect(0, 0, W, H);
 
+  // track CPS and check for Frenzy Mode
+  const now = performance.now();
+  clickTimes = clickTimes.filter(t => now - t < 1000);
+  const cps = clickTimes.length;
+  document.getElementById('cpsLbl').textContent = cps;
+
+  const fBox = document.getElementById('cpsLbl').parentNode;
+  const canvasEl = document.getElementById('gameCanvas');
+  if (cps >= 5) {
+    if (!frenzyActive) {
+      frenzyActive = true;
+      playSound('frenzy');
+      fBox.classList.add('frenzy');
+      canvasEl.classList.add('frenzy');
+    }
+  } else if (cps <= 3) {
+    if (frenzyActive) {
+      frenzyActive = false;
+      fBox.classList.remove('frenzy');
+      canvasEl.classList.remove('frenzy');
+    }
+  }
+
   if (state === 'idle') {
     drawIdle();
     raf = requestAnimationFrame(loop);
@@ -303,20 +601,47 @@ function loop() {
   }
 
   if (state === 'dead') {
-    drawBg(); drawGround();
+    updateParticles();
+    
+    // apply screen shake
+    ctx.save();
+    if (screenShake > 0) {
+      const dx = (Math.random() - 0.5) * screenShake;
+      const dy = (Math.random() - 0.5) * screenShake;
+      ctx.translate(dx, dy);
+      screenShake *= 0.88;
+      if (screenShake < 0.5) screenShake = 0;
+    }
+
+    drawBg();
+    pipes.forEach(p => drawPipe(p));
+    drawGround();
+    drawParticles();
     drawBird(bird);
     drawDead();
+
+    ctx.restore();
     raf = requestAnimationFrame(loop);
     return;
   }
 
+  // state === 'playing'
   // physics
-  bird.vy += 0.42;
+  bird.vy += 0.40;
   bird.y += bird.vy;
-  bird.angle = Math.max(-0.5, Math.min(Math.PI / 2.5, bird.vy * 0.06));
+  
+  // smooth rotation interpolation
+  const targetAngle = Math.max(-0.4, Math.min(Math.PI / 2.5, bird.vy * 0.08));
+  bird.angle += (targetAngle - bird.angle) * 0.15;
   bird.wingPhase += 0.35;
-  bird.trail.push({ x: bird.x, y: bird.y });
-  if (bird.trail.length > 8) bird.trail.shift();
+
+  // spawn trail particles
+  const trailColor = frenzyActive ? `hsl(${(frame * 3) % 360}, 100%, 65%)` : 'rgba(94, 184, 255, 0.7)';
+  spawnParticles(bird.x - 12, bird.y, trailColor, frenzyActive ? 3 : 1, 'trail');
+
+  // updates
+  updateParticles();
+  updateScorePopups();
 
   // pipes
   if (frame % 90 === 0) spawnPipe();
@@ -326,24 +651,38 @@ function loop() {
   // score
   pipes.forEach(p => {
     if (!p.scored && p.x + PIPE_W < bird.x) {
-      p.scored = true; score++;
+      p.scored = true;
+      const pts = frenzyActive ? 2 : 1;
+      score += pts;
       document.getElementById('scoreLbl').textContent = score;
-      if (score > best) { best = score; document.getElementById('bestLbl').textContent = best; }
-      // speed up slightly
-      // SPEED increases handled below
+      if (score > best) {
+        best = score;
+        document.getElementById('bestLbl').textContent = best;
+      }
+      spawnScorePopup(bird.x, bird.y - 25, frenzyActive ? `+2 FRENZY!` : `+1`, frenzyActive ? '#ff0055' : '#ffcc00');
+      playSound('score');
     }
   });
 
   // collision
   if (checkCollision()) {
     state = 'dead';
+    playSound('hit');
+    screenShake = 16;
+    const explodeCol = frenzyActive ? '#ff0055' : '#ffcc00';
+    spawnParticles(bird.x, bird.y, explodeCol, 22, 'explosion');
+    spawnParticles(bird.x, bird.y, '#ffffff', 10, 'explosion');
+    spawnParticles(bird.x, bird.y, '#00e1ff', 10, 'explosion');
     if (score > best) best = score;
     document.getElementById('bestLbl').textContent = best;
   }
 
+  // draw
   drawBg();
   pipes.forEach(p => drawPipe(p));
   drawGround();
+  drawParticles();
+  drawScorePopups();
   drawBird(bird);
   drawHUD();
 

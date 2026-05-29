@@ -1,67 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Structural Engineer — Civil Design Simulator</title>
-  <meta name="description" content="Design structural member thickness, foundation types, and load-bearing materials. Complete your building within budget and test it against loads and wind forces!">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <meta name="description"
+    content="Design structural member thickness, foundation types, and load-bearing materials. Complete your building within budget and test it against loads, wind forces, and earthquakes!">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800;900&display=swap"
+    rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     :root {
-      --bg: #080812;
-      --bg2: #0f0f24;
-      --bg3: #181836;
-      --bg4: #22224c;
+      --bg: #06060f;
+      --bg2: #0c0d1e;
+      --bg3: #141634;
+      --bg4: #1d204a;
       --cyan: #00f0ff;
       --cyan-glow: rgba(0, 240, 255, 0.3);
       --purple: #9d4edd;
       --purple-glow: rgba(157, 78, 221, 0.3);
-      --green: #3900f4; /* changed to vibrant green below */
-      --green-neon: #34d399;
-      --red-neon: #f87171;
+      --green-neon: #10b981;
+      --red-neon: #f43f5e;
       --amber-neon: #fbbf24;
-      --text: #f0f0faff;
-      --text2: #a5a5d8;
-      --text3: #58588a;
-      --border: #28285c;
+      --text: #f3f4f6;
+      --text2: #9ca3af;
+      --text3: #6b7280;
+      --border: #2c2f63;
+      --card-bg: rgba(12, 13, 30, 0.8);
     }
+
     body {
       font-family: 'Syne', sans-serif;
       background: var(--bg);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(157, 78, 221, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(0, 240, 255, 0.08) 0px, transparent 50%);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(157, 78, 221, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 240, 255, 0.1) 0px, transparent 50%);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
     }
+
     header {
-      background: rgba(15, 15, 36, 0.85);
+      background: rgba(6, 6, 15, 0.85);
       border-bottom: 1px solid var(--border);
-      padding: 1rem 2rem;
+      padding: 0.75rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
       z-index: 10;
     }
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+
     .header-logo h1 {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 900;
-      letter-spacing: -1px;
+      letter-spacing: -0.5px;
       background: linear-gradient(135deg, var(--cyan), var(--purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+
     .header-logo p {
       font-family: 'Space Mono', monospace;
       font-size: 0.65rem;
@@ -69,94 +77,134 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
     .back-btn {
       background: var(--bg3);
       border: 1px solid var(--border);
       color: var(--text2);
-      padding: 8px 16px;
-      border-radius: 10px;
+      padding: 6px 14px;
+      border-radius: 8px;
       cursor: pointer;
       font-family: 'Space Mono', monospace;
       font-size: 0.75rem;
-      font-weight: 700;
       text-decoration: none;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      transition: all 0.25s;
     }
+
     .back-btn:hover {
       border-color: var(--cyan);
       color: var(--cyan);
       box-shadow: 0 0 10px var(--cyan-glow);
     }
+
     .main-layout {
       flex: 1;
       display: flex;
-      padding: 1.5rem;
-      gap: 1.5rem;
-      max-width: 1300px;
+      padding: 1rem 1.5rem;
+      gap: 1.25rem;
+      max-width: 1500px;
       width: 100%;
       margin: 0 auto;
     }
+
     .sidebar {
-      width: 320px;
+      width: 360px;
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1rem;
     }
+
     .sidebar-panel {
-      background: rgba(15, 15, 36, 0.75);
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 1.25rem;
+      border-radius: 16px;
+      padding: 1rem;
       backdrop-filter: blur(10px);
     }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text3);
+      padding: 8px 4px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+    }
+
+    .tab-content {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tab-content.active {
+      display: flex;
+    }
+
     .panel-title {
       font-size: 0.7rem;
       font-family: 'Space Mono', monospace;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--cyan);
-      margin-bottom: 0.85rem;
+      margin-bottom: 0.75rem;
       border-bottom: 1px solid var(--border);
-      padding-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding-bottom: 0.4rem;
     }
+
     .level-btn {
       width: 100%;
       background: var(--bg3);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 10px;
-      border-radius: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
       text-align: left;
       font-family: 'Syne', sans-serif;
       font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       transition: all 0.2s;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
+
     .level-btn:hover {
       border-color: var(--purple);
       background: var(--bg4);
     }
+
     .level-btn.active {
       border-color: var(--cyan);
-      background: var(--purple3);
-      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+      background: rgba(0, 240, 255, 0.1);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
     }
+
     .level-btn-stat {
       font-family: 'Space Mono', monospace;
       font-size: 0.65rem;
       color: var(--text2);
     }
+
     .level-desc {
       font-size: 0.75rem;
       color: var(--text2);
@@ -167,215 +215,496 @@
       border-radius: 8px;
       border-left: 3px solid var(--purple);
     }
+
     .tool-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
+
     .tool-btn {
       background: var(--bg3);
       border: 1px solid var(--border);
       color: var(--text2);
-      padding: 12px 8px;
-      border-radius: 10px;
+      padding: 10px 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-family: 'Syne', sans-serif;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 700;
       transition: all 0.15s;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
+
     .tool-btn:hover {
       border-color: var(--purple);
       color: #fff;
     }
+
     .tool-btn.active {
       border-color: var(--cyan);
       background: var(--bg4);
       color: var(--cyan);
-      box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.1);
+      box-shadow: inset 0 0 8px rgba(0, 240, 255, 0.1);
     }
+
     .tool-btn-icon {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
     }
+
+    .sub-options {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .sub-option-btn {
+      flex: 1;
+      min-width: 70px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 0.7rem;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .sub-option-btn.active {
+      border-color: var(--cyan);
+      background: var(--bg3);
+      color: var(--cyan);
+    }
+
     .slider-container {
       margin-top: 10px;
+      background: var(--bg2);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
     }
+
     .slider-lbl {
       display: flex;
       justify-content: space-between;
       font-size: 0.65rem;
       font-family: 'Space Mono', monospace;
-      color: var(--text3);
+      color: var(--text2);
       margin-bottom: 4px;
     }
+
     .custom-range {
       width: 100%;
       accent-color: var(--cyan);
       cursor: pointer;
     }
+
+    .sm-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+
+    .sm-btn:hover {
+      border-color: var(--purple);
+      color: #fff;
+    }
+
+    .sm-btn.active {
+      border-color: var(--cyan);
+      background: var(--bg4);
+      color: var(--cyan);
+    }
+
+    .advanced-toggle {
+      margin-top: 8px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+
+    .advanced-toggle:hover {
+      color: var(--cyan);
+    }
+
+    .advanced-panel {
+      display: none;
+      margin-top: 6px;
+      background: var(--bg3);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .advanced-panel.active {
+      display: flex;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .form-group label {
+      font-size: 0.6rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--text2);
+    }
+
+    .form-select {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      padding: 4px;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .load-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .load-row label {
+      font-size: 0.75rem;
+      color: var(--text2);
+    }
+
+    .load-row span {
+      font-size: 0.75rem;
+      font-family: 'Space Mono', monospace;
+      color: var(--cyan);
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider-toggle {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--bg3);
+      border: 1px solid var(--border);
+      transition: .3s;
+      border-radius: 20px;
+    }
+
+    .slider-toggle:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text2);
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider-toggle {
+      background-color: var(--cyan);
+      border-color: var(--cyan);
+    }
+
+    input:checked + .slider-toggle:before {
+      transform: translateX(16px);
+      background-color: var(--bg);
+    }
+
+    .analysis-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.65rem;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .analysis-table th, .analysis-table td {
+      border: 1px solid var(--border);
+      padding: 4px 6px;
+      text-align: left;
+    }
+
+    .analysis-table th {
+      background: var(--bg3);
+      color: var(--text2);
+    }
+
     .workspace {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.75rem;
     }
+
     .workspace-canvas-wrap {
       flex: 1;
-      background: #060614;
+      background: #030309;
       border: 1px solid var(--border);
-      border-radius: 24px;
+      border-radius: 20px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     }
+
+    .top-view-container {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      width: 220px;
+      height: 250px;
+      background: rgba(10, 11, 26, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      backdrop-filter: blur(12px);
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 240, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .top-view-container:hover {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 240, 255, 0.2);
+      border-color: var(--cyan);
+    }
+
+    .top-view-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--cyan);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 5px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    #topViewCanvas {
+      width: 100%;
+      height: 200px;
+      background: #020207;
+      border-radius: 8px;
+      border: 1px solid rgba(44, 47, 99, 0.5);
+    }
+
     #blueprintCanvas {
       display: block;
       width: 100%;
       height: 100%;
       cursor: crosshair;
     }
+
     .hud-bar {
       display: flex;
-      gap: 12px;
+      gap: 10px;
     }
+
     .hud-box {
       flex: 1;
-      background: rgba(15, 15, 36, 0.75);
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 0.85rem;
+      border-radius: 12px;
+      padding: 0.6rem;
       text-align: center;
       backdrop-filter: blur(10px);
     }
+
     .hud-lbl {
-      font-size: 0.6rem;
+      font-size: 0.55rem;
       font-family: 'Space Mono', monospace;
       color: var(--text3);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
+
     .hud-val {
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       font-weight: 700;
       font-family: 'Space Mono', monospace;
     }
-    .hud-val.good { color: var(--green-neon); }
-    .hud-val.danger { color: var(--red-neon); }
-    .hud-val.warning { color: var(--amber-neon); }
+
+    .hud-val.good {
+      color: var(--green-neon);
+    }
+
+    .hud-val.danger {
+      color: var(--red-neon);
+    }
+
+    .hud-val.warning {
+      color: var(--amber-neon);
+    }
+
     .action-panel {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
+
     .action-btn {
       flex: 1;
-      padding: 12px;
-      border-radius: 12px;
+      padding: 10px;
+      border-radius: 10px;
       font-family: 'Syne', sans-serif;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.2s;
       border: none;
     }
+
     .action-btn.primary {
       background: var(--cyan);
       color: var(--bg);
-      box-shadow: 0 0 15px var(--cyan-glow);
+      box-shadow: 0 0 12px var(--cyan-glow);
     }
+
     .action-btn.primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
     }
+
     .action-btn.secondary {
       background: var(--bg3);
       border: 1px solid var(--border);
       color: var(--text2);
     }
+
     .action-btn.secondary:hover {
       border-color: var(--purple);
       color: #fff;
     }
+
     .action-btn:disabled {
       opacity: 0.4;
       cursor: not-allowed;
       transform: none !important;
       box-shadow: none !important;
     }
+
     .instruction-tooltip {
-      background: rgba(15, 15, 36, 0.9);
+      background: rgba(12, 13, 30, 0.9);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 0.75rem 1rem;
-      font-size: 0.75rem;
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.7rem;
       color: var(--text2);
       line-height: 1.4;
-      margin-top: 10px;
     }
+
     /* Modal Dialog styling */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(4, 4, 12, 0.85);
-      backdrop-filter: blur(6px);
+      background: rgba(2, 2, 6, 0.9);
+      backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 100;
       padding: 1rem;
     }
+
     .modal-overlay.active {
       display: flex;
     }
+
     .modal-box {
       background: var(--bg2);
       border: 2px solid var(--border);
-      border-radius: 24px;
-      max-width: 480px;
+      border-radius: 20px;
+      max-width: 440px;
       width: 100%;
-      padding: 2rem;
+      padding: 1.5rem;
       text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px var(--cyan-glow);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 20px var(--cyan-glow);
       animation: popIn 0.3s ease-out;
     }
+
     .modal-icon {
-      font-size: 3.5rem;
-      margin-bottom: 1rem;
-    }
-    .modal-title {
-      font-size: 1.6rem;
-      font-weight: 800;
+      font-size: 3rem;
       margin-bottom: 0.75rem;
     }
+
+    .modal-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
     .modal-body {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       color: var(--text2);
-      line-height: 1.5;
-      margin-bottom: 1.5rem;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
       font-family: 'Space Mono', monospace;
+      white-space: pre-line;
+      text-align: left;
+      max-height: 55vh;
+      overflow-y: auto;
+      padding-right: 4px;
     }
+
     @keyframes popIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
   </style>
 </head>
+
 <body>
 
   <header>
     <div class="header-logo">
-      <div>
-        <h1>Structural Engineer</h1>
-        <p>🏛️ foundation to roof simulation</p>
-      </div>
+      <h1>Structural Engineer</h1>
+      <p>🏛️ foundation to roof simulation</p>
     </div>
     <a href="index.html" class="back-btn">← Main Hub</a>
   </header>
@@ -403,54 +732,327 @@
         <div class="level-desc" id="levelDesc">Loading...</div>
       </div>
 
-      <!-- MEMBER & DRAFTING TOOLS -->
-      <div class="sidebar-panel">
-        <div class="panel-title">
-          <span>🛠️ Construction Tools</span>
-        </div>
-        <div class="tool-grid">
-          <button class="tool-btn active" id="tool-column" onclick="selectTool('column')">
-            <span class="tool-btn-icon">🏛️</span>
-            <span>Column</span>
-          </button>
-          <button class="tool-btn" id="tool-beam" onclick="selectTool('beam')">
-            <span class="tool-btn-icon">📏</span>
-            <span>Beam</span>
-          </button>
-          <button class="tool-btn" id="tool-brace" onclick="selectTool('brace')">
-            <span class="tool-btn-icon">🔀</span>
-            <span>Brace</span>
-          </button>
-          <button class="tool-btn" id="tool-foundation" onclick="selectTool('foundation')">
-            <span class="tool-btn-icon">🧱</span>
-            <span>Footing</span>
-          </button>
+      <!-- DESIGN & CONTROLS PANEL WITH TABS -->
+      <div class="sidebar-panel" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-design-btn" onclick="switchTab('design')">Design</button>
+          <button class="tab-btn" id="tab-loads-btn" onclick="switchTab('loads')">Loads</button>
+          <button class="tab-btn" id="tab-analysis-btn" onclick="switchTab('analysis')">Analysis</button>
+          <button class="tab-btn" id="tab-furnish-btn" onclick="switchTab('furnish')" style="display:none;">Finish</button>
         </div>
 
-        <!-- MATERIAL SELECTOR -->
-        <div class="slider-container" style="margin-top: 15px;">
-          <div class="slider-lbl">
-            <span>Material Type</span>
-            <span id="lbl-material" style="color: var(--cyan);">Concrete</span>
+        <!-- TAB CONTENT: DESIGN -->
+        <div class="tab-content active" id="tab-design">
+          <div class="tool-grid">
+            <button class="tool-btn active" id="tool-column" onclick="selectTool('column')">
+              <span class="tool-btn-icon">🏛️</span>
+              <span>Column</span>
+            </button>
+            <button class="tool-btn" id="tool-beam" onclick="selectTool('beam')">
+              <span class="tool-btn-icon">📏</span>
+              <span>Beam</span>
+            </button>
+            <button class="tool-btn" id="tool-brace" onclick="selectTool('brace')">
+              <span class="tool-btn-icon">🔀</span>
+              <span>Brace</span>
+            </button>
+            <button class="tool-btn" id="tool-foundation" onclick="selectTool('foundation')">
+              <span class="tool-btn-icon">🧱</span>
+              <span>Footing</span>
+            </button>
+            <button class="tool-btn" id="tool-wall" onclick="selectTool('wall')">
+              <span class="tool-btn-icon">🧱</span>
+              <span>Wall</span>
+            </button>
+            <button class="tool-btn" id="tool-slab" onclick="selectTool('slab')">
+              <span class="tool-btn-icon">🥞</span>
+              <span>Slab</span>
+            </button>
           </div>
-          <div style="display: flex; gap: 4px; margin-top: 4px;">
-            <button class="sm-btn" id="mat-timber" onclick="selectMaterial('timber')" style="flex:1;">Timber</button>
-            <button class="sm-btn active" id="mat-concrete" onclick="selectMaterial('concrete')" style="flex:1;">Concrete</button>
-            <button class="sm-btn" id="mat-steel" onclick="selectMaterial('steel')" style="flex:1;">Steel</button>
+
+          <!-- SUB-TYPES SELECTOR -->
+          <div id="sub-types-section" style="display: none;">
+            <div class="slider-lbl" style="margin-top: 4px;">
+              <span id="sub-types-title">Footing Type</span>
+            </div>
+            <div class="sub-options" id="sub-options-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- MATERIAL SELECTOR -->
+          <div class="slider-container">
+            <div class="slider-lbl">
+              <span>Material Type</span>
+              <span id="lbl-material" style="color: var(--cyan);">Concrete</span>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <button class="sm-btn" id="mat-timber" onclick="selectMaterial('timber')" style="flex:1;">Timber</button>
+              <button class="sm-btn active" id="mat-concrete" onclick="selectMaterial('concrete')"
+                style="flex:1;">Concrete</button>
+              <button class="sm-btn" id="mat-steel" onclick="selectMaterial('steel')" style="flex:1;">Steel</button>
+            </div>
+
+            <!-- COLLAPSIBLE ADVANCED SECTION -->
+            <div class="advanced-toggle" id="advToggle" onclick="toggleAdvanced()">
+              <span id="advArrow">▶</span> Advanced Options
+            </div>
+            <div class="advanced-panel" id="advPanel">
+              <div class="form-group" id="concrete-grade-grp">
+                <label for="concreteGrade">Concrete Grade</label>
+                <select id="concreteGrade" class="form-select" onchange="changeConcreteGrade(this.value)">
+                  <option value="M25">M25</option>
+                  <option value="M30">M30</option>
+                  <option value="M35" selected>M35 (Default)</option>
+                  <option value="M40">M40</option>
+                  <option value="M45">M45</option>
+                </select>
+              </div>
+              <div class="form-group" id="steel-grade-grp" style="display: none;">
+                <label for="steelGrade">Steel Grade</label>
+                <select id="steelGrade" class="form-select" onchange="changeSteelGrade(this.value)">
+                  <option value="Fe250">Fe250</option>
+                  <option value="Fe415" selected>Fe415 (Default)</option>
+                  <option value="Fe500">Fe500</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- THICKNESS SLIDER -->
+          <div class="slider-container">
+            <div class="slider-lbl">
+              <span>Cross-Section (Thickness)</span>
+              <span id="lbl-thickness" style="color: var(--cyan);">350mm</span>
+            </div>
+            <input type="range" class="custom-range" id="thicknessRange" min="50" max="600" step="50" value="350"
+              oninput="changeThickness(this.value)">
+            <div
+              style="display: flex; justify-content: space-between; font-size: 0.55rem; color: var(--text3); margin-top: 2px;">
+              <span>50mm</span>
+              <span>300mm</span>
+              <span>600mm</span>
+            </div>
+          </div>
+
+          <!-- SYMMETRIC BUILD TOGGLE -->
+          <div class="slider-container" style="margin-top: 4px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="font-size: 0.78rem; font-weight: 700;">🔄 Symmetric Build</span>
+                <div style="font-size: 0.55rem; color: var(--text3); font-family: 'Space Mono', monospace; margin-top: 2px;">Mirror walls &amp; slabs to all 4 sides</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="symmetryToggle" checked onchange="toggleSymmetry(this.checked)">
+                <span class="slider-toggle"></span>
+              </label>
+            </div>
+            <div id="symmetry-label" style="font-size: 0.6rem; color: var(--cyan); font-family: 'Space Mono', monospace; margin-top: 3px;">4-SIDED — cost × 4 for walls &amp; slabs</div>
           </div>
         </div>
 
-        <!-- THICKNESS SLIDER -->
-        <div class="slider-container" style="margin-top: 15px;">
-          <div class="slider-lbl">
-            <span>Cross-Section (Thickness)</span>
-            <span id="lbl-thickness" style="color: var(--cyan);">350mm</span>
+        <!-- TAB CONTENT: LOADS -->
+        <div class="tab-content" id="tab-loads">
+          <div class="slider-container" style="margin-top:0;">
+            <div class="slider-lbl">
+              <span>Floor Height</span>
+              <span id="lbl-floor-height" style="color: var(--cyan);">3m</span>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 4px;">
+              <button class="sm-btn" id="fh-2" onclick="selectFloorHeight(2)" style="flex:1;">2m</button>
+              <button class="sm-btn active" id="fh-3" onclick="selectFloorHeight(3)" style="flex:1;">3m</button>
+              <button class="sm-btn" id="fh-4" onclick="selectFloorHeight(4)" style="flex:1;">4m</button>
+            </div>
           </div>
-          <input type="range" class="custom-range" id="thicknessRange" min="200" max="500" step="150" value="350" oninput="changeThickness(this.value)">
-          <div style="display: flex; justify-content: space-between; font-size: 0.55rem; color: var(--text3); margin-top: 2px;">
-            <span>Thin (200mm)</span>
-            <span>Medium (350mm)</span>
-            <span>Thick (500mm)</span>
+
+          <div class="sidebar-panel" style="background: var(--bg2); border-color: var(--border);">
+            <div class="panel-title" style="border:none; margin-bottom:4px; font-size: 0.65rem;">Active Loads</div>
+
+            <div class="load-row">
+              <label style="font-size:0.7rem;">Structural DL <span style="color:var(--text3);font-size:0.6rem;">(auto)</span></label>
+              <span id="load-val-dl" style="color:var(--text2);font-size:0.7rem;">auto-calc</span>
+            </div>
+
+            <div class="load-row">
+              <label style="font-size:0.7rem;">Superimposed DL <span style="color:var(--text3);font-size:0.6rem;">(SDL)</span></label>
+              <span id="load-val-sdl" style="color:var(--amber-neon);font-size:0.7rem;">1.0 kN/m²</span>
+            </div>
+            <div style="font-size:0.58rem;color:var(--text3);padding:2px 0 6px 0;font-family:'Space Mono',monospace;" id="sdl-desc-lbl">finishes + services</div>
+
+            <div class="load-row">
+              <label style="font-size:0.7rem;">Floor Live Load <span style="color:var(--text3);font-size:0.6rem;">(LL)</span></label>
+              <span id="load-val-ll" style="font-size:0.7rem;">2.0 kN/m²</span>
+            </div>
+            <div style="font-size:0.58rem;color:var(--text3);padding:2px 0 6px 0;font-family:'Space Mono',monospace;" id="ll-desc-lbl">IS 875 Part-2, Residential</div>
+
+            <div class="load-row">
+              <label>Wind Pressure (Lateral)</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span id="load-val-wl">0.0 kN</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="windToggle" onchange="toggleWindLoad(this.checked)">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+            </div>
+            <div class="load-row">
+              <label>Seismic Coefficient (Earthquake)</label>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span id="load-val-el">No</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="seismicToggle" onchange="toggleSeismicLoad(this.checked)">
+                  <span class="slider-toggle"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: ANALYSIS -->
+        <div class="tab-content" id="tab-analysis">
+
+          <!-- LIVE LOAD SUMMARY PANEL (updates as you build) -->
+          <div class="sidebar-panel" style="background: var(--bg2); border-color: var(--border); margin-bottom:4px;">
+            <div class="panel-title" style="border:none; margin-bottom:6px; font-size: 0.65rem;">Structure Weight &amp; Loads</div>
+            <div class="load-row">
+              <label style="font-size:0.68rem;">&#9679; Structural DL <span style="color:var(--text3);">(frame)</span></label>
+              <span id="anal-dl" style="font-size:0.68rem; color:var(--cyan);">0.00 kN</span>
+            </div>
+            <div class="load-row">
+              <label style="font-size:0.68rem;">&#9679; SDL <span style="color:var(--text3);">(finishes/services)</span></label>
+              <span id="anal-sdl" style="font-size:0.68rem; color:var(--amber-neon);">—</span>
+            </div>
+            <div class="load-row">
+              <label style="font-size:0.68rem;">&#9679; Live Load <span style="color:var(--text3);">(occupancy)</span></label>
+              <span id="anal-ll" style="font-size:0.68rem; color:#a78bfa;">—</span>
+            </div>
+            <div class="load-row" style="border-top:1px solid var(--border); margin-top:4px; padding-top:4px;">
+              <label style="font-size:0.68rem; font-weight:bold;">Total (unfactored)</label>
+              <span id="anal-total" style="font-size:0.68rem; font-weight:bold;">0.00 kN</span>
+            </div>
+            <div class="load-row">
+              <label style="font-size:0.67rem; color:var(--text3);">Factored 1.5&times;(DL+SDL+LL)</label>
+              <span id="anal-factored" style="font-size:0.67rem; color:var(--red-neon);">0.00 kN</span>
+            </div>
+          </div>
+
+          <div class="sidebar-panel" style="background: var(--bg2); border-color: var(--border); overflow-x: auto;">
+            <div class="panel-title" style="border:none; margin-bottom:8px; font-size: 0.65rem;">Stress Utilization</div>
+            <table class="analysis-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Count</th>
+                  <th>Max Stress Ratio</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="stress-table-body">
+                <tr>
+                  <td>Columns</td>
+                  <td id="stat-col-cnt">0</td>
+                  <td id="stat-col-stress">—</td>
+                  <td id="stat-col-status">—</td>
+                </tr>
+                <tr>
+                  <td>Beams</td>
+                  <td id="stat-beam-cnt">0</td>
+                  <td id="stat-beam-stress">—</td>
+                  <td id="stat-beam-status">—</td>
+                </tr>
+                <tr>
+                  <td>Braces</td>
+                  <td id="stat-brace-cnt">0</td>
+                  <td id="stat-brace-stress">—</td>
+                  <td id="stat-brace-status">—</td>
+                </tr>
+                <tr>
+                  <td>Footings</td>
+                  <td id="stat-foot-cnt">0</td>
+                  <td id="stat-foot-stress">—</td>
+                  <td id="stat-foot-status">—</td>
+                </tr>
+                <tr>
+                  <td>Walls</td>
+                  <td id="stat-wall-cnt">0</td>
+                  <td id="stat-wall-stress">—</td>
+                  <td id="stat-wall-status">—</td>
+                </tr>
+                <tr>
+                  <td>Slabs</td>
+                  <td id="stat-slab-cnt">0</td>
+                  <td id="stat-slab-stress">—</td>
+                  <td id="stat-slab-status">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="sidebar-panel" style="background: var(--bg2); border-color: var(--border); margin-top: 4px;">
+            <div class="panel-title" style="border:none; margin-bottom:8px; font-size: 0.65rem;">Cost Statement</div>
+            <div class="load-row">
+              <label>Concrete Material</label>
+              <span id="cost-concrete">$0</span>
+            </div>
+            <div class="load-row">
+              <label>Structural Steel</label>
+              <span id="cost-steel">$0</span>
+            </div>
+            <div class="load-row">
+              <label>Timber Wood</label>
+              <span id="cost-timber">$0</span>
+            </div>
+            <div class="load-row">
+              <label>Brick & Masonry</label>
+              <span id="cost-masonry">$0</span>
+            </div>
+            <div class="load-row" style="font-weight: bold; border-top: 1px solid var(--border);">
+              <label style="color: var(--text);">Total Expenditures</label>
+              <span id="cost-total">$0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: FURNISHING -->
+        <div class="tab-content" id="tab-furnish">
+          <div class="sidebar-panel">
+            <div class="panel-title" style="border:none; margin-bottom:8px; font-size: 0.65rem;">Wall Paint Colors</div>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <button class="sm-btn active" onclick="selectPaint('white')">Classic White</button>
+              <button class="sm-btn" onclick="selectPaint('blue')">Sky Blue</button>
+              <button class="sm-btn" onclick="selectPaint('green')">Forest Green</button>
+              <button class="sm-btn" onclick="selectPaint('red')">Terracotta</button>
+              <button class="sm-btn" onclick="selectPaint('purple')">Royal Purple</button>
+            </div>
+          </div>
+
+          <div class="sidebar-panel" style="margin-top: 4px;">
+            <div class="panel-title" style="border:none; margin-bottom:8px; font-size: 0.65rem;">Wall Finishes (Tiles)</div>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <button class="sm-btn active" onclick="selectWallFinish('plain')">Plain Plaster</button>
+              <button class="sm-btn" onclick="selectWallFinish('brick')">Brick Clad</button>
+              <button class="sm-btn" onclick="selectWallFinish('tiles')">Marble Tile</button>
+            </div>
+          </div>
+
+          <div class="sidebar-panel" style="margin-top: 4px;">
+            <div class="panel-title" style="border:none; margin-bottom:8px; font-size: 0.65rem;">Exterior Decorations</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <label class="load-row" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <span>Add Roof Flag</span>
+                <input type="checkbox" id="dec-flag" onchange="toggleDecoration('flag')" style="cursor:pointer;">
+              </label>
+              <label class="load-row" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <span>Add Balcony Plants</span>
+                <input type="checkbox" id="dec-plants" onchange="toggleDecoration('plants')" style="cursor:pointer;">
+              </label>
+              <label class="load-row" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <span>Exposed Concrete Aesthetics</span>
+                <input type="checkbox" id="dec-concrete" onchange="toggleDecoration('concrete')" style="cursor:pointer;">
+              </label>
+            </div>
+            
+            <button class="action-btn primary" onclick="backToEdit()" style="margin-top: 12px; width: 100%;">← Back to Edit Frame</button>
           </div>
         </div>
       </div>
@@ -467,12 +1069,12 @@
       <!-- HUD / STATS ROW -->
       <div class="hud-bar">
         <div class="hud-box">
-          <div class="hud-lbl">Soil Soil Type</div>
+          <div class="hud-lbl">Soil Stratum</div>
           <div class="hud-val" id="hud-soil" style="color: var(--cyan);">Bedrock</div>
         </div>
         <div class="hud-box">
           <div class="hud-lbl">Target Height</div>
-          <div class="hud-val" id="hud-height">1 Story</div>
+          <div class="hud-val" id="hud-height">3m Floor</div>
         </div>
         <div class="hud-box">
           <div class="hud-lbl">Cost / Budget</div>
@@ -486,111 +1088,305 @@
 
       <div class="workspace-canvas-wrap">
         <canvas id="blueprintCanvas"></canvas>
+        <div class="top-view-container">
+          <div class="top-view-title">Top View (Plan)</div>
+          <canvas id="topViewCanvas"></canvas>
+        </div>
       </div>
 
-      <div class="instruction-tooltip">
-        💡 <strong>Drafting Instructions</strong>: Select a tool above, then click on the dotted grid lines to draw structural members. Columns go vertically, Beams go horizontally, and Footings are laid along the ground floor line. Click an existing member to erase it.
+      <div class="instruction-tooltip" id="drawInstructions">
+        💡 <strong>Drafting Instructions</strong>: Select a tool, then click near or along grid lines/cells to draw structural members. Columns go vertically, Beams horizontally. Braces require clicking any two nodes.
       </div>
     </div>
   </main>
 
   <!-- TEST RESULT MODAL -->
   <div class="modal-overlay" id="resultModal">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 480px;">
       <div class="modal-icon" id="modalIcon">🟢</div>
       <div class="modal-title" id="modalTitle">Structural Success!</div>
+      
+      <!-- SUCCESS STATS RATING PANEL (Hidden by default, shown on success) -->
+      <div id="modalStats" style="display: none; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; text-align: left;">
+        <div style="font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 4px;">🏗️ Project Outcomes</div>
+        
+        <!-- Money Used & Earned -->
+        <div class="load-row" style="border:none; padding: 2px 0;">
+          <label style="color:var(--text2); font-size:0.75rem;">Budget Outcome:</label>
+          <span id="stat-modal-money" style="font-weight:bold; font-size:0.75rem;">💰 Profit: $0</span>
+        </div>
+        
+        <!-- Structural Durability -->
+        <div class="load-row" style="border:none; padding: 2px 0;">
+          <label style="color:var(--text2); font-size:0.75rem;">Structural Durability:</label>
+          <span id="stat-modal-durability" style="font-weight:bold; font-size:0.75rem; color: var(--green-neon);">🛡️ 100% (High)</span>
+        </div>
+        
+        <!-- Customer Satisfaction -->
+        <div class="load-row" style="border:none; padding: 2px 0;">
+          <label style="color:var(--text2); font-size:0.75rem;">Customer Satisfaction:</label>
+          <span id="stat-modal-satisfaction" style="font-weight:bold; font-size:0.75rem; color: var(--amber-neon);">⭐⭐⭐⭐⭐ 100%</span>
+        </div>
+      </div>
+
       <div class="modal-body" id="modalBody">Description details...</div>
-      <button class="big-btn" style="padding: 0.75rem 2rem;" onclick="closeModal()">Close</button>
+      
+      <div style="display:flex; gap: 8px; justify-content: center;">
+        <button class="action-btn secondary" id="modalCloseBtn" style="padding: 0.6rem 1.2rem; flex:1;" onclick="closeModal()">Close</button>
+        <button class="action-btn primary" id="modalFurnishBtn" style="padding: 0.6rem 1.2rem; flex:1; display:none;" onclick="goToFurnishing()">Decorate &amp; Finish</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // Grid coordinate configuration
-    // 6 Columns: spacing at 80px intervals starting at X=110
-    // 6 Floor levels: Ground (Y=380) down to roof level heights
-    const GRID_SPANS_X = [110, 190, 270, 350, 430, 510];
-    const GRID_ROWS_Y = [380, 320, 260, 200, 140, 80];
+    // Grid sizing parameters: 22 columns, 16 rows. Spaced at 1m.
+    const NUM_COLS = 22; // 0m to 21m
+    const NUM_ROWS = 16; // 0m to 15m (above ground)
+    let GRID_SPANS_X = [];
+    let GRID_ROWS_Y = [];
+    let groundY = 0;
 
     const SCENARIOS = [
       {
         name: 'Cozy Cottage',
-        budget: 15000,
-        heightNeeded: 1, // Floor level 1 (Y index 1)
+        budget: 25000,
+        heightNeeded: 3,
         soil: 'bedrock',
-        soilCapacity: 99999,
+        soilCapacity: 10000,
         windLoad: 0,
-        desc: 'Build a stable 1-story cottage on solid bedrock. Safe footing is easy, but manage members economically.'
+        seismic: false,
+        liveLoad: 2.0,
+        SDL: 1.0,
+        buildingUse: 'Residential',
+        floors: 1,
+        liveLoadDesc: '2.0 kN/m² — IS 875 Part-2, Residential occupancy',
+        sdlDesc: '1.0 kN/m² — 0.5 floor finish + 0.5 services/MEP',
+        desc: 'RESIDENTIAL COTTAGE  |  1 Floor  |  Bedrock soil\n\n💼 Loads to design for:\n  • Structural DL  — self-weight of your frame (auto-calculated)\n  • SDL (finishes + services)   1.0 kN/m²  [IS 875 Part-1]\n  • Live Load (residential)     2.0 kN/m²  [IS 875 Part-2]\n\n🎯 Target: Reach 3 m height. All loaded columns must have footings.\n💰 Budget: $25,000 — stay under to earn PROFIT!'
       },
       {
         name: 'Office Complex',
-        budget: 45000,
-        heightNeeded: 3, // Floor level 3 (Y index 3)
+        budget: 70000,
+        heightNeeded: 9,
         soil: 'sand',
-        soilCapacity: 4500,
-        windLoad: 80,
-        desc: 'Construct a 3-story office building on sandy soil. Watch footing pressures—isolated footings might sink. Consider raft footings!'
+        soilCapacity: 250,
+        windLoad: 40,
+        seismic: false,
+        liveLoad: 4.0,
+        SDL: 1.5,
+        buildingUse: 'Commercial',
+        floors: 3,
+        liveLoadDesc: '4.0 kN/m² — IS 875 Part-2, Office floor areas',
+        sdlDesc: '1.5 kN/m² — 0.75 floor finish + 0.75 HVAC/raised floor',
+        desc: 'COMMERCIAL OFFICE  |  3 Floors  |  Sandy soil\n\n💼 Loads to design for:\n  • Structural DL  — self-weight of your frame (auto-calculated)\n  • SDL (finishes + HVAC)      1.5 kN/m²  [IS 875 Part-1]\n  • Live Load (office area)    4.0 kN/m²  [IS 875 Part-2]\n  • Wind pressure (lateral)    40 kN  [IS 875 Part-3]\n\n🎯 Target: Reach 9 m. Wind bracing critical on sand soil!\n💰 Budget: $70,000 — monitor footing pressure carefully.'
       },
       {
         name: 'Windy Tower',
-        budget: 95000,
-        heightNeeded: 5, // Floor level 5 (Y index 5)
+        budget: 150000,
+        heightNeeded: 15,
         soil: 'clay',
-        soilCapacity: 1600,
-        windLoad: 350,
-        desc: 'A massive 5-story tower on soft clay. Extreme horizontal wind shear forces. Deep pile footings and diagonal shear braces are essential!'
+        soilCapacity: 90,
+        windLoad: 120,
+        seismic: true,
+        liveLoad: 5.0,
+        SDL: 2.0,
+        buildingUse: 'Mixed-Use High Rise',
+        floors: 5,
+        liveLoadDesc: '5.0 kN/m² — IS 875 Part-2, Assembly / mixed-use',
+        sdlDesc: '2.0 kN/m² — 1.0 stone cladding + 1.0 MEP + waterproofing',
+        desc: 'HIGH-RISE TOWER  |  5 Floors  |  Soft clay\n\n💼 Loads to design for:\n  • Structural DL  — self-weight of your frame (auto-calculated)\n  • SDL (cladding + MEP)       2.0 kN/m²  [IS 875 Part-1]\n  • Live Load (mixed-use)      5.0 kN/m²  [IS 875 Part-2]\n  • Wind (extreme lateral)     120 kN  [IS 875 Part-3]\n  • Seismic  Zone-III  Ah = 0.08g  [IS 1893]\n\n🎯 Target: Reach 15 m. Deep piles essential on soft clay!\n💰 Budget: $1,50,000 — full shear-wall system required. Stay under budget!'
       }
     ];
 
     let currentLvl = 0;
     let selectedTool = 'column';
+    let selectedSubTypes = {
+      foundation: 'isolated',
+      wall: 'brick',
+      slab: 'concrete'
+    };
     let selectedMaterial = 'concrete';
-    let selectedThickness = 350; // 200, 350, 500
+    let selectedThickness = 350;
+    let selectedFloorHeight = 3; // 2m, 3m, 4m
+    let windActive = false;
+    let seismicActive = false;
 
-    let columns = [];    // stores: {x, y, material, thickness, cost, weight, capacity} (y goes from bottom index to top index)
-    let beams = [];      // stores: {x, y, length, material, thickness, cost, weight} (horizontal span)
-    let braces = [];     // stores: {x1, y1, x2, y2, material, thickness, cost} (diagonal brace)
-    let foundations = []; // stores: {x, type} (type: isolated, raft, pile)
+    // Advanced parameters
+    let selectedConcreteGrade = 'M35';
+    let selectedSteelGrade = 'Fe415';
 
-    // Physics state
+    // Member structures
+    let columns = [];    // {x, y, material, thickness, concreteGrade, steelGrade, cost, weight}
+    let beams = [];      // {x, y, material, thickness, concreteGrade, steelGrade, cost, weight}
+    let braces = [];     // {x1, y1, x2, y2, material, thickness, steelGrade, cost, weight}
+    let foundations = []; // {x, type, concreteGrade, steelGrade, cost}
+    let walls = [];      // {x1, y1, x2, y2, type, thickness, cost, weight}
+    let slabs = [];      // {x, y, type, thickness, concreteGrade, steelGrade, cost, weight}
+
+    // Drag-to-connect interaction state (replaces old two-click brace system)
+    let firstBraceNode = null; // legacy, kept for compat
+    let hoverNode     = null;  // grid node currently under cursor
+    let dragStartNode = null;  // node where drag began
+    let dragCurrentPos = null; // raw canvas coords while dragging
+    let isDragging    = false;
+
+    // Symmetric build mode (mirrors walls/slabs to all 4 sides)
+    let symmetricBuild = true;
+    function getSymmetryFactor() { return symmetricBuild ? 4 : 1; }
+
+    function toggleSymmetry(val) {
+      symmetricBuild = val;
+      document.getElementById('symmetry-label').textContent = val
+        ? '4-SIDED — cost × 4 for walls & slabs'
+        : '1-SIDED — front face only';
+      document.getElementById('symmetry-label').style.color = val ? 'var(--cyan)' : 'var(--text3)';
+      recalcCost();
+      drawWorkspace();
+    }
+
+    // Furnishing customized finishes
+    let selectedPaint = 'white'; // white, blue, green, red, purple
+    let selectedWallFinish = 'plain'; // plain, brick, tiles
+    let activeDecorations = { flag: false, plants: false, concrete: false };
+
+    // Physics/Testing state
     let testPhase = 'edit'; // edit, test, fail, success
-    let stressLevels = { columns: [], beams: [], braces: [], footings: [] };
+    let stressLevels = { columns: [], beams: [], braces: [], footings: [], walls: [] };
     let windShiftOffset = 0;
     let collapseAnimPct = 0;
-    let collapseTrigger = null; // {type: 'column'|'beam'|'foundation'|'wind', index: number, desc: string}
+    let collapseTrigger = null;
     let animId = null;
+    let totalCost = 0;
+    let earthquakeShake = 0;
 
     const cv = document.getElementById('blueprintCanvas');
     const ctx = cv.getContext('2d');
+    const tvCanvas = document.getElementById('topViewCanvas');
+    const tvCtx = tvCanvas.getContext('2d');
 
-    // Resize canvas
+    // Sub-types configurations
+    const SUB_TYPE_OPTIONS = {
+      foundation: [
+        { id: 'isolated', name: 'Isolated Footing' },
+        { id: 'raft', name: 'Raft Slab' },
+        { id: 'pile', name: 'Deep Pile' }
+      ],
+      wall: [
+        { id: 'brick', name: 'Brick Wall' },
+        { id: 'concrete', name: 'Concrete Wall' },
+        { id: 'glass', name: 'Glass Curtain' },
+        { id: 'timber', name: 'Timber Panel' }
+      ],
+      slab: [
+        { id: 'concrete', name: 'Concrete Slab' },
+        { id: 'timber', name: 'Timber Deck' },
+        { id: 'steel', name: 'Composite Steel' }
+      ]
+    };
+
+    function computeGrid() {
+      // Usable bounds
+      const marginX = Math.round(cv.width * 0.05);
+      const marginTop = Math.round(cv.height * 0.1);
+      const tempGroundY = Math.round(cv.height * 0.72);
+      const usableW = cv.width - 2 * marginX;
+      const usableH = tempGroundY - marginTop;
+
+      // Force perfectly square grid cells (1m x 1m is 1:1 on screen)
+      const spacing = Math.min(usableW / (NUM_COLS - 1), usableH / (NUM_ROWS - 1));
+
+      // Calculate total pixel dimensions of the grid
+      const gridW = spacing * (NUM_COLS - 1);
+      const gridH = spacing * (NUM_ROWS - 1);
+
+      // Center the grid in the canvas
+      const startX = Math.round(marginX + (usableW - gridW) / 2);
+      groundY = Math.round(marginTop + gridH + (usableH - gridH) / 2);
+
+      GRID_SPANS_X = [];
+      for (let i = 0; i < NUM_COLS; i++) {
+        GRID_SPANS_X.push(startX + i * spacing);
+      }
+
+      GRID_ROWS_Y = [];
+      for (let i = 0; i < NUM_ROWS; i++) {
+        GRID_ROWS_Y.push(groundY - i * spacing);
+      }
+    }
+
     function resizeCanvas() {
       const rect = cv.parentNode.getBoundingClientRect();
       cv.width = rect.width;
       cv.height = rect.height;
+      if (tvCanvas) {
+        tvCanvas.width = tvCanvas.clientWidth || 154;
+        tvCanvas.height = tvCanvas.clientHeight || 150;
+      }
+      computeGrid();
       drawWorkspace();
     }
     window.addEventListener('resize', resizeCanvas);
-    setTimeout(resizeCanvas, 100);
 
-    // Initial setup
+    // Initial load
+    window.addEventListener('DOMContentLoaded', () => {
+      resizeCanvas();
+      selectLevel(0);
+      populateSubTypes();
+    });
+
     function selectLevel(idx) {
       currentLvl = idx;
       document.querySelectorAll('.level-btn').forEach((btn, i) => {
         btn.classList.toggle('active', i === idx);
       });
-      document.getElementById('levelDesc').textContent = SCENARIOS[idx].desc;
-      document.getElementById('hud-soil').textContent = SCENARIOS[idx].soil.toUpperCase();
-      document.getElementById('hud-height').textContent = `${SCENARIOS[idx].heightNeeded} Floor${SCENARIOS[idx].heightNeeded > 1 ? 's' : ''}`;
-      
+
+      const lvl = SCENARIOS[idx];
+      document.getElementById('levelDesc').textContent = lvl.desc;
+      document.getElementById('hud-soil').textContent  = lvl.soil.toUpperCase();
+      document.getElementById('hud-height').textContent = `${lvl.heightNeeded}m Req`;
+
+      // Sync load display
+      document.getElementById('load-val-sdl').textContent = `${(lvl.SDL || 0).toFixed(1)} kN/m²`;
+      document.getElementById('sdl-desc-lbl').textContent  = lvl.sdlDesc || '';
+      document.getElementById('load-val-ll').textContent   = `${lvl.liveLoad.toFixed(1)} kN/m²`;
+      document.getElementById('ll-desc-lbl').textContent   = lvl.liveLoadDesc || '';
+
+      document.getElementById('windToggle').checked = lvl.windLoad > 0;
+      windActive = lvl.windLoad > 0;
+      document.getElementById('load-val-wl').textContent = windActive ? `${lvl.windLoad} kN` : '0.0 kN';
+
+      document.getElementById('seismicToggle').checked = lvl.seismic;
+      seismicActive = lvl.seismic;
+      document.getElementById('load-val-el').textContent = seismicActive ? 'Active (Ah = 0.08)' : 'No';
+
       clearStructure();
       loadPBStats();
     }
-    selectLevel(0);
 
     function loadPBStats() {
       for (let i = 0; i < SCENARIOS.length; i++) {
         const pb = localStorage.getItem(`pb_struct_lvl_${i}`);
-        document.getElementById(`lvl-stat-${i}`).textContent = pb ? `$${pb}` : 'PB: —';
+        document.getElementById(`lvl-stat-${i}`).textContent = pb ? `$${parseInt(pb).toLocaleString()}` : 'PB: —';
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `tab-${tabId}-btn`);
+      });
+      document.querySelectorAll('.tab-content').forEach(cont => {
+        cont.classList.toggle('active', cont.id === `tab-${tabId}`);
+      });
+    }
+
+    function toggleAdvanced() {
+      const advPanel = document.getElementById('advPanel');
+      const arrow = document.getElementById('advArrow');
+      if (advPanel.classList.contains('active')) {
+        advPanel.classList.remove('active');
+        arrow.textContent = '▶';
+      } else {
+        advPanel.classList.add('active');
+        arrow.textContent = '▼';
       }
     }
 
@@ -599,6 +1395,44 @@
       document.querySelectorAll('.tool-btn').forEach(btn => {
         btn.classList.toggle('active', btn.id === `tool-${tool}`);
       });
+      firstBraceNode = null;
+      hoverNode      = null;
+      dragStartNode  = null;
+      dragCurrentPos = null;
+      isDragging     = false;
+      populateSubTypes();
+      updateInstructions();
+      drawWorkspace();
+    }
+
+    function populateSubTypes() {
+      const container = document.getElementById('sub-options-container');
+      const section = document.getElementById('sub-types-section');
+      const title = document.getElementById('sub-types-title');
+
+      if (SUB_TYPE_OPTIONS[selectedTool]) {
+        section.style.display = 'block';
+        title.textContent = selectedTool.charAt(0).toUpperCase() + selectedTool.slice(1) + ' Type';
+        container.innerHTML = '';
+        SUB_TYPE_OPTIONS[selectedTool].forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = `sub-option-btn ${selectedSubTypes[selectedTool] === opt.id ? 'active' : ''}`;
+          btn.textContent = opt.name;
+          btn.onclick = () => selectSubType(selectedTool, opt.id);
+          container.appendChild(btn);
+        });
+      } else {
+        section.style.display = 'none';
+      }
+    }
+
+    function selectSubType(tool, typeId) {
+      selectedSubTypes[tool] = typeId;
+      document.querySelectorAll('.sub-option-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === SUB_TYPE_OPTIONS[tool].find(o => o.id === typeId).name);
+      });
+      populateSubTypes();
+      drawWorkspace();
     }
 
     function selectMaterial(mat) {
@@ -607,6 +1441,29 @@
         btn.classList.toggle('active', btn.id === `mat-${mat}`);
       });
       document.getElementById('lbl-material').textContent = mat.charAt(0).toUpperCase() + mat.slice(1);
+
+      // Show relevant advanced grade config
+      document.getElementById('concrete-grade-grp').style.display = (mat === 'concrete') ? 'flex' : 'none';
+      document.getElementById('steel-grade-grp').style.display = (mat === 'steel') ? 'flex' : 'none';
+      drawWorkspace();
+    }
+
+    function changeConcreteGrade(val) {
+      selectedConcreteGrade = val;
+    }
+
+    function changeSteelGrade(val) {
+      selectedSteelGrade = val;
+    }
+
+    function selectFloorHeight(h) {
+      selectedFloorHeight = h;
+      document.querySelectorAll('.sm-btn[id^="fh-"]').forEach(btn => {
+        btn.classList.toggle('active', btn.id === `fh-${h}`);
+      });
+      document.getElementById('lbl-floor-height').textContent = h + 'm';
+      computeGrid();
+      drawWorkspace();
     }
 
     function changeThickness(val) {
@@ -614,180 +1471,1752 @@
       document.getElementById('lbl-thickness').textContent = val + 'mm';
     }
 
-    function getCosts(type, material, thickness) {
-      const matMults = { timber: 0.9, concrete: 1.8, steel: 4.5 };
-      const thickMults = { 200: 0.6, 350: 1.0, 500: 1.8 };
-      
-      const baseCosts = { column: 300, beam: 250, brace: 350 };
+    function toggleWindLoad(checked) {
+      windActive = checked;
+      const wl = SCENARIOS[currentLvl].windLoad;
+      document.getElementById('load-val-wl').textContent = windActive ? `${wl} kN` : '0.0 kN';
+    }
+
+    function toggleSeismicLoad(checked) {
+      seismicActive = checked;
+      document.getElementById('load-val-el').textContent = seismicActive ? 'Active (Ah = 0.08)' : 'No';
+    }
+
+    function updateInstructions() {
+      const tips = {
+        column:     '🏛️ <strong>Column</strong>: Click a dot, drag vertically to another dot — fills every segment with columns. Hover glows show snap targets.',
+        beam:       '📏 <strong>Beam</strong>: Click a dot, drag horizontally to another dot — spans all beam segments in one stroke.',
+        brace:      '🔀 <strong>Brace</strong>: Click any dot, drag diagonally to any other dot to draw a steel diagonal brace.',
+        foundation: '🧱 <strong>Footing</strong>: Click directly on a ground-level dot (0m row) to place or toggle a foundation footing.',
+        wall:       '🧱 <strong>Wall</strong>: Click a dot, drag horizontally or vertically — places wall panels along the full run.',
+        slab:       '🥞 <strong>Slab</strong>: Click a dot, drag horizontally along a floor level to lay slab plates in one sweep.'
+      };
+      document.getElementById('drawInstructions').innerHTML = tips[selectedTool] || '💡 Select a tool to begin drafting.';
+    }
+
+    // Cost computation system
+    function calculateMemberCost(type, material, thickness, optType = '') {
+      const matMults = { timber: 0.8, concrete: 1.5, steel: 4.0 };
+      const thickMults = thickness / 300.0;
+
+      let base = 250;
+      if (type === 'column') base = 300;
+      if (type === 'beam') base = 250;
+      if (type === 'brace') base = 200;
+      if (type === 'slab') base = 400;
+      if (type === 'wall') {
+        const wallBase = { brick: 180, concrete: 450, glass: 800, timber: 220 };
+        return Math.round(wallBase[optType] * thickMults);
+      }
       if (type === 'foundation') {
-        const fCosts = { isolated: 350, raft: 1800, pile: 4200 };
-        return fCosts[material]; // material serves as type for foundation
+        const foundBase = { isolated: 400, raft: 1800, pile: 3500 };
+        return foundBase[optType];
       }
-      return Math.round(baseCosts[type] * matMults[material] * thickMults[thickness]);
-    }
 
-    function getWeight(type, material, thickness) {
-      const matWeights = { timber: 0.4, concrete: 2.0, steel: 1.0 };
-      const thickWeights = { 200: 0.6, 350: 1.0, 500: 1.8 };
-      
-      const baseWeights = { column: 150, beam: 120, brace: 100 };
-      return Math.round(baseWeights[type] * matWeights[material] * thickWeights[thickness]);
-    }
-
-    function getStrength(type, material, thickness) {
-      const matStrengths = { timber: 1.2, concrete: 3.5, steel: 7.5 };
-      const thickStrengths = { 200: 0.5, 350: 1.0, 500: 1.9 };
-      return matStrengths[material] * thickStrengths[thickness];
-    }
-
-    function getSoilColor(soil) {
-      if (soil === 'bedrock') return '#4a4e69';
-      if (soil === 'sand') return '#d4a373';
-      return '#8d99ae';
-    }
-
-    // Interactive placement / click handling
-    cv.addEventListener('mousedown', handleCanvasClick);
-    cv.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      handleCanvasClick(e.touches[0]);
-    });
-
-    function getGridCoordinates(mx, my) {
-      let nearestX = -1;
-      let nearestY = -1;
-      let minDistX = 28;
-      let minDistY = 24;
-      
-      for (let i = 0; i < GRID_SPANS_X.length; i++) {
-        const dx = Math.abs(mx - GRID_SPANS_X[i]);
-        if (dx < minDistX) {
-          minDistX = dx;
-          nearestX = i;
-        }
+      // Apply grade modifiers
+      let gradeMult = 1.0;
+      if (material === 'concrete') {
+        const cGrades = { M25: 0.85, M30: 0.95, M35: 1.0, M40: 1.15, M45: 1.3 };
+        gradeMult = cGrades[selectedConcreteGrade] || 1.0;
+      } else if (material === 'steel') {
+        const sGrades = { Fe250: 0.8, Fe415: 1.0, Fe500: 1.25 };
+        gradeMult = sGrades[selectedSteelGrade] || 1.0;
       }
-      
-      for (let i = 0; i < GRID_ROWS_Y.length; i++) {
-        const dy = Math.abs(my - GRID_ROWS_Y[i]);
-        if (dy < minDistY) {
-          minDistY = dy;
-          nearestY = i;
-        }
-      }
-      
-      return { gridX: nearestX, gridY: nearestY, dx: minDistX, dy: minDistY };
+
+      return Math.round(base * matMults[material] * thickMults * gradeMult);
     }
 
-    function handleCanvasClick(e) {
-      if (testPhase !== 'edit') return;
+    function calculateMemberWeight(type, material, thickness, length = 1.0, optType = '') {
+      // Density in kN/m3
+      const densities = { timber: 8.0, concrete: 25.0, steel: 78.5 };
+      const thickM = thickness / 1000.0;
+      let area = thickM * thickM; // square cross section for cols/beams
+
+      if (type === 'wall') {
+        const wallDensities = { brick: 19.0, concrete: 25.0, glass: 25.0, timber: 8.0 };
+        return thickM * length * 3.0 * wallDensities[optType]; // thickness * length * height * density
+      }
+      if (type === 'slab') {
+        const slabDensities = { concrete: 25.0, timber: 8.0, steel: 40.0 };
+        return thickM * length * 1.5 * slabDensities[optType];
+      }
+      if (type === 'foundation') {
+        return 0; // Foundation weights transfer directly into soil, not carried by structure
+      }
+
+      const baseWeight = area * length * densities[material];
+      return baseWeight;
+    }
+
+    function recalcCost() {
+      totalCost = 0;
+      let costC = 0, costS = 0, costT = 0, costM = 0;
+
+      columns.forEach(c => {
+        const cost = calculateMemberCost('column', c.material, c.thickness);
+        totalCost += cost;
+        if (c.material === 'concrete') costC += cost;
+        else if (c.material === 'steel') costS += cost;
+        else costT += cost;
+      });
+
+      beams.forEach(b => {
+        const cost = calculateMemberCost('beam', b.material, b.thickness);
+        totalCost += cost;
+        if (b.material === 'concrete') costC += cost;
+        else if (b.material === 'steel') costS += cost;
+        else costT += cost;
+      });
+
+      braces.forEach(b => {
+        const cost = calculateMemberCost('brace', b.material, b.thickness);
+        totalCost += cost;
+        if (b.material === 'concrete') costC += cost;
+        else if (b.material === 'steel') costS += cost;
+        else costT += cost;
+      });
+
+      foundations.forEach(f => {
+        const cost = calculateMemberCost('foundation', 'concrete', 350, f.type);
+        totalCost += cost;
+        costC += cost;
+      });
+
+      const symFactor = getSymmetryFactor();
+      walls.forEach(w => {
+        const cost = calculateMemberCost('wall', '', w.thickness, w.type) * symFactor;
+        totalCost += cost;
+        if (w.type === 'concrete') costC += cost;
+        else if (w.type === 'brick') costM += cost;
+        else if (w.type === 'glass') costS += cost; // high steel framing
+        else costT += cost;
+      });
+
+      slabs.forEach(s => {
+        const cost = calculateMemberCost('slab', s.type === 'timber' ? 'timber' : 'concrete', s.thickness, s.type) * symFactor;
+        totalCost += cost;
+        if (s.type === 'concrete') costC += cost;
+        else if (s.type === 'steel') costS += cost;
+        else costT += cost;
+      });
+
+      // Update UI elements
+      document.getElementById('cost-concrete').textContent = `$${costC.toLocaleString()}`;
+      document.getElementById('cost-steel').textContent = `$${costS.toLocaleString()}`;
+      document.getElementById('cost-timber').textContent = `$${costT.toLocaleString()}`;
+      document.getElementById('cost-masonry').textContent = `$${costM.toLocaleString()}`;
+      document.getElementById('cost-total').textContent = `$${totalCost.toLocaleString()}`;
+
+      const budgetEl = document.getElementById('hud-budget');
+      const bLimit = SCENARIOS[currentLvl].budget;
+      budgetEl.textContent = `$${totalCost.toLocaleString()} / $${bLimit.toLocaleString()}`;
+
+      if (totalCost > bLimit) {
+        budgetEl.className = 'hud-val danger';
+      } else {
+        budgetEl.className = 'hud-val good';
+      }
+
+      // Update Analysis counts
+      document.getElementById('stat-col-cnt').textContent  = columns.length;
+      document.getElementById('stat-beam-cnt').textContent = beams.length;
+      document.getElementById('stat-brace-cnt').textContent = braces.length;
+      document.getElementById('stat-foot-cnt').textContent = foundations.length;
+      document.getElementById('stat-wall-cnt').textContent = walls.length * getSymmetryFactor() + (symmetricBuild ? ' (×4)' : '');
+      document.getElementById('stat-slab-cnt').textContent = slabs.length * getSymmetryFactor() + (symmetricBuild ? ' (×4)' : '');
+
+      // Live DL computation for Analysis panel
+      let liveDL = 0;
+      columns.forEach(c   => liveDL += calculateMemberWeight('column', c.material, c.thickness, selectedFloorHeight / 3));
+      beams.forEach(b     => liveDL += calculateMemberWeight('beam',   b.material, b.thickness, 1.0));
+      braces.forEach(br   => {
+        const dx = Math.abs(br.x2 - br.x1);
+        const dy = Math.abs(br.y2 - br.y1) * (selectedFloorHeight / 3);
+        liveDL += calculateMemberWeight('brace', br.material, br.thickness, Math.sqrt(dx * dx + dy * dy));
+      });
+      walls.forEach(w => {
+        const len = (w.y1 === w.y2) ? Math.abs(w.x2 - w.x1) : Math.abs(w.y2 - w.y1) * (selectedFloorHeight / 3);
+        liveDL += calculateMemberWeight('wall', '', w.thickness, len, w.type) * getSymmetryFactor();
+      });
+      slabs.forEach(s => liveDL += calculateMemberWeight('slab', '', s.thickness, 1.0, s.type) * getSymmetryFactor());
+
+      const lvl2      = SCENARIOS[currentLvl];
+      // SDL and LL applied per beam-bay (floor panel) — assumes 1 m² tributary per panel
+      const numPanels = Math.max(slabs.length, beams.length); // floor panels carrying SDL+LL
+      const liveSDL   = (lvl2.SDL || 0) * numPanels;
+      const liveLL    = lvl2.liveLoad * numPanels;
+      const liveTotal = liveDL + liveSDL + liveLL;
+      const liveFactored = 1.5 * liveTotal;
+
+      document.getElementById('anal-dl').textContent       = `${liveDL.toFixed(2)} kN`;
+      document.getElementById('anal-sdl').textContent      = liveSDL > 0 ? `${liveSDL.toFixed(2)} kN (${numPanels} panels)` : '—';
+      document.getElementById('anal-ll').textContent       = liveLL > 0  ? `${liveLL.toFixed(2)} kN (${numPanels} panels)` : '—';
+      document.getElementById('anal-total').textContent    = `${liveTotal.toFixed(2)} kN`;
+      document.getElementById('anal-factored').textContent = `${liveFactored.toFixed(2)} kN`;
+    }
+
+    // ── COORDINATE HELPERS ────────────────────────────────────────────────
+    // Converts a mouse/touch event to canvas-pixel coordinates.
+    // The scaleX/Y correction handles cases where CSS size ≠ canvas pixel size.
+    function getEventCoords(e) {
       const rect = cv.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      const scaleX = cv.width  / rect.width;
+      const scaleY = cv.height / rect.height;
+      const touch  = e.touches?.[0] || e.changedTouches?.[0];
+      const clientX = touch ? touch.clientX : e.clientX;
+      const clientY = touch ? touch.clientY : e.clientY;
+      return {
+        mx: (clientX - rect.left) * scaleX,
+        my: (clientY - rect.top)  * scaleY
+      };
+    }
 
-      const { gridX, gridY, dx, dy } = getGridCoordinates(mx, my);
-      if (gridX === -1 || gridY === -1) return;
-
-      // Handle footing tool (only on ground level GRID_ROWS_Y[0])
-      if (selectedTool === 'foundation') {
-        if (gridY === 0) {
-          // Select footing type (cycle through isolated -> raft -> pile -> remove)
-          const existIdx = foundations.findIndex(f => f.x === gridX);
-          if (existIdx !== -1) {
-            const currentType = foundations[existIdx].type;
-            if (currentType === 'isolated') {
-              foundations[existIdx].type = 'raft';
-            } else if (currentType === 'raft') {
-              foundations[existIdx].type = 'pile';
-            } else {
-              foundations.splice(existIdx, 1);
-            }
-          } else {
-            foundations.push({ x: gridX, type: 'isolated' });
-          }
-          recalcCost();
-          drawWorkspace();
-        }
-        return;
+    // Returns the nearest grid node within snap tolerance, or null.
+    // Tolerance is 45% of the smaller grid spacing so it never overlaps adjacent dots.
+    function getNearestNode(mx, my) {
+      let tol = 30;
+      if (GRID_SPANS_X.length > 1 && GRID_ROWS_Y.length > 1) {
+        const colSpacing = Math.abs(GRID_SPANS_X[1] - GRID_SPANS_X[0]);
+        const rowSpacing = Math.abs(GRID_ROWS_Y[0]  - GRID_ROWS_Y[1]);
+        tol = Math.min(colSpacing, rowSpacing) * 0.45;
       }
+      let bestNode = null;
+      let bestDist = Infinity;
+      for (let xi = 0; xi < GRID_SPANS_X.length; xi++) {
+        for (let yi = 0; yi < GRID_ROWS_Y.length; yi++) {
+          const dx = mx - GRID_SPANS_X[xi];
+          const dy = my - GRID_ROWS_Y[yi];
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < tol && dist < bestDist) {
+            bestDist = dist;
+            bestNode = { x: xi, y: yi };
+          }
+        }
+      }
+      return bestNode;
+    }
 
-      // Handle drawing columns (vertically between rows Y and Y+1)
+    // ── DRAG-TO-CONNECT PLACEMENT ─────────────────────────────────────────
+    // Places one or more members along the straight path between two nodes.
+    // Column/beam/wall/slab: fills every segment along the axis.
+    // Brace: single diagonal from A to B.
+    function placeMembersAlongPath(startNode, endNode) {
+      const x1 = startNode.x, y1 = startNode.y;
+      const x2 = endNode.x,   y2 = endNode.y;
+      if (x1 === x2 && y1 === y2) return;
+
       if (selectedTool === 'column') {
-        // Must click near vertical member grid line
-        if (dx < 20 && gridY < GRID_ROWS_Y.length - 1) {
-          // Toggle column
-          const existIdx = columns.findIndex(c => c.x === gridX && c.y === gridY);
-          if (existIdx !== -1) {
-            columns.splice(existIdx, 1);
-          } else {
-            const cost = getCosts('column', selectedMaterial, selectedThickness);
-            const weight = getWeight('column', selectedMaterial, selectedThickness);
-            const strength = getStrength('column', selectedMaterial, selectedThickness);
-            columns.push({
-              x: gridX,
-              y: gridY,
-              material: selectedMaterial,
-              thickness: selectedThickness,
-              cost,
-              weight,
-              strength
-            });
+        if (x1 !== x2) return; // must be same vertical line
+        const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        for (let y = minY; y < maxY; y++) {
+          const ei = columns.findIndex(c => c.x === x1 && c.y === y);
+          if (ei !== -1) columns.splice(ei, 1);
+          else columns.push({ x: x1, y, material: selectedMaterial, thickness: selectedThickness, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
+        }
+
+      } else if (selectedTool === 'beam') {
+        if (y1 !== y2) return; // must be same floor row
+        const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX; x < maxX; x++) {
+          const ei = beams.findIndex(b => b.x === x && b.y === y1);
+          if (ei !== -1) beams.splice(ei, 1);
+          else beams.push({ x, y: y1, material: selectedMaterial, thickness: selectedThickness, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
+        }
+
+      } else if (selectedTool === 'brace') {
+        const ei = braces.findIndex(b =>
+          (b.x1 === x1 && b.y1 === y1 && b.x2 === x2 && b.y2 === y2) ||
+          (b.x1 === x2 && b.y1 === y2 && b.x2 === x1 && b.y2 === y1)
+        );
+        if (ei !== -1) braces.splice(ei, 1);
+        else braces.push({ x1, y1, x2, y2, material: selectedMaterial, thickness: selectedThickness, steelGrade: selectedSteelGrade });
+
+      } else if (selectedTool === 'wall') {
+        if (x1 === x2) {
+          // Vertical wall run
+          const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+          for (let y = minY; y < maxY; y++) {
+            const ei = walls.findIndex(w =>
+              (w.x1 === x1 && w.y1 === y   && w.x2 === x1 && w.y2 === y + 1) ||
+              (w.x1 === x1 && w.y1 === y+1 && w.x2 === x1 && w.y2 === y)
+            );
+            if (ei !== -1) walls.splice(ei, 1);
+            else walls.push({ x1, y1: y, x2: x1, y2: y + 1, type: selectedSubTypes.wall, thickness: selectedThickness });
           }
+        } else if (y1 === y2) {
+          // Horizontal wall run
+          const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+          for (let x = minX; x < maxX; x++) {
+            const ei = walls.findIndex(w =>
+              (w.x1 === x   && w.y1 === y1 && w.x2 === x+1 && w.y2 === y1) ||
+              (w.x1 === x+1 && w.y1 === y1 && w.x2 === x   && w.y2 === y1)
+            );
+            if (ei !== -1) walls.splice(ei, 1);
+            else walls.push({ x1: x, y1, x2: x + 1, y2: y1, type: selectedSubTypes.wall, thickness: selectedThickness });
+          }
+        }
+
+      } else if (selectedTool === 'slab') {
+        if (y1 !== y2) return;
+        const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        for (let x = minX; x < maxX; x++) {
+          const ei = slabs.findIndex(s => s.x === x && s.y === y1);
+          if (ei !== -1) slabs.splice(ei, 1);
+          else slabs.push({ x, y: y1, type: selectedSubTypes.slab, thickness: selectedThickness, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
+        }
+      }
+
+      recalcCost();
+      drawWorkspace();
+    }
+
+    // ── CANVAS EVENT HANDLERS ─────────────────────────────────────────────
+    function handleCanvasMouseDown(e) {
+      if (testPhase !== 'edit') return;
+      e.preventDefault();
+      const { mx, my } = getEventCoords(e);
+      const node = getNearestNode(mx, my);
+      if (!node) return;
+
+      // Foundation: single-click toggle on ground-row dot (y === 0)
+      if (selectedTool === 'foundation') {
+        if (node.y === 0) {
+          const ei = foundations.findIndex(f => f.x === node.x);
+          if (ei !== -1) foundations.splice(ei, 1);
+          else foundations.push({ x: node.x, type: selectedSubTypes.foundation, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
           recalcCost();
           drawWorkspace();
         }
         return;
       }
 
-      // Handle drawing beams (horizontally between spans X and X+1)
-      if (selectedTool === 'beam') {
-        if (dy < 18 && gridX < GRID_SPANS_X.length - 1) {
-          const existIdx = beams.findIndex(b => b.x === gridX && b.y === gridY);
-          if (existIdx !== -1) {
-            beams.splice(existIdx, 1);
-          } else {
-            const cost = getCosts('beam', selectedMaterial, selectedThickness);
-            const weight = getWeight('beam', selectedMaterial, selectedThickness);
-            beams.push({
-              x: gridX,
-              y: gridY,
-              material: selectedMaterial,
-              thickness: selectedThickness,
-              cost,
-              weight
-            });
-          }
-          recalcCost();
-          drawWorkspace();
+      dragStartNode  = node;
+      isDragging     = true;
+      dragCurrentPos = { mx, my };
+      drawWorkspace();
+    }
+
+    // Single-click on a dot places exactly 1 unit of the selected member
+    // adjacent to that node, in the tool's natural direction:
+    //   column  → segment going UP   from the clicked dot
+    //   beam    → segment going RIGHT from the clicked dot
+    //   wall    → panel  going RIGHT from the clicked dot
+    //   slab    → plate  going RIGHT from the clicked dot
+    //   brace   → skipped (needs two distinct nodes)
+    function placeSingleUnit(node) {
+      const { x, y } = node;
+
+      if (selectedTool === 'column') {
+        if (y >= NUM_ROWS - 1) return; // already at top, nowhere to go up
+        const ei = columns.findIndex(c => c.x === x && c.y === y);
+        if (ei !== -1) columns.splice(ei, 1);
+        else columns.push({ x, y, material: selectedMaterial, thickness: selectedThickness, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
+
+      } else if (selectedTool === 'beam') {
+        if (x >= NUM_COLS - 1) return;
+        const ei = beams.findIndex(b => b.x === x && b.y === y);
+        if (ei !== -1) beams.splice(ei, 1);
+        else beams.push({ x, y, material: selectedMaterial, thickness: selectedThickness, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
+
+      } else if (selectedTool === 'wall') {
+        if (x >= NUM_COLS - 1) return;
+        const ei = walls.findIndex(w =>
+          (w.x1 === x && w.y1 === y && w.x2 === x+1 && w.y2 === y) ||
+          (w.x1 === x+1 && w.y1 === y && w.x2 === x && w.y2 === y)
+        );
+        if (ei !== -1) walls.splice(ei, 1);
+        else walls.push({ x1: x, y1: y, x2: x+1, y2: y, type: selectedSubTypes.wall, thickness: selectedThickness });
+
+      } else if (selectedTool === 'slab') {
+        if (x >= NUM_COLS - 1) return;
+        const ei = slabs.findIndex(s => s.x === x && s.y === y);
+        if (ei !== -1) slabs.splice(ei, 1);
+        else slabs.push({ x, y, type: selectedSubTypes.slab, thickness: selectedThickness, concreteGrade: selectedConcreteGrade, steelGrade: selectedSteelGrade });
+
+      } else {
+        return; // brace needs two nodes — single click does nothing
+      }
+
+      recalcCost();
+      drawWorkspace();
+    }
+
+    function handleCanvasMouseMove(e) {
+      if (testPhase !== 'edit') return;
+      const { mx, my } = getEventCoords(e);
+      hoverNode = getNearestNode(mx, my);
+      if (isDragging) dragCurrentPos = { mx, my };
+      drawWorkspace();
+    }
+
+    function handleCanvasMouseUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      const { mx, my } = getEventCoords(e);
+      const endNode = getNearestNode(mx, my);
+      if (dragStartNode && endNode) {
+        // Same dot = single click → place 1 unit in tool's default direction
+        // Different dots = drag → fill all segments along the path
+        if (dragStartNode.x === endNode.x && dragStartNode.y === endNode.y) {
+          placeSingleUnit(endNode);
+        } else {
+          placeMembersAlongPath(dragStartNode, endNode);
         }
+      }
+      dragStartNode  = null;
+      dragCurrentPos = null;
+      drawWorkspace();
+    }
+
+    cv.addEventListener('mousedown',  handleCanvasMouseDown);
+    cv.addEventListener('mousemove',  handleCanvasMouseMove);
+    cv.addEventListener('mouseup',    handleCanvasMouseUp);
+    cv.addEventListener('mouseleave', () => { hoverNode = null; drawWorkspace(); });
+    document.addEventListener('mouseup', () => {
+      // Safety: cancel drag if mouse released outside canvas
+      if (isDragging) {
+        isDragging = false; dragStartNode = null; dragCurrentPos = null;
+        drawWorkspace();
+      }
+    });
+    cv.addEventListener('touchstart', (e) => { e.preventDefault(); handleCanvasMouseDown(e); }, { passive: false });
+    cv.addEventListener('touchmove',  (e) => { e.preventDefault(); handleCanvasMouseMove(e); }, { passive: false });
+    cv.addEventListener('touchend',   (e) => { e.preventDefault(); handleCanvasMouseUp(e);   }, { passive: false });
+
+
+
+
+
+    function getMaterialColor(material) {
+      if (material === 'timber') return '#d4a373';
+      if (material === 'concrete') return '#9ca3af';
+      return '#f43f5e';
+    }
+
+    function getStressColor(stress, alpha = 1) {
+      if (stress < 0.45) return `rgba(16, 185, 129, ${alpha})`; // stable green
+      if (stress < 0.85) return `rgba(245, 158, 11, ${alpha})`; // amber warn
+      return `rgba(244, 63, 94, ${alpha})`; // crimson limit
+    }
+
+    // DRAW WORKSPACE
+    function drawWorkspace() {
+      if (GRID_SPANS_X.length === 0 || GRID_ROWS_Y.length === 0) return;
+
+      if (testPhase === 'success') {
+        render3D();
         return;
       }
 
-      // Handle drawing diagonal braces
-      if (selectedTool === 'brace') {
-        if (gridX < GRID_SPANS_X.length - 1 && gridY < GRID_ROWS_Y.length - 1) {
-          // Identify grid cell quad. Draw diagonal inside cell.
-          // Toggle brace between cell intersections
-          const x1 = gridX;
-          const y1 = gridY;
-          const x2 = gridX + 1;
-          const y2 = gridY + 1;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+
+      // Blueprint style background grid
+      ctx.strokeStyle = 'rgba(44, 47, 99, 0.4)';
+      ctx.lineWidth = 0.5;
+      const step = 20;
+      for (let x = 0; x < cv.width; x += step) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke();
+      }
+      for (let y = 0; y < cv.height; y += step) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke();
+      }
+
+      // Seismic ground vibration offset
+      let shakeX = 0;
+      if (testPhase === 'test' && seismicActive) {
+        shakeX = Math.sin(Date.now() * 0.08) * earthquakeShake;
+      }
+
+      // DRAW SOIL UNDERGROUND STRATUM
+      const sType = SCENARIOS[currentLvl].soil;
+      const soilG = ctx.createLinearGradient(0, groundY, 0, cv.height);
+      if (sType === 'bedrock') {
+        soilG.addColorStop(0, '#2d3142');
+        soilG.addColorStop(1, '#1f2029');
+      } else if (sType === 'sand') {
+        soilG.addColorStop(0, '#cca43b');
+        soilG.addColorStop(1, '#7a5c12');
+      } else {
+        soilG.addColorStop(0, '#5c4d3c');
+        soilG.addColorStop(1, '#2c221e');
+      }
+      ctx.fillStyle = soilG;
+      ctx.fillRect(0, groundY, cv.width, cv.height - groundY);
+
+      // Texture dots for soil
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for (let sx = 5; sx < cv.width; sx += 15) {
+        for (let sy = groundY + 5; sy < cv.height; sy += 15) {
+          ctx.fillRect(sx + shakeX, sy, 2, 2);
+        }
+      }
+
+      // Soil Label
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.font = '900 2.2rem Syne';
+      ctx.textAlign = 'center';
+      ctx.fillText(sType.toUpperCase() + ' FOUNDATION LAYER', cv.width / 2 + shakeX, groundY + 50);
+
+      // Dotted layout guide lines
+      ctx.setLineDash([3, 5]);
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.12)';
+      ctx.lineWidth = 1;
+      GRID_SPANS_X.forEach(gx => {
+        ctx.beginPath();
+        ctx.moveTo(gx + shakeX, GRID_ROWS_Y[GRID_ROWS_Y.length - 1]);
+        ctx.lineTo(gx + shakeX, groundY);
+        ctx.stroke();
+      });
+      GRID_ROWS_Y.forEach(gy => {
+        ctx.beginPath();
+        ctx.moveTo(GRID_SPANS_X[0] + shakeX, gy);
+        ctx.lineTo(GRID_SPANS_X[GRID_SPANS_X.length - 1] + shakeX, gy);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Draw minor grid nodes (radius 1.5) and major nodes (radius 3.5)
+      GRID_SPANS_X.forEach((gx, xIdx) => {
+        GRID_ROWS_Y.forEach((gy, yIdx) => {
+          const isMajorX = (xIdx % 3 === 0);
+          const isMajorY = (yIdx % 3 === 0);
+          if (isMajorX && isMajorY) {
+            ctx.fillStyle = 'rgba(0, 240, 255, 0.6)';
+            ctx.beginPath(); ctx.arc(gx + shakeX, gy, 3.5, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.fillStyle = 'rgba(157, 78, 221, 0.35)';
+            ctx.beginPath(); ctx.arc(gx + shakeX, gy, 1.8, 0, Math.PI * 2); ctx.fill();
+          }
+        });
+      });
+
+      // ── HOVER GLOW: brighten the dot nearest the cursor ─────────────────
+      if (hoverNode !== null && testPhase === 'edit') {
+        const hx = GRID_SPANS_X[hoverNode.x];
+        const hy = GRID_ROWS_Y[hoverNode.y];
+        ctx.save();
+        ctx.shadowBlur  = 18;
+        ctx.shadowColor = '#00f0ff';
+        ctx.fillStyle   = 'rgba(0, 240, 255, 0.92)';
+        ctx.beginPath();
+        ctx.arc(hx + shakeX, hy, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // ── DRAG PREVIEW: ghost line + pulsing start-dot while dragging ──────
+      if (isDragging && dragStartNode !== null && dragCurrentPos !== null && testPhase === 'edit') {
+        const sx = GRID_SPANS_X[dragStartNode.x];
+        const sy = GRID_ROWS_Y[dragStartNode.y];
+
+        // Pulsing purple start-node indicator
+        ctx.save();
+        ctx.shadowBlur  = 22;
+        ctx.shadowColor = '#9d4edd';
+        ctx.fillStyle   = '#9d4edd';
+        ctx.beginPath();
+        ctx.arc(sx + shakeX, sy, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Ghost preview line — snaps to nearest node when close enough
+        const ex = hoverNode ? GRID_SPANS_X[hoverNode.x] + shakeX : dragCurrentPos.mx;
+        const ey = hoverNode ? GRID_ROWS_Y[hoverNode.y]            : dragCurrentPos.my;
+        ctx.save();
+        ctx.setLineDash([7, 5]);
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.55)';
+        ctx.lineWidth   = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(sx + shakeX, sy);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
+      // RENDER FOUNDATIONS
+      foundations.forEach(f => {
+        const fx = GRID_SPANS_X[f.x];
+        ctx.save();
+        ctx.translate(fx + shakeX, groundY);
+
+        let stressVal = 0;
+        if (testPhase === 'test' || testPhase === 'fail') {
+          stressVal = stressLevels.footings[f.x] || 0;
+        }
+
+        if (f.type === 'isolated') {
+          ctx.fillStyle = '#4b5563';
+          ctx.fillRect(-20, 0, 40, 15);
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-20, 0, 40, 15);
+        } else if (f.type === 'raft') {
+          ctx.fillStyle = '#374151';
+          ctx.fillRect(-40, 0, 80, 20);
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = 2.5;
+          ctx.strokeRect(-40, 0, 80, 20);
+        } else if (f.type === 'pile') {
+          ctx.fillStyle = '#1f2937';
+          ctx.fillRect(-22, 0, 44, 15);
+          // Piles drilling down
+          ctx.fillStyle = '#4b5563';
+          ctx.fillRect(-12, 15, 6, 70);
+          ctx.fillRect(6, 15, 6, 70);
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(-22, 0, 44, 15);
+        }
+        ctx.restore();
+      });
+
+      // RENDER SLABS
+      slabs.forEach(s => {
+        const lx = GRID_SPANS_X[s.x];
+        const rx = GRID_SPANS_X[s.x + 1];
+        const yVal = GRID_ROWS_Y[s.y];
+
+        ctx.save();
+        if (testPhase === 'fail' && collapseTrigger && s.y >= collapseTrigger.y) {
+          ctx.translate(0, collapseAnimPct * 80);
+        }
+
+        ctx.fillStyle = s.type === 'timber' ? 'rgba(212, 163, 115, 0.45)' :
+                        s.type === 'steel' ? 'rgba(244, 63, 94, 0.35)' : 'rgba(156, 163, 175, 0.45)';
+        ctx.fillRect(lx + shakeX, yVal - 4, rx - lx, 8);
+
+        if (testPhase === 'test' || testPhase === 'fail') {
+          const sIdx = slabs.indexOf(s);
+          const stressVal = (stressLevels.slabs && stressLevels.slabs[sIdx]) || 0;
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(lx + shakeX, yVal - 4, rx - lx, 8);
+        }
+        ctx.restore();
+      });
+
+      // RENDER WALLS (Drawn as solid panels)
+      walls.forEach((w, wIdx) => {
+        const x1 = GRID_SPANS_X[w.x1];
+        const y1 = GRID_ROWS_Y[w.y1];
+        const x2 = GRID_SPANS_X[w.x2];
+        const y2 = GRID_ROWS_Y[w.y2];
+
+        ctx.save();
+        if (testPhase === 'fail' && collapseTrigger && Math.max(w.y1, w.y2) >= collapseTrigger.y) {
+          ctx.translate(0, collapseAnimPct * 80);
+        }
+
+        const wallColorMap = {
+          brick: 'rgba(185, 28, 28, 0.5)',
+          concrete: 'rgba(107, 114, 128, 0.6)',
+          glass: 'rgba(6, 182, 212, 0.3)',
+          timber: 'rgba(217, 119, 6, 0.4)'
+        };
+        ctx.fillStyle = wallColorMap[w.type];
+
+        ctx.beginPath();
+        if (w.y1 === w.y2) {
+          // Horizontal panel (fills 1x1 block cell below the beam line)
+          const yTop = GRID_ROWS_Y[w.y1 + 1];
+          const yBot = GRID_ROWS_Y[w.y1];
           
-          const existIdx = braces.findIndex(b => b.x1 === x1 && b.y1 === y1 && b.x2 === x2 && b.y2 === y2);
-          if (existIdx !== -1) {
-            braces.splice(existIdx, 1);
+          const wallColors = { white: '#ffffff', blue: '#3b82f6', green: '#10b981', red: '#b91c1c', purple: '#8b5cf6' };
+          const baseColor = wallColorMap[w.type];
+          ctx.fillStyle = selectedPaint === 'white' ? baseColor : wallColors[selectedPaint];
+          ctx.fillRect(x1 + shakeX, yTop, x2 - x1, yBot - yTop);
+
+          // Tile outline / finishes
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 0.5;
+          if (selectedWallFinish === 'brick') {
+            const wVal = x2 - x1;
+            for (let bx = x1; bx < x2; bx += wVal/4) {
+              ctx.beginPath(); ctx.moveTo(bx + shakeX, yTop); ctx.lineTo(bx + shakeX, yBot); ctx.stroke();
+            }
+            ctx.beginPath(); ctx.moveTo(x1 + shakeX, (yTop+yBot)/2); ctx.lineTo(x2 + shakeX, (yTop+yBot)/2); ctx.stroke();
           } else {
-            const cost = getCosts('brace', selectedMaterial, selectedThickness);
-            braces.push({
-              x1, y1, x2, y2,
-              material: selectedMaterial,
-              thickness: selectedThickness,
-              cost
-            });
+            ctx.strokeRect(x1 + shakeX, yTop, x2 - x1, yBot - yTop);
           }
-          recalcCost();
-          drawWorkspace();
+        } else {
+          // Vertical panel (fills 1x1 block cell to the right of column line)
+          const xRight = GRID_SPANS_X[w.x1 + 1];
+          
+          const wallColors = { white: '#ffffff', blue: '#3b82f6', green: '#10b981', red: '#b91c1c', purple: '#8b5cf6' };
+          const baseColor = wallColorMap[w.type];
+          ctx.fillStyle = selectedPaint === 'white' ? baseColor : wallColors[selectedPaint];
+          ctx.fillRect(x1 + shakeX, y2, xRight - x1, y1 - y2);
+
+          // Tile outline / finishes
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 0.5;
+          if (selectedWallFinish === 'brick') {
+            const hVal = y1 - y2;
+            for (let by = y2; by < y1; by += hVal/4) {
+              ctx.beginPath(); ctx.moveTo(x1 + shakeX, by); ctx.lineTo(xRight + shakeX, by); ctx.stroke();
+            }
+            ctx.beginPath(); ctx.moveTo((x1+xRight)/2 + shakeX, y2); ctx.lineTo((x1+xRight)/2 + shakeX, y1); ctx.stroke();
+          } else {
+            ctx.strokeRect(x1 + shakeX, y2, xRight - x1, y1 - y2);
+          }
+        }
+
+        if (testPhase === 'test' || testPhase === 'fail') {
+          const stressVal = stressLevels.walls[wIdx] || 0;
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = 2.0;
+          if (w.y1 === w.y2) {
+            const yTop = GRID_ROWS_Y[w.y1 + 1];
+            const yBot = GRID_ROWS_Y[w.y1];
+            ctx.strokeRect(x1 + shakeX, yTop, x2 - x1, yBot - yTop);
+          } else {
+            const xRight = GRID_SPANS_X[w.x1 + 1];
+            ctx.strokeRect(x1 + shakeX, y2, xRight - x1, y1 - y2);
+          }
+        }
+        ctx.restore();
+      });
+
+      // RENDER COLUMNS
+      columns.forEach((c, idx) => {
+        const xVal = GRID_SPANS_X[c.x];
+        const yTop = GRID_ROWS_Y[c.y + 1];
+        const yBot = GRID_ROWS_Y[c.y];
+
+        ctx.save();
+        let swayTop = 0, swayBot = 0;
+        if (testPhase === 'test' || testPhase === 'fail') {
+          swayTop = Math.sin(Date.now() * 0.004) * windShiftOffset * (c.y + 1) * 3;
+          swayBot = Math.sin(Date.now() * 0.004) * windShiftOffset * c.y * 3;
+        }
+
+        if (testPhase === 'fail' && collapseTrigger) {
+          if (collapseTrigger.type === 'column' && collapseTrigger.index === idx) {
+            // Buckle render
+            const midY = (yTop + yBot) / 2;
+            ctx.beginPath();
+            ctx.moveTo(xVal + swayTop + shakeX, yTop);
+            ctx.quadraticCurveTo(xVal + (collapseAnimPct * 25) + (swayTop + swayBot)/2 + shakeX, midY, xVal + swayBot + shakeX, yBot);
+            ctx.strokeStyle = varColor('--red-neon');
+            ctx.lineWidth = c.thickness / 45;
+            ctx.stroke();
+            ctx.restore();
+            return;
+          }
+          if (c.y >= collapseTrigger.y) {
+            ctx.translate(0, collapseAnimPct * 80);
+          }
+        }
+
+        ctx.lineWidth = Math.max(1.5, c.thickness / 40.0);
+        ctx.strokeStyle = getMaterialColor(c.material);
+        ctx.beginPath();
+        ctx.moveTo(xVal + swayTop + shakeX, yTop);
+        ctx.lineTo(xVal + swayBot + shakeX, yBot);
+        ctx.stroke();
+
+        if (testPhase === 'test' || testPhase === 'fail') {
+          const stressVal = stressLevels.columns[idx] || 0;
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = Math.max(1.5, c.thickness / 40.0) + 0.5;
+          ctx.beginPath();
+          ctx.moveTo(xVal + swayTop + shakeX, yTop);
+          ctx.lineTo(xVal + swayBot + shakeX, yBot);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // RENDER BEAMS
+      beams.forEach((b, idx) => {
+        const xLeft = GRID_SPANS_X[b.x];
+        const xRight = GRID_SPANS_X[b.x + 1];
+        const yVal = GRID_ROWS_Y[b.y];
+
+        ctx.save();
+        let sway = 0;
+        if (testPhase === 'test' || testPhase === 'fail') {
+          sway = Math.sin(Date.now() * 0.004) * windShiftOffset * b.y * 3;
+        }
+
+        if (testPhase === 'fail' && collapseTrigger && b.y >= collapseTrigger.y) {
+          ctx.translate(0, collapseAnimPct * 80);
+        }
+
+        ctx.lineWidth = Math.max(1.5, b.thickness / 45.0);
+        ctx.strokeStyle = getMaterialColor(b.material);
+        ctx.beginPath();
+        ctx.moveTo(xLeft + sway + shakeX, yVal);
+        ctx.lineTo(xRight + sway + shakeX, yVal);
+        ctx.stroke();
+
+        if (testPhase === 'test' || testPhase === 'fail') {
+          const stressVal = stressLevels.beams[idx] || 0;
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = Math.max(1.5, b.thickness / 45.0) + 0.5;
+          ctx.beginPath();
+          ctx.moveTo(xLeft + sway + shakeX, yVal);
+          ctx.lineTo(xRight + sway + shakeX, yVal);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // RENDER BRACES
+      braces.forEach((br, idx) => {
+        const x1 = GRID_SPANS_X[br.x1];
+        const y1 = GRID_ROWS_Y[br.y1];
+        const x2 = GRID_SPANS_X[br.x2];
+        const y2 = GRID_ROWS_Y[br.y2];
+
+        ctx.save();
+        let sway1 = 0, sway2 = 0;
+        if (testPhase === 'test' || testPhase === 'fail') {
+          sway1 = Math.sin(Date.now() * 0.004) * windShiftOffset * br.y1 * 3;
+          sway2 = Math.sin(Date.now() * 0.004) * windShiftOffset * br.y2 * 3;
+        }
+
+        if (testPhase === 'fail' && collapseTrigger && Math.max(br.y1, br.y2) >= collapseTrigger.y) {
+          ctx.translate(0, collapseAnimPct * 80);
+        }
+
+        ctx.lineWidth = Math.max(1.5, br.thickness / 60.0);
+        ctx.strokeStyle = getMaterialColor(br.material);
+        ctx.beginPath();
+        ctx.moveTo(x1 + sway1 + shakeX, y1);
+        ctx.lineTo(x2 + sway2 + shakeX, y2);
+        ctx.stroke();
+
+        if (testPhase === 'test' || testPhase === 'fail') {
+          const stressVal = stressLevels.braces[idx] || 0;
+          ctx.strokeStyle = getStressColor(stressVal);
+          ctx.lineWidth = Math.max(1.5, br.thickness / 60.0) + 0.5;
+          ctx.beginPath();
+          ctx.moveTo(x1 + sway1 + shakeX, y1);
+          ctx.lineTo(x2 + sway2 + shakeX, y2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+
+      // DRAW AXIS METRIC RULERS
+      ctx.fillStyle = '#6b7280';
+      ctx.font = 'bold 0.6rem Space Mono';
+      ctx.textAlign = 'right';
+
+      // Left axis ticks & labels (Vertical height scale)
+      GRID_ROWS_Y.forEach((gy, idx) => {
+        const isFloor = (idx % 3 === 0);
+        const actualH = idx * (selectedFloorHeight / 3);
+
+        ctx.strokeStyle = isFloor ? 'rgba(0,240,255,0.4)' : 'rgba(107,114,128,0.2)';
+        ctx.beginPath();
+        ctx.moveTo(GRID_SPANS_X[0] - 10 + shakeX, gy);
+        ctx.lineTo(GRID_SPANS_X[0] + shakeX, gy);
+        ctx.stroke();
+
+        if (isFloor) {
+          ctx.fillText(`${actualH.toFixed(0)}m`, GRID_SPANS_X[0] - 15 + shakeX, gy + 3);
+        }
+      });
+
+      // Bottom axis ticks & labels (Horizontal span scale)
+      ctx.textAlign = 'center';
+      GRID_SPANS_X.forEach((gx, idx) => {
+        const isMajorSpan = (idx % 3 === 0);
+        ctx.strokeStyle = isMajorSpan ? 'rgba(0,240,255,0.4)' : 'rgba(107,114,128,0.2)';
+        ctx.beginPath();
+        ctx.moveTo(gx + shakeX, groundY);
+        ctx.lineTo(gx + shakeX, groundY + 10);
+        ctx.stroke();
+
+        if (isMajorSpan) {
+          ctx.fillText(`${idx}m`, gx + shakeX, groundY + 22);
+        }
+      });
+
+      // Wind animation sprites
+      if (testPhase === 'test' && windActive) {
+        ctx.strokeStyle = 'var(--cyan)';
+        ctx.lineWidth = 1.5;
+        GRID_ROWS_Y.forEach((gy, i) => {
+          if (i === 0) return;
+          const arrowX = GRID_SPANS_X[0] - 80 + ((Date.now() * 0.12) % 60);
+          ctx.beginPath();
+          ctx.moveTo(arrowX + shakeX, gy);
+          ctx.lineTo(arrowX + 20 + shakeX, gy);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(arrowX + 20 + shakeX, gy);
+          ctx.lineTo(arrowX + 15 + shakeX, gy - 3);
+          ctx.lineTo(arrowX + 15 + shakeX, gy + 3);
+          ctx.fillStyle = 'var(--cyan)';
+          ctx.fill();
+        });
+      }
+
+      // Draw dimension annotations on top of everything
+      drawAnnotations(shakeX);
+      drawTopView();
+    }
+
+    // ── TOP-VIEW PLAN WINDOW RENDERING ──────────────────────────────────────────────
+    function drawTopView() {
+      if (!tvCanvas || !tvCtx) return;
+
+      // Clear top view
+      tvCtx.clearRect(0, 0, tvCanvas.width, tvCanvas.height);
+
+      // Grid boundaries - force perfectly square cell proportions
+      const side = Math.min(tvCanvas.width - 20, tvCanvas.height - 20);
+      const marginX = Math.round((tvCanvas.width - side) / 2);
+      const marginY = Math.round((tvCanvas.height - side) / 2);
+      const usableW = side;
+      const usableH = side;
+
+      // Draw grid points for plan view (NUM_COLS x NUM_COLS grid)
+      tvCtx.fillStyle = 'rgba(44, 47, 99, 0.4)'; // matches var(--border)
+      for (let x = 0; x < NUM_COLS; x++) {
+        const px = marginX + (x / (NUM_COLS - 1)) * usableW;
+        for (let z = 0; z < NUM_COLS; z++) {
+          const pz = marginY + (z / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.arc(px, pz, 1.2, 0, 2 * Math.PI);
+          tvCtx.fill();
         }
       }
+
+      // Compute active boundary in X direction
+      let minX = NUM_COLS;
+      let maxX = -1;
+      columns.forEach(c => { if(c.x < minX) minX = c.x; if(c.x > maxX) maxX = c.x; });
+      beams.forEach(b => { 
+        if(b.x < minX) minX = b.x; if(b.x > maxX) maxX = b.x;
+        if(b.x + 1 < minX) minX = b.x + 1; if(b.x + 1 > maxX) maxX = b.x + 1; 
+      });
+      slabs.forEach(s => { 
+        if(s.x < minX) minX = s.x; if(s.x > maxX) maxX = s.x;
+        if(s.x + 1 < minX) minX = s.x + 1; if(s.x + 1 > maxX) maxX = s.x + 1; 
+      });
+      walls.forEach(w => { 
+        if(w.x1 < minX) minX = w.x1; if(w.x1 > maxX) maxX = w.x1;
+        if(w.x2 < minX) minX = w.x2; if(w.x2 > maxX) maxX = w.x2; 
+      });
+      foundations.forEach(f => { if(f.x < minX) minX = f.x; if(f.x > maxX) maxX = f.x; });
+      braces.forEach(br => { 
+        if(br.x1 < minX) minX = br.x1; if(br.x1 > maxX) maxX = br.x1;
+        if(br.x2 < minX) minX = br.x2; if(br.x2 > maxX) maxX = br.x2; 
+      });
+
+      // If nothing built yet, we don't draw anything else
+      if (maxX < minX) return;
+
+      // Bounding box for active square land
+      const xLeft = marginX + (minX / (NUM_COLS - 1)) * usableW;
+      const xRight = marginX + (maxX / (NUM_COLS - 1)) * usableW;
+      const zTop = marginY + (minX / (NUM_COLS - 1)) * usableH;
+      const zBottom = marginY + (maxX / (NUM_COLS - 1)) * usableH;
+
+      tvCtx.save();
+      tvCtx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+      tvCtx.lineWidth = 1;
+      tvCtx.setLineDash([3, 3]);
+      tvCtx.strokeRect(xLeft, zTop, xRight - xLeft, zBottom - zTop);
+      tvCtx.fillStyle = 'rgba(0, 240, 255, 0.05)';
+      tvCtx.fillRect(xLeft, zTop, xRight - xLeft, zBottom - zTop);
+      tvCtx.restore();
+
+      // Deduplicate elements for cleaner overlay drawing
+      const uniqueColumns = {};
+      columns.forEach(c => {
+        if (!uniqueColumns[c.x] || uniqueColumns[c.x].thickness < c.thickness) {
+          uniqueColumns[c.x] = c;
+        }
+      });
+
+      const uniqueBeams = {};
+      beams.forEach(b => {
+        if (!uniqueBeams[b.x] || uniqueBeams[b.x].thickness < b.thickness) {
+          uniqueBeams[b.x] = b;
+        }
+      });
+
+      const uniqueSlabs = {};
+      slabs.forEach(s => {
+        uniqueSlabs[s.x] = s;
+      });
+
+      const uniqueFoundations = {};
+      foundations.forEach(f => {
+        uniqueFoundations[f.x] = f;
+      });
+
+      const horizontalWalls = {};
+      const verticalWalls = {};
+      walls.forEach(w => {
+        if (w.x1 === w.x2) {
+          verticalWalls[w.x1] = w;
+        } else {
+          const key = `${w.x1}-${w.x2}`;
+          horizontalWalls[key] = w;
+        }
+      });
+
+      const uniqueBraces = {};
+      braces.forEach(br => {
+        const key = `${Math.min(br.x1, br.x2)}-${Math.max(br.x1, br.x2)}`;
+        uniqueBraces[key] = br;
+      });
+
+      // 1. Draw Foundations
+      let colXs = [...new Set(columns.map(c => c.x))].sort((a,b)=>a-b);
+      if (colXs.length === 0) {
+        colXs = [minX, maxX];
+      }
+
+      Object.values(uniqueFoundations).forEach(f => {
+        const px = marginX + (f.x / (NUM_COLS - 1)) * usableW;
+        tvCtx.save();
+        tvCtx.strokeStyle = 'rgba(75, 85, 99, 0.7)';
+        tvCtx.lineWidth = 1;
+        colXs.forEach(z => {
+          const pz = marginY + (z / (NUM_COLS - 1)) * usableH;
+          if (f.type === 'isolated') {
+            tvCtx.strokeRect(px - 4, pz - 4, 8, 8);
+          } else if (f.type === 'raft') {
+            tvCtx.fillStyle = 'rgba(55, 65, 81, 0.4)';
+            tvCtx.fillRect(px - 6, pz - 6, 12, 12);
+            tvCtx.strokeRect(px - 6, pz - 6, 12, 12);
+          } else if (f.type === 'pile') {
+            tvCtx.strokeRect(px - 5, pz - 5, 10, 10);
+            tvCtx.beginPath();
+            tvCtx.moveTo(px - 5, pz - 5); tvCtx.lineTo(px + 5, pz + 5);
+            tvCtx.moveTo(px + 5, pz - 5); tvCtx.lineTo(px - 5, pz + 5);
+            tvCtx.stroke();
+          }
+        });
+        tvCtx.restore();
+      });
+
+      // 2. Draw Slabs (translucent planes covering whole footprint)
+      Object.values(uniqueSlabs).forEach(s => {
+        const px1 = marginX + (s.x / (NUM_COLS - 1)) * usableW;
+        const px2 = marginX + ((s.x + 1) / (NUM_COLS - 1)) * usableW;
+        const slabColor = s.type === 'timber' ? 'rgba(212, 163, 115, 0.3)' :
+                          s.type === 'steel' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(156, 163, 175, 0.3)';
+        tvCtx.save();
+        tvCtx.fillStyle = slabColor;
+        for (let z = minX; z < maxX; z++) {
+          const pz1 = marginY + (z / (NUM_COLS - 1)) * usableH;
+          const pz2 = marginY + ((z + 1) / (NUM_COLS - 1)) * usableH;
+          tvCtx.fillRect(px1 + 0.5, pz1 + 0.5, (px2 - px1) - 1, (pz2 - pz1) - 1);
+        }
+        tvCtx.restore();
+      });
+
+      // 3. Draw Beams (X direction and Z direction)
+      // X direction Beams along column lines
+      Object.values(uniqueBeams).forEach(b => {
+        const beamColor = getMaterialColor(b.material);
+        const width = Math.max(1, b.thickness / 180);
+        const px1 = marginX + (b.x / (NUM_COLS - 1)) * usableW;
+        const px2 = marginX + ((b.x + 1) / (NUM_COLS - 1)) * usableW;
+        tvCtx.save();
+        tvCtx.strokeStyle = beamColor;
+        tvCtx.lineWidth = width;
+        colXs.forEach(z => {
+          const pz = marginY + (z / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.moveTo(px1, pz);
+          tvCtx.lineTo(px2, pz);
+          tvCtx.stroke();
+        });
+        tvCtx.restore();
+      });
+
+      // Z direction Beams (connecting copied columns in depth)
+      Object.values(uniqueColumns).forEach(c => {
+        const beamColor = getMaterialColor(c.material);
+        const width = Math.max(1, c.thickness / 180);
+        const px = marginX + (c.x / (NUM_COLS - 1)) * usableW;
+        tvCtx.save();
+        tvCtx.strokeStyle = beamColor;
+        tvCtx.lineWidth = width;
+        for (let z = minX; z < maxX; z++) {
+          const pz1 = marginY + (z / (NUM_COLS - 1)) * usableH;
+          const pz2 = marginY + ((z + 1) / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.moveTo(px, pz1);
+          tvCtx.lineTo(px, pz2);
+          tvCtx.stroke();
+        }
+        tvCtx.restore();
+      });
+
+      // 4. Draw Walls (horizontal and vertical/depth direction)
+      const wallColorMap = {
+        brick: 'rgba(185, 28, 28, 0.65)',
+        concrete: 'rgba(107, 114, 128, 0.75)',
+        glass: 'rgba(6, 182, 212, 0.55)',
+        timber: 'rgba(217, 119, 6, 0.55)'
+      };
+
+      // X direction Walls along column lines
+      Object.values(horizontalWalls).forEach(w => {
+        const wallColor = wallColorMap[w.type] || 'rgba(107, 114, 128, 0.75)';
+        const width = Math.max(2, w.thickness / 50);
+        const px1 = marginX + (w.x1 / (NUM_COLS - 1)) * usableW;
+        const px2 = marginX + (w.x2 / (NUM_COLS - 1)) * usableW;
+        tvCtx.save();
+        tvCtx.strokeStyle = wallColor;
+        tvCtx.lineWidth = width;
+        colXs.forEach(z => {
+          const pz = marginY + (z / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.moveTo(px1, pz);
+          tvCtx.lineTo(px2, pz);
+          tvCtx.stroke();
+        });
+        tvCtx.restore();
+      });
+
+      // Z direction Walls (connecting front to back in depth)
+      Object.values(verticalWalls).forEach(w => {
+        const wallColor = wallColorMap[w.type] || 'rgba(107, 114, 128, 0.75)';
+        const width = Math.max(2, w.thickness / 50);
+        const px = marginX + (w.x1 / (NUM_COLS - 1)) * usableW;
+        tvCtx.save();
+        tvCtx.strokeStyle = wallColor;
+        tvCtx.lineWidth = width;
+        for (let z = minX; z < maxX; z++) {
+          const pz1 = marginY + (z / (NUM_COLS - 1)) * usableH;
+          const pz2 = marginY + ((z + 1) / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.moveTo(px, pz1);
+          tvCtx.lineTo(px, pz2);
+          tvCtx.stroke();
+        }
+        tvCtx.restore();
+      });
+
+      // 5. Draw Braces (as thin dashed indicators along column lines)
+      Object.values(uniqueBraces).forEach(br => {
+        const px1 = marginX + (br.x1 / (NUM_COLS - 1)) * usableW;
+        const px2 = marginX + (br.x2 / (NUM_COLS - 1)) * usableW;
+        tvCtx.save();
+        tvCtx.strokeStyle = getMaterialColor(br.material);
+        tvCtx.lineWidth = 1;
+        tvCtx.setLineDash([2, 2]);
+        colXs.forEach(z => {
+          const pz = marginY + (z / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.moveTo(px1, pz);
+          tvCtx.lineTo(px2, pz);
+          tvCtx.stroke();
+        });
+        tvCtx.restore();
+      });
+
+      // 6. Draw Columns (drawn at intersecting grid locations cz in colXs)
+      Object.values(uniqueColumns).forEach(c => {
+        const px = marginX + (c.x / (NUM_COLS - 1)) * usableW;
+        const colColor = getMaterialColor(c.material);
+        const radius = Math.max(2.5, c.thickness / 100);
+        tvCtx.save();
+        tvCtx.fillStyle = colColor;
+        colXs.forEach(z => {
+          const pz = marginY + (z / (NUM_COLS - 1)) * usableH;
+          tvCtx.beginPath();
+          tvCtx.arc(px, pz, radius, 0, 2 * Math.PI);
+          tvCtx.fill();
+          
+          // Draw thin outline
+          tvCtx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+          tvCtx.lineWidth = 0.5;
+          tvCtx.stroke();
+        });
+      });
+    }
+
+    // ── ROTATING 3D PROJECTION ENGINE (Painter's Algorithm) ─────────────────────────
+    function render3D() {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+
+      // Draw premium space background
+      const grad = ctx.createRadialGradient(cv.width/2, cv.height/2, 50, cv.width/2, cv.height/2, cv.width);
+      grad.addColorStop(0, '#0c0d28');
+      grad.addColorStop(1, '#030309');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      // Draw faint stars in background
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
+      for (let i = 0; i < 40; i++) {
+        const starX = (Math.sin(i * 333) * 0.5 + 0.5) * cv.width;
+        const starY = (Math.cos(i * 777) * 0.5 + 0.5) * cv.height;
+        ctx.fillRect(starX, starY, 1.5, 1.5);
+      }
+
+      // Calculate building horizontal bounds
+      let minX = NUM_COLS;
+      let maxX = -1;
+      columns.forEach(c => { if(c.x < minX) minX = c.x; if(c.x > maxX) maxX = c.x; });
+      beams.forEach(b => { 
+        if(b.x < minX) minX = b.x; if(b.x > maxX) maxX = b.x;
+        if(b.x + 1 < minX) minX = b.x + 1; if(b.x + 1 > maxX) maxX = b.x + 1; 
+      });
+      walls.forEach(w => { 
+        if(w.x1 < minX) minX = w.x1; if(w.x1 > maxX) maxX = w.x1;
+        if(w.x2 < minX) minX = w.x2; if(w.x2 > maxX) maxX = w.x2; 
+      });
+      foundations.forEach(f => { if(f.x < minX) minX = f.x; if(f.x > maxX) maxX = f.x; });
+      if (maxX < minX) { minX = 0; maxX = 5; }
+
+      let colXs = [...new Set(columns.map(c => c.x))].sort((a,b)=>a-b);
+      if (colXs.length === 0) colXs = [minX, maxX];
+
+      const midX = (minX + maxX) / 2;
+      const midZ = (minX + maxX) / 2;
+
+      // Find max height level
+      let maxYGrid = 1;
+      columns.forEach(c => { if(c.y + 1 > maxYGrid) maxYGrid = c.y + 1; });
+      walls.forEach(w => {
+        const topY = Math.max(w.y1, w.y2);
+        if(topY > maxYGrid) maxYGrid = topY;
+      });
+      const structHeightM = maxYGrid * (selectedFloorHeight / 3);
+      const midY = structHeightM / 2;
+
+      // Rotate around center
+      const theta = Date.now() * 0.0004;
+      const cx = cv.width / 2;
+      const cy = cv.height / 2 + 50;
+      const scale = Math.min(cv.width, cv.height) * 0.35 / Math.max(1.5, maxX - minX);
+
+      function project3D(x, y, z) {
+        const xm = x;
+        const ym = y * (selectedFloorHeight / 3);
+        const zm = z;
+        
+        const dx = xm - midX;
+        const dy = ym - midY;
+        const dz = zm - midZ;
+        
+        const rx = dx * Math.cos(theta) - dz * Math.sin(theta);
+        const rz = dx * Math.sin(theta) + dz * Math.cos(theta);
+        const ry = dy;
+        
+        const px = cx + rx * scale;
+        const py = cy - ry * scale * 0.85 + rz * scale * 0.45;
+        
+        return { x: px, y: py, depth: rz };
+      }
+
+      function shadeColor(color, percent) {
+        let r = 120, g = 120, b = 120, a = 1;
+        if (color.startsWith('#')) {
+          const hex = color.substring(1);
+          r = parseInt(hex.substring(0, 2), 16);
+          g = parseInt(hex.substring(2, 4), 16);
+          b = parseInt(hex.substring(4, 6), 16);
+        } else if (color.startsWith('rgba')) {
+          const parts = color.match(/[\d\.]+/g);
+          if (parts) {
+            r = parseInt(parts[0]);
+            g = parseInt(parts[1]);
+            b = parseInt(parts[2]);
+            a = parseFloat(parts[3]);
+          }
+        } else if (color.startsWith('rgb')) {
+          const parts = color.match(/\d+/g);
+          if (parts) {
+            r = parseInt(parts[0]);
+            g = parseInt(parts[1]);
+            b = parseInt(parts[2]);
+          }
+        }
+        r = Math.min(255, Math.max(0, Math.round(r * percent)));
+        g = Math.min(255, Math.max(0, Math.round(g * percent)));
+        b = Math.min(255, Math.max(0, Math.round(b * percent)));
+        return a === 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
+
+      function drawCuboid(x1, y1, z1, x2, y2, z2, fillStyle, strokeStyle, lineWidth) {
+        const c000 = project3D(x1, y1, z1);
+        const c100 = project3D(x2, y1, z1);
+        const c010 = project3D(x1, y2, z1);
+        const c110 = project3D(x2, y2, z1);
+        const c001 = project3D(x1, y1, z2);
+        const c101 = project3D(x2, y1, z2);
+        const c011 = project3D(x1, y2, z2);
+        const c111 = project3D(x2, y2, z2);
+        
+        const faces = [
+          { pts: [c000, c100, c101, c001], name: 'bottom', shade: 0.7 },
+          { pts: [c010, c110, c111, c011], name: 'top', shade: 1.0 },
+          { pts: [c000, c010, c011, c001], name: 'left', shade: 0.8 },
+          { pts: [c100, c110, c111, c101], name: 'right', shade: 0.85 },
+          { pts: [c000, c100, c110, c010], name: 'back', shade: 0.75 },
+          { pts: [c001, c101, c111, c011], name: 'front', shade: 0.9 }
+        ];
+        
+        faces.forEach(f => {
+          f.depth = (f.pts[0].depth + f.pts[1].depth + f.pts[2].depth + f.pts[3].depth) / 4;
+        });
+        faces.sort((a, b) => a.depth - b.depth);
+        
+        faces.forEach(f => {
+          ctx.beginPath();
+          ctx.moveTo(f.pts[0].x, f.pts[0].y);
+          for (let i = 1; i < 4; i++) ctx.lineTo(f.pts[i].x, f.pts[i].y);
+          ctx.closePath();
+          
+          if (fillStyle) {
+            ctx.fillStyle = shadeColor(fillStyle, f.shade);
+            ctx.fill();
+          }
+          if (strokeStyle) {
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = lineWidth || 1;
+            ctx.stroke();
+          }
+        });
+      }
+
+      const primitives = [];
+
+      // 1. Ground Grid
+      for (let z = minX; z <= maxX; z++) {
+        primitives.push({
+          depth: project3D(midX, 0, z).depth - 0.01,
+          draw: () => {
+            const p1 = project3D(minX, 0, z);
+            const p2 = project3D(maxX, 0, z);
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        });
+      }
+      for (let x = minX; x <= maxX; x++) {
+        primitives.push({
+          depth: project3D(x, 0, midZ).depth - 0.01,
+          draw: () => {
+            const p1 = project3D(x, 0, minX);
+            const p2 = project3D(x, 0, maxX);
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // 2. Foundations (Footings)
+      foundations.forEach(f => {
+        colXs.forEach(cz => {
+          primitives.push({
+            depth: project3D(f.x, 0, cz).depth,
+            draw: () => {
+              if (f.type === 'raft') {
+                drawCuboid(f.x - 0.5, -0.25, cz - 0.5, f.x + 0.5, 0, cz + 0.5, '#4b5563', 'rgba(0,0,0,0.5)', 0.5);
+              } else if (f.type === 'pile') {
+                drawCuboid(f.x - 0.35, -0.2, cz - 0.35, f.x + 0.35, 0, cz + 0.35, '#374151', 'rgba(0,0,0,0.5)', 0.5);
+                const pTop1 = project3D(f.x - 0.15, -0.2, cz);
+                const pBot1 = project3D(f.x - 0.15, -1.8, cz);
+                const pTop2 = project3D(f.x + 0.15, -0.2, cz);
+                const pBot2 = project3D(f.x + 0.15, -1.8, cz);
+                ctx.strokeStyle = '#4b5563';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(pTop1.x, pTop1.y); ctx.lineTo(pBot1.x, pBot1.y);
+                ctx.moveTo(pTop2.x, pTop2.y); ctx.lineTo(pBot2.x, pBot2.y);
+                ctx.stroke();
+              } else {
+                drawCuboid(f.x - 0.3, -0.15, cz - 0.3, f.x + 0.3, 0, cz + 0.3, '#4b5563', 'rgba(0,0,0,0.5)', 0.5);
+              }
+            }
+          });
+        });
+      });
+
+      // 3. Columns
+      columns.forEach(c => {
+        const colColor = getMaterialColor(c.material);
+        const th = (c.thickness / 1000.0) * 0.8;
+        colXs.forEach(cz => {
+          primitives.push({
+            depth: project3D(c.x, c.y + 0.5, cz).depth,
+            draw: () => {
+              drawCuboid(c.x - th/2, c.y, cz - th/2, c.x + th/2, c.y + 1, cz + th/2, colColor, 'rgba(0,0,0,0.4)', 0.5);
+            }
+          });
+        });
+      });
+
+      // 4. Slabs
+      slabs.forEach(s => {
+        const slabColor = s.type === 'timber' ? '#d4a373' : s.type === 'steel' ? '#f43f5e' : '#9ca3af';
+        const th = s.thickness / 1000.0;
+        for (let z = minX; z < maxX; z++) {
+          primitives.push({
+            depth: project3D(s.x + 0.5, s.y, z + 0.5).depth,
+            draw: () => {
+              drawCuboid(s.x, s.y - th, z, s.x + 1, s.y, slabColor, 'rgba(0,0,0,0.3)', 0.5);
+            }
+          });
+        }
+      });
+
+      // 5. Beams (X direction and Z direction)
+      beams.forEach(b => {
+        const beamColor = getMaterialColor(b.material);
+        const th = b.thickness / 1000.0;
+        colXs.forEach(cz => {
+          primitives.push({
+            depth: project3D(b.x + 0.5, b.y, cz).depth,
+            draw: () => {
+              drawCuboid(b.x, b.y - th, cz - th/2, b.x + 1, b.y, beamColor, 'rgba(0,0,0,0.4)', 0.5);
+            }
+          });
+        });
+      });
+
+      // Z direction Beams connecting columns along depth
+      columns.forEach(c => {
+        const beamColor = getMaterialColor(c.material);
+        const th = 0.2;
+        const hasBeamsAtLevel = beams.some(b => b.y === c.y + 1);
+        if (hasBeamsAtLevel) {
+          for (let idx = 0; idx < colXs.length - 1; idx++) {
+            const cz1 = colXs[idx];
+            const cz2 = colXs[idx + 1];
+            primitives.push({
+              depth: project3D(c.x, c.y + 1, (cz1 + cz2)/2).depth,
+              draw: () => {
+                drawCuboid(c.x - th/2, c.y + 1 - th, cz1, c.x + th/2, c.y + 1, cz2, beamColor, 'rgba(0,0,0,0.4)', 0.5);
+              }
+            });
+          }
+        }
+      });
+
+      // 6. Walls
+      const wallColorMap = {
+        brick: '#b91c1c',
+        concrete: '#6b7280',
+        glass: 'rgba(6, 182, 212, 0.4)',
+        timber: '#d97706'
+      };
+
+      const wallColors = { 
+        white: '#e5e7eb', 
+        blue: '#60a5fa', 
+        green: '#34d399', 
+        red: '#f87171', 
+        purple: '#a78bfa' 
+      };
+
+      // X-walls (horizontal in 2D)
+      walls.forEach(w => {
+        if (w.y1 === w.y2) {
+          const baseColor = w.type === 'glass' ? 'rgba(6, 182, 212, 0.4)' : (selectedPaint === 'white' ? wallColorMap[w.type] : wallColors[selectedPaint]);
+          const th = w.thickness / 1000.0;
+          colXs.forEach(cz => {
+            primitives.push({
+              depth: project3D((w.x1 + w.x2)/2, w.y1 + 0.5, cz).depth,
+              draw: () => {
+                drawCuboid(w.x1, w.y1, cz - th/2, w.x2, w.y1 + 1, cz + th/2, baseColor, 'rgba(0,0,0,0.4)', 0.5);
+              }
+            });
+          });
+        }
+      });
+
+      // Z-walls (vertical in 2D)
+      walls.forEach(w => {
+        if (w.x1 === w.x2) {
+          const baseColor = w.type === 'glass' ? 'rgba(6, 182, 212, 0.4)' : (selectedPaint === 'white' ? wallColorMap[w.type] : wallColors[selectedPaint]);
+          const th = w.thickness / 1000.0;
+          const minY = Math.min(w.y1, w.y2);
+          const maxY = Math.max(w.y1, w.y2);
+          
+          for (let y = minY; y < maxY; y++) {
+            for (let z = minX; z < maxX; z++) {
+              primitives.push({
+                depth: project3D(w.x1, y + 0.5, z + 0.5).depth,
+                draw: () => {
+                  drawCuboid(w.x1 - th/2, y, z, w.x1 + th/2, y + 1, z + 1, baseColor, 'rgba(0,0,0,0.4)', 0.5);
+                }
+              });
+            }
+          }
+        }
+      });
+
+      // 7. Braces
+      braces.forEach(br => {
+        colXs.forEach(cz => {
+          primitives.push({
+            depth: project3D((br.x1 + br.x2)/2, (br.y1 + br.y2)/2, cz).depth,
+            draw: () => {
+              const p1 = project3D(br.x1, br.y1, cz);
+              const p2 = project3D(br.x2, br.y2, cz);
+              ctx.strokeStyle = getMaterialColor(br.material);
+              ctx.lineWidth = Math.max(2, br.thickness / 50);
+              ctx.beginPath();
+              ctx.moveTo(p1.x, p1.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
+            }
+          });
+        });
+      });
+
+      // 8. Decorations
+      if (activeDecorations.flag && columns.length > 0) {
+        let highestC = columns[0];
+        columns.forEach(c => { if(c.y > highestC.y) highestC = c; });
+        const fx = highestC.x;
+        const fy = highestC.y + 1;
+        const fz = maxX;
+        
+        primitives.push({
+          depth: project3D(fx, fy + 0.5, fz).depth + 0.1,
+          draw: () => {
+            const pBase = project3D(fx, fy, fz);
+            const pTop = project3D(fx, fy + 1.2, fz);
+            ctx.strokeStyle = '#9ca3af';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(pBase.x, pBase.y);
+            ctx.lineTo(pTop.x, pTop.y);
+            ctx.stroke();
+            
+            const waveOffset = Math.sin(Date.now() * 0.015) * 0.18;
+            const pFlagMid = project3D(fx + 0.5, fy + 1.0, fz + waveOffset);
+            const pFlagBottom = project3D(fx, fy + 0.8, fz);
+            
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath();
+            ctx.moveTo(pTop.x, pTop.y);
+            ctx.lineTo(pFlagMid.x, pFlagMid.y);
+            ctx.lineTo(pFlagBottom.x, pFlagBottom.y);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        });
+      }
+
+      if (activeDecorations.plants) {
+        beams.forEach(b => {
+          if (b.y >= 1) {
+            primitives.push({
+              depth: project3D(b.x + 0.5, b.y, minX).depth + 0.1,
+              draw: () => {
+                drawCuboid(b.x + 0.2, b.y, minX - 0.15, b.x + 0.8, b.y + 0.12, minX + 0.15, '#d27d2d', 'rgba(0,0,0,0.5)', 0.5);
+                ctx.fillStyle = '#10b981';
+                const pMid = project3D(b.x + 0.5, b.y + 0.18, minX);
+                ctx.beginPath();
+                ctx.arc(pMid.x - 10, pMid.y, 6, 0, Math.PI * 2);
+                ctx.arc(pMid.x + 10, pMid.y, 7, 0, Math.PI * 2);
+                ctx.arc(pMid.x, pMid.y - 4, 8, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            });
+          }
+        });
+      }
+
+      // Sort primitives back-to-front
+      primitives.sort((a, b) => a.depth - b.depth);
+
+      // Render all
+      primitives.forEach(p => p.draw());
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.font = 'bold 0.7rem Space Mono';
+      ctx.textAlign = 'left';
+      ctx.fillText('🔄 Auto-Rotating 3D Projection Active', 20, 30);
+      
+      const paintLabels = { white: 'White Paint', blue: 'Sky Blue', green: 'Forest Green', red: 'Terracotta', purple: 'Royal Purple' };
+      const finishLabels = { plain: 'Plain Plaster', brick: 'Brick Clad', tiles: 'Marble Tile' };
+      ctx.fillText(`🎨 Finish: ${paintLabels[selectedPaint]} | ${finishLabels[selectedWallFinish]}`, 20, 48);
+    }
+
+    // ── FURNISHING SELECTION HANDLERS ────────────────────────────────────────────────
+    function selectPaint(color) {
+      selectedPaint = color;
+      const btns = document.querySelectorAll('#tab-furnish .sidebar-panel:nth-of-type(1) .sm-btn');
+      const paintColors = ['white', 'blue', 'green', 'red', 'purple'];
+      btns.forEach((btn, idx) => {
+        btn.classList.toggle('active', paintColors[idx] === color);
+      });
+      drawWorkspace();
+    }
+
+    function selectWallFinish(finish) {
+      selectedWallFinish = finish;
+      const btns = document.querySelectorAll('#tab-furnish .sidebar-panel:nth-of-type(2) .sm-btn');
+      const finishes = ['plain', 'brick', 'tiles'];
+      btns.forEach((btn, idx) => {
+        btn.classList.toggle('active', finishes[idx] === finish);
+      });
+      drawWorkspace();
+    }
+
+    function toggleDecoration(dec) {
+      activeDecorations[dec] = document.getElementById(`dec-${dec}`).checked;
+      drawWorkspace();
+    }
+
+    function goToFurnishing() {
+      document.getElementById('resultModal').classList.remove('active');
+      const tabBtn = document.getElementById('tab-furnish-btn');
+      tabBtn.style.display = 'block';
+      switchTab('furnish');
+    }
+
+    function backToEdit() {
+      document.getElementById('tab-furnish-btn').style.display = 'none';
+      testPhase = 'edit';
+      switchTab('design');
+      if (animId) cancelAnimationFrame(animId);
+      drawWorkspace();
+    }
+
+    // ── CANVAS OVERLAY ANNOTATIONS ──────────────────────────────────────────────────
+    // Called at end of drawWorkspace so overlays render on top of all members.
+    function drawAnnotations(shakeX) {
+      const lvl = SCENARIOS[currentLvl];
+      const floorStep = selectedFloorHeight / 3; // metres per grid row
+
+      // ── 1. REQUIRED HEIGHT TARGET LINE ─────────────────────────────
+      const reqGridRow = Math.round(lvl.heightNeeded / floorStep);
+      if (reqGridRow > 0 && reqGridRow < GRID_ROWS_Y.length) {
+        const reqY = GRID_ROWS_Y[reqGridRow];
+        ctx.save();
+        ctx.setLineDash([10, 7]);
+        ctx.strokeStyle = 'rgba(251,191,36,0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(GRID_SPANS_X[0] + shakeX, reqY);
+        ctx.lineTo(GRID_SPANS_X[GRID_SPANS_X.length - 1] + shakeX, reqY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = 'bold 0.58rem Space Mono';
+        ctx.fillStyle = '#fbbf24';
+        ctx.textAlign = 'right';
+        ctx.fillText(`▶ TARGET ${lvl.heightNeeded}m`, GRID_SPANS_X[GRID_SPANS_X.length - 1] + shakeX - 4, reqY - 4);
+        ctx.restore();
+      }
+
+      // ── 2. STRUCTURE BOUNDING BOX + DIMENSIONS ────────────────────
+      let sL = NUM_COLS, sR = -1, sT = -1; // grid indices
+      columns.forEach(c => {
+        sL = Math.min(sL, c.x);
+        sR = Math.max(sR, c.x);
+        sT = Math.max(sT, c.y + 1);
+      });
+      beams.forEach(b => {
+        sL = Math.min(sL, b.x);
+        sR = Math.max(sR, b.x + 1);
+        sT = Math.max(sT, b.y);
+      });
+      walls.forEach(w => {
+        sL = Math.min(sL, Math.min(w.x1, w.x2));
+        sR = Math.max(sR, Math.max(w.x1, w.x2));
+        sT = Math.max(sT, Math.max(w.y1, w.y2));
+      });
+
+      if (sR >= 0 && sT >= 0 && sL <= sR) {
+        const px1 = GRID_SPANS_X[Math.max(0, sL)] + shakeX;
+        const px2 = GRID_SPANS_X[Math.min(sR, GRID_SPANS_X.length - 1)] + shakeX;
+        const py1 = GRID_ROWS_Y[Math.min(sT, GRID_ROWS_Y.length - 1)];
+        const py2 = groundY;
+        const structW = sR - sL; // grid units ≈ metres at 1m spacing
+        const structH = sT * floorStep;
+
+        // Bounding box
+        ctx.save();
+        ctx.setLineDash([3, 5]);
+        ctx.strokeStyle = 'rgba(0,240,255,0.2)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(px1 - 8, py1 - 8, px2 - px1 + 16, py2 - py1 + 8);
+        ctx.setLineDash([]);
+
+        // Width dimension line below ground
+        const dimY = groundY + 32;
+        ctx.strokeStyle = 'rgba(0,240,255,0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(px1, dimY - 4); ctx.lineTo(px1, dimY + 4);
+        ctx.moveTo(px1, dimY); ctx.lineTo(px2, dimY);
+        ctx.moveTo(px2, dimY - 4); ctx.lineTo(px2, dimY + 4);
+        ctx.stroke();
+        ctx.font = 'bold 0.58rem Space Mono';
+        ctx.fillStyle = 'rgba(0,240,255,0.8)';
+        ctx.textAlign = 'center';
+        ctx.fillText(`W: ${structW}m`, (px1 + px2) / 2, dimY + 12);
+
+        // Height dimension line to the right
+        const dimX = Math.min(px2 + 28, cv.width - 10);
+        ctx.strokeStyle = 'rgba(0,240,255,0.5)';
+        ctx.beginPath();
+        ctx.moveTo(dimX - 4, py1); ctx.lineTo(dimX + 4, py1);
+        ctx.moveTo(dimX, py1); ctx.lineTo(dimX, py2);
+        ctx.moveTo(dimX - 4, py2); ctx.lineTo(dimX + 4, py2);
+        ctx.stroke();
+        ctx.save();
+        ctx.translate(dimX + 10, (py1 + py2) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText(`H: ${structH.toFixed(0)}m`, 0, 0);
+        ctx.restore();
+
+        // Corner label (W × H summary)
+        ctx.fillStyle = 'rgba(0,240,255,0.6)';
+        ctx.font = '0.55rem Space Mono';
+        ctx.textAlign = 'left';
+        ctx.fillText(`🏛️ ${structW}m × ${structH.toFixed(0)}m`, px1 + 4, py1 - 12);
+        ctx.restore();
+      }
+
+      // ── 3. BUDGET STATUS OVERLAY (top-right corner) ────────────────
+      if (totalCost > 0) {
+        const budget   = lvl.budget;
+        const diff     = budget - totalCost;
+        const overBudget = diff < 0;
+        const pct      = Math.abs(diff / budget * 100).toFixed(0);
+        const budgetTxt = overBudget
+          ? `📉 LOSS: $${Math.abs(diff).toLocaleString()} (${pct}% over)`
+          : `💰 PROFIT: $${diff.toLocaleString()} (${pct}% saved)`;
+
+        ctx.save();
+        ctx.font = 'bold 0.6rem Space Mono';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = overBudget ? '#f43f5e' : '#10b981';
+        ctx.fillText(budgetTxt, cv.width - 10, 22);
+        ctx.restore();
+      }
+    }
+
+    function varColor(variable) {
+      if (variable === '--cyan') return '#00f0ff';
+      if (variable === '--red-neon') return '#f43f5e';
+      return '#fff';
     }
 
     function clearStructure() {
@@ -795,579 +3224,728 @@
       beams = [];
       braces = [];
       foundations = [];
+      walls = [];
+      slabs = [];
       testPhase = 'edit';
-      stressLevels = { columns: [], beams: [], braces: [], footings: [] };
+      stressLevels = { columns: [], beams: [], braces: [], footings: [], walls: [] };
       windShiftOffset = 0;
       collapseAnimPct = 0;
       collapseTrigger = null;
+      firstBraceNode  = null;
+      hoverNode       = null;
+      dragStartNode   = null;
+      dragCurrentPos  = null;
+      isDragging      = false;
       if (animId) cancelAnimationFrame(animId);
-      
+
+      const stabilityEl = document.getElementById('hud-stability');
+      stabilityEl.textContent = '—';
+      stabilityEl.className = 'hud-val';
+
+      // Clear stress table UI
+      document.getElementById('stat-col-stress').textContent = '—';
+      document.getElementById('stat-col-status').textContent = '—';
+      document.getElementById('stat-beam-stress').textContent = '—';
+      document.getElementById('stat-beam-status').textContent = '—';
+      document.getElementById('stat-brace-stress').textContent = '—';
+      document.getElementById('stat-brace-status').textContent = '—';
+      document.getElementById('stat-foot-stress').textContent = '—';
+      document.getElementById('stat-foot-status').textContent = '—';
+      document.getElementById('stat-wall-stress').textContent = '—';
+      document.getElementById('stat-wall-status').textContent = '—';
+      document.getElementById('stat-slab-stress').textContent = '—';
+      document.getElementById('stat-slab-status').textContent = '—';
+
       recalcCost();
       drawWorkspace();
     }
 
-    let totalCost = 0;
-    function recalcCost() {
-      totalCost = 0;
-      columns.forEach(c => totalCost += c.cost);
-      beams.forEach(b => totalCost += b.cost);
-      braces.forEach(b => totalCost += b.cost);
-      foundations.forEach(f => {
-        totalCost += getCosts('foundation', f.type);
-      });
-
-      const budgetEl = document.getElementById('hud-budget');
-      budgetEl.textContent = `$${totalCost.toLocaleString()} / $${SCENARIOS[currentLvl].budget.toLocaleString()}`;
-      
-      if (totalCost > SCENARIOS[currentLvl].budget) {
-        budgetEl.className = 'hud-val danger';
-        document.getElementById('testBtn').disabled = true;
-      } else {
-        budgetEl.className = 'hud-val good';
-        document.getElementById('testBtn').disabled = false;
-      }
-    }
-
-    // GRAPHICS RENDERING
-    function drawWorkspace() {
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      
-      // Draw grid overlay (Blueprint look)
-      ctx.strokeStyle = 'rgba(28, 37, 65, 0.6)';
-      ctx.lineWidth = 1;
-      
-      const gridSpacing = 40;
-      for (let x = 0; x < cv.width; x += gridSpacing) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke();
-      }
-      for (let y = 0; y < cv.height; y += gridSpacing) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke();
-      }
-
-      // Draw Soil block
-      const soilY = GRID_ROWS_Y[0];
-      const soilGradient = ctx.createLinearGradient(0, soilY, 0, cv.height);
-      const sColor = getSoilColor(SCENARIOS[currentLvl].soil);
-      soilGradient.addColorStop(0, sColor);
-      soilGradient.addColorStop(1, '#080812');
-      ctx.fillStyle = soilGradient;
-      ctx.fillRect(0, soilY, cv.width, cv.height - soilY);
-
-      // Soil text and label
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.font = '900 3rem Syne';
-      ctx.textAlign = 'center';
-      ctx.fillText(SCENARIOS[currentLvl].soil.toUpperCase() + ' STRATUM', cv.width / 2, soilY + 70);
-
-      // Draw Soil capacity dots
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-      const dotsPattern = 20;
-      for (let sx = 10; sx < cv.width; sx += dotsPattern) {
-        for (let sy = soilY + 10; sy < cv.height; sy += dotsPattern) {
-          ctx.fillRect(sx, sy, 2, 2);
-        }
-      }
-
-      // Draw draft guide lines (dotted structural grids)
-      ctx.setLineDash([4, 6]);
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
-      ctx.lineWidth = 1.5;
-      
-      GRID_SPANS_X.forEach(gx => {
-        ctx.beginPath();
-        ctx.moveTo(gx, GRID_ROWS_Y[GRID_ROWS_Y.length - 1]);
-        ctx.lineTo(gx, GRID_ROWS_Y[0]);
-        ctx.stroke();
-      });
-
-      GRID_ROWS_Y.forEach(gy => {
-        ctx.beginPath();
-        ctx.moveTo(GRID_SPANS_X[0], gy);
-        ctx.lineTo(GRID_SPANS_X[GRID_SPANS_X.length - 1], gy);
-        ctx.stroke();
-      });
-      ctx.setLineDash([]);
-
-      // Draw guide grid joint dots
-      ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
-      GRID_SPANS_X.forEach(gx => {
-        GRID_ROWS_Y.forEach(gy => {
-          ctx.beginPath(); ctx.arc(gx, gy, 3, 0, Math.PI * 2); ctx.fill();
-        });
-      });
-
-      // RENDER FOUNDATIONS
-      foundations.forEach((f, idx) => {
-        const xPos = GRID_SPANS_X[f.x];
-        const yPos = GRID_ROWS_Y[0];
-        
-        ctx.save();
-        // Collapse displacement
-        let sinkDisplace = 0;
-        if (testPhase === 'fail' && collapseTrigger && collapseTrigger.type === 'foundation' && collapseTrigger.index === f.x) {
-          sinkDisplace = collapseAnimPct * 25;
-        }
-
-        ctx.translate(xPos, yPos + sinkDisplace);
-
-        // Styling based on footing type
-        if (f.type === 'isolated') {
-          ctx.fillStyle = '#6c757d';
-          ctx.fillRect(-22, 0, 44, 16);
-          ctx.strokeStyle = 'var(--cyan)';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(-22, 0, 44, 16);
-        } else if (f.type === 'raft') {
-          ctx.fillStyle = '#495057';
-          // Draws continuous wide pad
-          ctx.fillRect(-45, 0, 90, 22);
-          ctx.strokeStyle = '#ced4da';
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(-45, 0, 90, 22);
-        } else if (f.type === 'pile') {
-          // Concrete block
-          ctx.fillStyle = '#343a40';
-          ctx.fillRect(-25, 0, 50, 20);
-          // Steel/Concrete deep piles drilling down
-          ctx.fillStyle = '#1c2541';
-          ctx.fillRect(-14, 20, 10, 80);
-          ctx.fillRect(4, 20, 10, 80);
-          ctx.fillStyle = '#5c677d';
-          ctx.fillRect(-15, 20, 2, 80);
-          ctx.fillRect(3, 20, 2, 80);
-        }
-
-        // Stress overlay
-        if (testPhase === 'test' || testPhase === 'fail') {
-          const stress = stressLevels.footings[f.x] || 0;
-          ctx.fillStyle = getStressColor(stress, 0.6);
-          if (f.type === 'raft') ctx.fillRect(-45, 0, 90, 22);
-          else ctx.fillRect(-25, 0, 50, 20);
-        }
-
-        ctx.restore();
-      });
-
-      // RENDER SUPERSTRUCTURE MEMBERS
-      // Render Columns
-      columns.forEach((c, idx) => {
-        const xPos = GRID_SPANS_X[c.x];
-        const yTop = GRID_ROWS_Y[c.y + 1];
-        const yBot = GRID_ROWS_Y[c.y];
-        
-        ctx.save();
-        
-        // Sway offset calculations
-        let swayTop = 0;
-        let swayBot = 0;
-        if (testPhase === 'test' || testPhase === 'fail') {
-          swayTop = Math.sin(Date.now() * 0.005) * windShiftOffset * (c.y + 1) * 3;
-          swayBot = Math.sin(Date.now() * 0.005) * windShiftOffset * c.y * 3;
-        }
-
-        // Collapse effect
-        if (testPhase === 'fail' && collapseTrigger) {
-          if (collapseTrigger.type === 'column' && collapseTrigger.index === idx) {
-            // Buckle effect
-            const midY = (yTop + yBot) / 2;
-            ctx.beginPath();
-            ctx.moveTo(xPos + swayTop, yTop);
-            ctx.quadraticCurveTo(xPos + (collapseAnimPct * 20) + (swayTop+swayBot)/2, midY, xPos + swayBot, yBot);
-            ctx.strokeStyle = 'var(--red-neon)';
-            ctx.lineWidth = c.thickness / 30;
-            ctx.stroke();
-            ctx.restore();
-            return;
-          }
-          if (c.y >= collapseTrigger.y) {
-            // Drop down if support below fails
-            const drop = collapseAnimPct * 120;
-            ctx.translate(0, drop);
-          }
-        }
-
-        // Material member design
-        ctx.lineWidth = c.thickness / 35;
-        ctx.strokeStyle = getMaterialColor(c.material);
-        
-        ctx.beginPath();
-        ctx.moveTo(xPos + swayTop, yTop);
-        ctx.lineTo(xPos + swayBot, yBot);
-        ctx.stroke();
-
-        // Stress coloring overlay
-        if (testPhase === 'test' || testPhase === 'fail') {
-          const stress = stressLevels.columns[idx] || 0;
-          ctx.strokeStyle = getStressColor(stress);
-          ctx.lineWidth = (c.thickness / 35) + 1;
-          ctx.stroke();
-        }
-        
-        ctx.restore();
-      });
-
-      // Render Beams
-      beams.forEach((b, idx) => {
-        const xLeft = GRID_SPANS_X[b.x];
-        const xRight = GRID_SPANS_X[b.x + 1];
-        const yPos = GRID_ROWS_Y[b.y];
-
-        ctx.save();
-        
-        // Sway displacements
-        let swayLeft = 0;
-        let swayRight = 0;
-        if (testPhase === 'test' || testPhase === 'fail') {
-          swayLeft = Math.sin(Date.now() * 0.005) * windShiftOffset * b.y * 3;
-          swayRight = Math.sin(Date.now() * 0.005) * windShiftOffset * b.y * 3;
-        }
-
-        // Support failure drop
-        if (testPhase === 'fail' && collapseTrigger) {
-          if (b.y >= collapseTrigger.y) {
-            const drop = collapseAnimPct * 120;
-            ctx.translate(0, drop);
-          }
-        }
-
-        ctx.lineWidth = b.thickness / 35;
-        ctx.strokeStyle = getMaterialColor(b.material);
-
-        ctx.beginPath();
-        ctx.moveTo(xLeft + swayLeft, yPos);
-        ctx.lineTo(xRight + swayRight, yPos);
-        ctx.stroke();
-
-        // Stress overlay
-        if (testPhase === 'test' || testPhase === 'fail') {
-          const stress = stressLevels.beams[idx] || 0;
-          ctx.strokeStyle = getStressColor(stress);
-          ctx.lineWidth = (b.thickness / 35) + 1;
-          ctx.stroke();
-        }
-
-        ctx.restore();
-      });
-
-      // Render Diagonal Braces
-      braces.forEach((b, idx) => {
-        const x1 = GRID_SPANS_X[b.x1];
-        const y1 = GRID_ROWS_Y[b.y1];
-        const x2 = GRID_SPANS_X[b.x2];
-        const y2 = GRID_ROWS_Y[b.y2];
-
-        ctx.save();
-
-        let swayTop = 0;
-        let swayBot = 0;
-        if (testPhase === 'test' || testPhase === 'fail') {
-          // y2 is top node (index +1), y1 is bottom node
-          swayTop = Math.sin(Date.now() * 0.005) * windShiftOffset * b.y2 * 3;
-          swayBot = Math.sin(Date.now() * 0.005) * windShiftOffset * b.y1 * 3;
-        }
-
-        // Support failure drops
-        if (testPhase === 'fail' && collapseTrigger) {
-          if (b.y2 >= collapseTrigger.y) {
-            const drop = collapseAnimPct * 120;
-            ctx.translate(0, drop);
-          }
-        }
-
-        ctx.lineWidth = b.thickness / 50;
-        ctx.strokeStyle = getMaterialColor(b.material);
-        
-        ctx.beginPath();
-        // Drawing diagonal from x1,y1 (bottom-left) to x2,y2 (top-right)
-        ctx.moveTo(x1 + swayBot, y1);
-        ctx.lineTo(x2 + swayTop, y2);
-        ctx.stroke();
-
-        if (testPhase === 'test' || testPhase === 'fail') {
-          const stress = stressLevels.braces[idx] || 0;
-          ctx.strokeStyle = getStressColor(stress);
-          ctx.lineWidth = (b.thickness / 50) + 1.5;
-          ctx.stroke();
-        }
-
-        ctx.restore();
-      });
-
-      // Render structural node weights / loads (if testing active)
-      if (testPhase === 'test') {
-        ctx.fillStyle = 'var(--red-neon)';
-        ctx.font = 'bold 0.65rem Space Mono';
-        ctx.textAlign = 'center';
-        
-        // Draw load sprites at floors
-        beams.forEach(b => {
-          const midX = (GRID_SPANS_X[b.x] + GRID_SPANS_X[b.x + 1]) / 2;
-          const yPos = GRID_ROWS_Y[b.y];
-          let sway = Math.sin(Date.now() * 0.005) * windShiftOffset * b.y * 3;
-
-          ctx.fillText('▼ 12.5kN', midX + sway, yPos - 10);
-        });
-
-        // Draw wind vectors if wind active
-        if (SCENARIOS[currentLvl].windLoad > 0) {
-          ctx.strokeStyle = 'var(--cyan)';
-          ctx.lineWidth = 2.5;
-          ctx.fillStyle = 'var(--cyan)';
-
-          GRID_ROWS_Y.forEach((gy, i) => {
-            if (i === 0) return;
-            const wX = GRID_SPANS_X[0] - 65;
-            const wY = gy;
-            
-            // animated wind arrow
-            const offset = (Date.now() * 0.1) % 40;
-            ctx.beginPath();
-            ctx.moveTo(wX + offset, wY);
-            ctx.lineTo(wX + offset + 30, wY);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.moveTo(wX + offset + 30, wY);
-            ctx.lineTo(wX + offset + 22, wY - 5);
-            ctx.lineTo(wX + offset + 22, wY + 5);
-            ctx.fill();
-          });
-          ctx.fillStyle = 'var(--cyan)';
-          ctx.font = 'bold 0.65rem Space Mono';
-          ctx.fillText(`WIND: ${SCENARIOS[currentLvl].windLoad}kN`, GRID_SPANS_X[0] - 80, GRID_ROWS_Y[3] - 20);
-        }
-      }
-    }
-
-    function getMaterialColor(material) {
-      if (material === 'timber') return '#d4a373'; // wooden orange-brown
-      if (material === 'concrete') return '#adb5bd'; // cool cement grey
-      return '#f72585'; // bright structural steel pink/rust
-    }
-
-    function getStressColor(stress, alpha = 1) {
-      if (stress < 0.4) return `rgba(52, 211, 153, ${alpha})`; // Safe green
-      if (stress < 0.75) return `rgba(251, 191, 36, ${alpha})`; // Yield warning amber
-      return `rgba(248, 113, 113, ${alpha})`; // Buckling stress red
-    }
-
-    // STRUCTURAL LOADS & STABILITY PHYSICS SOLVER
+    // MAIN PHYSICS LOAD TEST & CAPACITY EVALUATION ENGINE
     function runLoadTest() {
       if (testPhase !== 'edit') return;
-      
-      // Perform structural assessment
-      stressLevels = { columns: [], beams: [], braces: [], footings: [] };
+
+      stressLevels = { columns: [], beams: [], braces: [], footings: [], walls: [] };
       collapseTrigger = null;
       testPhase = 'test';
       collapseAnimPct = 0;
 
-      // Ensure building has footings connected to columns
-      if (columns.length === 0 && foundations.length === 0) {
-        showResult(false, '❌ Structural Empty', 'No structure or foundations placed. Add elements to design a load-bearing frame.');
-        testPhase = 'edit';
-        return;
-      }
-
-      // 1. Calculate structural weights at nodes
-      const nodeWeights = Array(GRID_SPANS_X.length).fill(0).map(() => Array(GRID_ROWS_Y.length).fill(0));
-      
-      // Member weights
-      columns.forEach(c => {
-        const w = getWeight('column', c.material, c.thickness);
-        nodeWeights[c.x][c.y] += w / 2;
-        nodeWeights[c.x][c.y + 1] += w / 2;
-      });
-
-      beams.forEach(b => {
-        const w = getWeight('beam', b.material, b.thickness);
-        nodeWeights[b.x][b.y] += w / 2;
-        nodeWeights[b.x + 1][b.y] += w / 2;
-        
-        // Add floor Dead Load + Live Load to span endpoints
-        nodeWeights[b.x][b.y] += 380;
-        nodeWeights[b.x + 1][b.y] += 380;
-      });
-
-      // 2. Propagate vertical force downwards (compress loads)
-      const colForces = Array(columns.length).fill(0);
-      const footingForces = Array(GRID_SPANS_X.length).fill(0);
-
-      // Iterate top floors to ground
-      for (let y = GRID_ROWS_Y.length - 1; y >= 0; y--) {
-        for (let x = 0; x < GRID_SPANS_X.length; x++) {
-          const weight = nodeWeights[x][y];
-          if (weight === 0) continue;
-
-          if (y === 0) {
-            // Reaches ground footing load
-            footingForces[x] += weight;
-            continue;
-          }
-
-          // Check supporting structures below node (x, y)
-          const colBelowIdx = columns.findIndex(c => c.x === x && c.y === y - 1);
-          const braceLeftIdx = braces.findIndex(b => b.x2 === x && b.y2 === y);
-          const braceRightIdx = braces.findIndex(b => b.x1 === x && b.y2 === y);
-
-          let supports = 0;
-          if (colBelowIdx !== -1) supports++;
-          if (braceLeftIdx !== -1) supports++;
-          if (braceRightIdx !== -1) supports++;
-
-          if (supports === 0) {
-            // Settle failure (free hanging heavy node collapses structure)
-            collapseTrigger = {
-              type: 'settlement',
-              x, y,
-              desc: `Gravity failure at story index ${y}. Supported floor structure requires a column or diagonal brace underneath!`
-            };
-            triggerCollapse();
-            return;
-          }
-
-          // Share weight among supports
-          const share = weight / supports;
-          if (colBelowIdx !== -1) {
-            colForces[colBelowIdx] += share;
-            nodeWeights[x][y - 1] += share;
-          }
-          if (braceLeftIdx !== -1) {
-            // Transfers diagonal loads down-left
-            const b = braces[braceLeftIdx];
-            nodeWeights[b.x1][b.y1] += share;
-          }
-          if (braceRightIdx !== -1) {
-            // Transfers diagonal loads down-right
-            const b = braces[braceRightIdx];
-            nodeWeights[b.x2][b.y1] += share;
-          }
-        }
-      }
-
-      // Check Column capacity limits
-      columns.forEach((c, idx) => {
-        const force = colForces[idx];
-        const cap = getStrength('column', c.material, c.thickness) * 1100;
-        const stress = force / cap;
-        stressLevels.columns[idx] = stress;
-
-        if (stress > 1.05 && !collapseTrigger) {
-          collapseTrigger = {
-            type: 'column',
-            index: idx,
-            y: c.y,
-            desc: `Column buckling failure at story ${c.y + 1}! The compressive weight of structural columns exceeded the loading limits of the selected thickness.`
-          };
-        }
-      });
-
-      // Check Beam moment spans
-      beams.forEach((b, idx) => {
-        // Calculate spanning bending stresses
-        // If a beam is unsupported (no column directly underneath spans), bending stress scales up quadratically with length
-        let leftSupported = columns.some(c => c.x === b.x && c.y === b.y - 1) || b.y === 0;
-        let rightSupported = columns.some(c => c.x === b.x + 1 && c.y === b.y - 1) || b.y === 0;
-
-        let supportPenalty = 1.0;
-        if (!leftSupported && !rightSupported) supportPenalty = 3.5;
-        else if (!leftSupported || !rightSupported) supportPenalty = 1.8;
-
-        const force = 380 * supportPenalty;
-        const cap = getStrength('column', b.material, b.thickness) * 380;
-        const stress = force / cap;
-        stressLevels.beams[idx] = stress;
-
-        if (stress > 1.05 && !collapseTrigger) {
-          collapseTrigger = {
-            type: 'beam',
-            index: idx,
-            y: b.y,
-            desc: `Beam bending yield failure on floor level ${b.y}! The unsupported floor span is too long for the selected member thickness.`
-          };
-        }
-      });
-
-      // Check Soil bearing limits on footings
-      footingForces.forEach((force, x) => {
-        if (force === 0) return;
-        const footing = foundations.find(f => f.x === x);
-        if (!footing) {
-          // Missing foundation block supporting column reaching ground
-          collapseTrigger = {
-            type: 'foundation',
-            index: x,
-            desc: `Soil settlement fail! Solid columns cannot connect directly to ground without a Footing block support.`
-          };
-          triggerCollapse();
-          return;
-        }
-
-        let area = 1.0;
-        let capacityBoost = 1.0;
-
-        if (footing.type === 'raft') {
-          // Raft footing shares weights across structural area
-          area = 3.5;
-        } else if (footing.type === 'pile') {
-          // Piles pierce soft clays reaching lower solid load capacity
-          capacityBoost = 4.5;
-        }
-
-        const capacity = SCENARIOS[currentLvl].soilCapacity * area * capacityBoost;
-        const stress = force / capacity;
-        stressLevels.footings[x] = stress;
-
-        if (stress > 1.02 && !collapseTrigger) {
-          collapseTrigger = {
-            type: 'foundation',
-            index: x,
-            desc: `Soil capacity bearing failure at grid column X:${x}! The footing sank into the ${SCENARIOS[currentLvl].soil} under heavy compressive loads. Consider upgrading to a Raft or Deep Pile system.`
-          };
-        }
-      });
-
-      // 3. Horizontal Wind Shear Resistance
-      const windForce = SCENARIOS[currentLvl].windLoad;
-      if (windForce > 0) {
-        // Calculate lateral stiffness resistance on each level
-        let totalStiffness = 0;
-        columns.forEach(c => {
-          const colStiff = getStrength('column', c.material, c.thickness) * 120;
-          totalStiffness += colStiff;
-        });
-        braces.forEach(b => {
-          const braceStiff = getStrength('column', b.material, b.thickness) * 850;
-          totalStiffness += braceStiff;
-        });
-
-        const swayFactor = windForce / (totalStiffness || 1);
-        windShiftOffset = Math.min(1.2, swayFactor);
-
-        if (swayFactor > 0.45 && !collapseTrigger) {
-          collapseTrigger = {
-            type: 'wind',
-            desc: `Lateral stability wind collapse! The structural framework swayed excessively under horizontal wind shear forces. Add diagonal steel Bracing to secure the frame's lateral shear limits.`
-          };
-        }
-      }
-
-      // Check Target height requirement achieved
-      let highestFloor = 0;
-      columns.forEach(c => {
-        if (c.y + 1 > highestFloor) highestFloor = c.y + 1;
-      });
-      beams.forEach(b => {
-        if (b.y > highestFloor) highestFloor = b.y;
-      });
-
-      if (highestFloor < SCENARIOS[currentLvl].heightNeeded && !collapseTrigger) {
-        showResult(false, '❌ Design Height Incomplete', `Building failed to reach target height. Please build up to floor level ${SCENARIOS[currentLvl].heightNeeded}.`);
+      // Base validation
+      if (columns.length === 0 && walls.length === 0) {
+        showResult(false, '❌ Structural Empty', 'No columns or load-bearing walls have been placed. Create a frame to test gravity loads.');
         testPhase = 'edit';
         drawWorkspace();
         return;
       }
 
-      // Execute assessment result loops
+      // Floor completion validation (slabs and walls required at each floor level)
+      const lvl = SCENARIOS[currentLvl];
+      for (let f = 1; f <= lvl.floors; f++) {
+        const floorY = f * 3;
+        const slabsAtLevel = slabs.filter(s => s.y === floorY);
+        if (slabsAtLevel.length === 0) {
+          showResult(false, '❌ Missing Slab (Ceiling)', `Floor level ${f} (height ${f * selectedFloorHeight}m) is missing slab panels. Slabs are required at each floor level to act as ceilings and floors.`);
+          testPhase = 'edit';
+          drawWorkspace();
+          return;
+        }
+
+        const floorBottom = (f - 1) * 3;
+        const wallsAtLevel = walls.filter(w => {
+          const minY = Math.min(w.y1, w.y2);
+          const maxY = Math.max(w.y1, w.y2);
+          if (w.y1 === w.y2 && w.y1 === floorY) return true;
+          if (w.x1 === w.x2 && minY < floorY && maxY > floorBottom) return true;
+          return false;
+        });
+        if (wallsAtLevel.length === 0) {
+          showResult(false, '❌ Missing Walls', `Floor level ${f} (height ${f * selectedFloorHeight}m) lacks partition or structural walls. A complete building requires wall enclosures on each floor.`);
+          testPhase = 'edit';
+          drawWorkspace();
+          return;
+        }
+      }
+
+      // 1. Structural gravity self-weight load flow
+      const nodeLoads = Array(NUM_COLS).fill(0).map(() => Array(NUM_ROWS).fill(0));
+
+      // Columns weight
+      columns.forEach(c => {
+        const wt = calculateMemberWeight('column', c.material, c.thickness, selectedFloorHeight / 3);
+        nodeLoads[c.x][c.y] += wt / 2.0;
+        nodeLoads[c.x][c.y + 1] += wt / 2.0;
+      });
+
+      // Beams weight
+      beams.forEach(b => {
+        const wt = calculateMemberWeight('beam', b.material, b.thickness, 1.0);
+        nodeLoads[b.x][b.y] += wt / 2.0;
+        nodeLoads[b.x + 1][b.y] += wt / 2.0;
+      });
+
+      // Braces weight
+      braces.forEach(br => {
+        const dx = Math.abs(br.x2 - br.x1);
+        const dy = Math.abs(br.y2 - br.y1) * (selectedFloorHeight / 3);
+        const len = Math.sqrt(dx*dx + dy*dy);
+        const wt = calculateMemberWeight('brace', br.material, br.thickness, len);
+        nodeLoads[br.x1][br.y1] += wt / 2.0;
+        nodeLoads[br.x2][br.y2] += wt / 2.0;
+      });
+
+      // Slabs: self-weight DL + SDL (finishes/services) + LL (imposed)
+      // IS 456 Table 18 load combination: 1.5×DL + 1.5×(SDL+LL)
+      const scenarioSDL = SCENARIOS[currentLvl].SDL || 0;
+      const symF = getSymmetryFactor();
+      slabs.forEach(s => {
+        const selfWt    = calculateMemberWeight('slab', '', s.thickness, 1.0, s.type) * symF;
+        const scenarioLL = SCENARIOS[currentLvl].liveLoad;
+        // Factored: 1.0×selfWt + 1.5×(SDL+LL) per unit slab area
+        const factored  = selfWt + (scenarioSDL + scenarioLL) * 1.5;
+        nodeLoads[s.x][s.y]     += factored / 2.0;
+        nodeLoads[s.x + 1][s.y] += factored / 2.0;
+      });
+
+      // Walls self weight (multiplied by symmetry — walls on all sides)
+      walls.forEach(w => {
+        const len = (w.y1 === w.y2) ? Math.abs(w.x2 - w.x1) : Math.abs(w.y2 - w.y1) * (selectedFloorHeight / 3);
+        const wt = calculateMemberWeight('wall', '', w.thickness, len, w.type) * symF;
+        nodeLoads[w.x1][w.y1] += wt / 2.0;
+        nodeLoads[w.x2][w.y2] += wt / 2.0;
+      });
+
+      // Clone original node loads before horizontal redistribution for span bending moment checks
+      const nodeLoadsBeforeRedist = nodeLoads.map(row => [...row]);
+
+      // ── UNIFIED TOP-DOWN LOAD FLOW ──────────────────────────────────────
+      // At each level y (from top to bottom):
+      //   Step A: Redistribute loads horizontally along continuous beam spans
+      //           to their supported endpoints (columns/walls/braces below).
+      //   Step B: Transmit the resulting supported-node loads downward.
+      // This ensures loads cascading from above are always redistributed
+      // before checking for vertical support — fixing the "segments" bug.
+
+      const colCompressForces = Array(columns.length).fill(0);
+      const wallCompressForces = Array(walls.length).fill(0);
+      const footingForces = Array(NUM_COLS).fill(0);
+      const beamShears = Array(beams.length).fill(0);
+      const braceForces = Array(braces.length).fill(0);
+
+      // Helper: find which X positions at level y have vertical support below
+      function getSupportedXsAtLevel(y) {
+        const supported = new Set();
+        columns.forEach(c => { if (c.x >= 0 && c.y === y - 1) supported.add(c.x); });
+        walls.forEach(w => {
+          if ((w.x1 === w.x2) && 
+              ((w.y1 === y && w.y2 === y - 1) || (w.y2 === y && w.y1 === y - 1))) {
+            supported.add(w.x1);
+          }
+        });
+        braces.forEach(br => {
+          if (br.y1 === y && br.y2 < y) supported.add(br.x1);
+          if (br.y2 === y && br.y1 < y) supported.add(br.x2);
+        });
+        return supported;
+      }
+
+      // Helper: BFS to find connected beam components at a given level
+      function getBeamComponentsAtLevel(y) {
+        const lvlBeams = beams.filter(b => b.y === y);
+        if (lvlBeams.length === 0) return { components: [], beamNodeSet: new Set() };
+
+        const adj = {};
+        const beamNodeSet = new Set();
+        lvlBeams.forEach(b => {
+          if (!adj[b.x]) adj[b.x] = [];
+          if (!adj[b.x + 1]) adj[b.x + 1] = [];
+          adj[b.x].push(b.x + 1);
+          adj[b.x + 1].push(b.x);
+          beamNodeSet.add(b.x);
+          beamNodeSet.add(b.x + 1);
+        });
+
+        const visited = new Set();
+        const components = [];
+        for (const nodeStr in adj) {
+          const node = parseInt(nodeStr);
+          if (!visited.has(node)) {
+            const comp = [];
+            const queue = [node];
+            visited.add(node);
+            while (queue.length > 0) {
+              const curr = queue.shift();
+              comp.push(curr);
+              (adj[curr] || []).forEach(neighbor => {
+                if (!visited.has(neighbor)) {
+                  visited.add(neighbor);
+                  queue.push(neighbor);
+                }
+              });
+            }
+            components.push(comp.sort((a, b) => a - b));
+          }
+        }
+        return { components, beamNodeSet };
+      }
+
+      for (let y = NUM_ROWS - 1; y >= 0; y--) {
+
+        // ── Step A: Horizontal redistribution via continuous beams ──
+        if (y > 0) {
+          const supportedSet = getSupportedXsAtLevel(y);
+          const { components, beamNodeSet } = getBeamComponentsAtLevel(y);
+
+          components.forEach(comp => {
+            const supportedXs = comp.filter(cx => supportedSet.has(cx)).sort((a, b) => a - b);
+
+            if (supportedXs.length === 0) {
+              // Entire beam span has zero supports — check if loaded
+              let compLoad = 0;
+              comp.forEach(cx => compLoad += nodeLoads[cx][y]);
+              if (compLoad > 0.01) {
+                collapseTrigger = {
+                  type: 'stability',
+                  y,
+                  desc: `Gravity yield failure at height level ${y * (selectedFloorHeight/3)}m!\nA continuous beam spanning X: ${Math.min(...comp)}m to ${Math.max(...comp)}m is completely unsupported.\nAdd vertical columns, load-bearing walls, or braces underneath.`
+                };
+              }
+            } else {
+              // Redistribute unsupported mid-span loads to nearest supports
+              comp.forEach(cx => {
+                if (supportedXs.includes(cx)) return; // Already supported
+
+                const load = nodeLoads[cx][y];
+                if (load < 0.001) return;
+
+                // Find nearest left and right supports
+                let xL = -1, xR = -1;
+                for (let i = supportedXs.length - 1; i >= 0; i--) {
+                  if (supportedXs[i] < cx) { xL = supportedXs[i]; break; }
+                }
+                for (let i = 0; i < supportedXs.length; i++) {
+                  if (supportedXs[i] > cx) { xR = supportedXs[i]; break; }
+                }
+
+                if (xL !== -1 && xR !== -1) {
+                  const dist = xR - xL;
+                  nodeLoads[xL][y] += load * (xR - cx) / dist;
+                  nodeLoads[xR][y] += load * (cx - xL) / dist;
+                } else if (xL !== -1) {
+                  nodeLoads[xL][y] += load;
+                } else if (xR !== -1) {
+                  nodeLoads[xR][y] += load;
+                }
+                nodeLoads[cx][y] = 0; // Load transferred to supports
+              });
+            }
+          });
+
+          if (collapseTrigger) {
+            triggerCollapse();
+            return;
+          }
+        }
+
+        // ── Step B: Transmit remaining loads at this level downward ──
+        for (let x = 0; x < NUM_COLS; x++) {
+          const load = nodeLoads[x][y];
+          if (load < 0.001) continue;
+
+          if (y === 0) {
+            footingForces[x] += load;
+            continue;
+          }
+
+          // Count supporting members below node (x, y)
+          const colsBelow = [];
+          columns.forEach((c, cIdx) => {
+            if (c.x === x && c.y === y - 1) colsBelow.push(cIdx);
+          });
+
+          const wallsBelow = [];
+          walls.forEach((w, wIdx) => {
+            if ((w.x1 === x && w.y1 === y && w.x2 === x && w.y2 === y - 1) ||
+                (w.x2 === x && w.y2 === y && w.x1 === x && w.y1 === y - 1)) {
+              wallsBelow.push(wIdx);
+            }
+          });
+
+          const bracesBelow = [];
+          braces.forEach((br, bIdx) => {
+            if ((br.x1 === x && br.y1 === y && br.y2 < y) || (br.x2 === x && br.y2 === y && br.y1 < y)) {
+              bracesBelow.push(bIdx);
+            }
+          });
+
+          const totalSupports = colsBelow.length + wallsBelow.length + bracesBelow.length;
+
+          if (totalSupports === 0) {
+            // Node has residual load but no vertical support and wasn't
+            // on a beam span (beam redistribution already cleared beam-span nodes).
+            // This is a true unsupported node → instability.
+            collapseTrigger = {
+              type: 'stability',
+              y,
+              desc: `Gravity yield failure at height level ${y * (selectedFloorHeight/3)}m! Node (${x}, ${y}) carries ${load.toFixed(1)} kN but has no vertical support below.\nAdd columns, load-bearing walls, or braces underneath this point.`
+            };
+            triggerCollapse();
+            return;
+          }
+
+          const share = load / totalSupports;
+          colsBelow.forEach(idx => {
+            colCompressForces[idx] += share;
+            nodeLoads[columns[idx].x][columns[idx].y] += share;
+          });
+          wallsBelow.forEach(idx => {
+            wallCompressForces[idx] += share;
+            const w = walls[idx];
+            const bottomY = Math.min(w.y1, w.y2);
+            nodeLoads[w.x1][bottomY] += share;
+          });
+          bracesBelow.forEach(idx => {
+            braceForces[idx] += share * 1.41; // Diagonal compression
+            const br = braces[idx];
+            const bottomY = Math.min(br.y1, br.y2);
+            const bottomX = (br.y1 < br.y2) ? br.x1 : br.x2;
+            nodeLoads[bottomX][bottomY] += share;
+          });
+        }
+      }
+
+      // 3. Stresses & limits verification
+      // ── (a) COLUMNS — IS 456 Cl.39 compressive check with slenderness reduction ──
+      let maxColStress = 0;
+      
+      // Group columns on each column line into vertical continuous stacks
+      const colStacks = [];
+      const colByX = {};
+      columns.forEach((c, idx) => {
+        if (!colByX[c.x]) colByX[c.x] = [];
+        colByX[c.x].push({ c, idx });
+      });
+
+      for (const xStr in colByX) {
+        const x = parseInt(xStr);
+        const colList = colByX[x].sort((a, b) => a.c.y - b.c.y);
+        
+        let currentStack = [];
+        for (let i = 0; i < colList.length; i++) {
+          const item = colList[i];
+          if (currentStack.length === 0) {
+            currentStack.push(item);
+          } else {
+            const lastItem = currentStack[currentStack.length - 1];
+            if (item.c.y === lastItem.c.y + 1) {
+              currentStack.push(item);
+            } else {
+              colStacks.push([...currentStack]);
+              currentStack = [item];
+            }
+          }
+        }
+        if (currentStack.length > 0) {
+          colStacks.push(currentStack);
+        }
+      }
+
+      // Evaluate each column stack
+      colStacks.forEach(stack => {
+        const x = stack[0].c.x;
+        const yStart = stack[0].c.y;
+        const yEnd = stack[stack.length - 1].c.y + 1;
+        
+        const bracedYs = [yStart, yEnd];
+        for (let y = yStart + 1; y < yEnd; y++) {
+          const hasBeam = beams.some(b => b.y === y && (b.x === x || b.x === x - 1));
+          const hasSlab = slabs.some(s => s.y === y && (s.x === x || s.x === x - 1));
+          const hasWall = walls.some(w => w.y1 === w.y2 && w.y1 === y && (Math.min(w.x1, w.x2) <= x && Math.max(w.x1, w.x2) >= x));
+          if (hasBeam || hasSlab || hasWall) {
+            bracedYs.push(y);
+          }
+        }
+        bracedYs.sort((a, b) => a - b);
+        
+        let maxUnbracedFloors = 1;
+        for (let i = 0; i < bracedYs.length - 1; i++) {
+          maxUnbracedFloors = Math.max(maxUnbracedFloors, bracedYs[i+1] - bracedYs[i]);
+        }
+        
+        const unbracedHeightM = maxUnbracedFloors * (selectedFloorHeight / 3);
+
+        stack.forEach(item => {
+          const c = item.c;
+          const idx = item.idx;
+          const force = colCompressForces[idx];
+          const thickM = c.thickness / 1000.0;
+          const Ag = thickM * thickM; // gross cross-section area (m²)
+
+          let fck = 25.0, fy = 415.0; // defaults
+          if (c.material === 'concrete') {
+            const cG = { M25: 25, M30: 30, M35: 35, M40: 40, M45: 45 };
+            fck = cG[c.concreteGrade] || 25;
+            fy  = ({ Fe250: 250, Fe415: 415, Fe500: 500 })[c.steelGrade] || 415;
+            var capacity = Ag * (0.4 * fck * 1000 + 0.67 * fy * 1000 * 0.02); // kN
+          } else if (c.material === 'steel') {
+            fy = ({ Fe250: 250, Fe415: 415, Fe500: 500 })[c.steelGrade] || 415;
+            var capacity = Ag * (fy * 1000) / 1.10;
+          } else {
+            var capacity = Ag * 12.0 * 1000; // kN (12 MPa for structural timber)
+          }
+
+          // Apply slenderness reduction factor
+          const slendernessRatio = (unbracedHeightM * 1000) / c.thickness;
+          let slendernessFactor = 1.0;
+          if (slendernessRatio > 12) {
+            slendernessFactor = Math.max(0.2, 1.25 - slendernessRatio / 48);
+          }
+          capacity *= slendernessFactor * 0.70; // safety factor
+
+          const stressRatio = force / (capacity || 0.1);
+          stressLevels.columns[idx] = stressRatio;
+          if (stressRatio > maxColStress) maxColStress = stressRatio;
+
+          if (stressRatio > 1.05 && !collapseTrigger) {
+            collapseTrigger = {
+              type: 'column', index: idx, y: c.y,
+              desc: `COLUMN BUCKLING — Level ${c.y}\n` +
+                    `Material: ${c.material.toUpperCase()} (${c.concreteGrade || c.steelGrade || 'Timber'}) | Size: ${c.thickness}×${c.thickness} mm\n` +
+                    `Applied force : ${force.toFixed(1)} kN\n` +
+                    `Column capacity: ${capacity.toFixed(1)} kN (unbraced height: ${unbracedHeightM.toFixed(1)}m)\n` +
+                    `Utilization   : ${(stressRatio * 100).toFixed(0)}%  ← EXCEEDED\n\n` +
+                    `Reason: ${slendernessRatio > 12 ? 'High column slenderness. The unbraced column buckled.' : 'Column is undersized for the gravity loads.'}\n` +
+                    `Fix: Increase column size to ≥${Math.ceil(c.thickness * Math.sqrt(stressRatio) / 10) * 10}mm or add bracing beams at intermediate floors.`
+            };
+          }
+        });
+      });
+
+      // ── (b) BEAMS — IS 456 flexure check (Mu_lim = 0.138·fck·b·d²) based on span length ──
+      let maxBeamStress = 0;
+      
+      for (let y = 1; y < NUM_ROWS; y++) {
+        const lvlBeams = beams.filter(b => b.y === y);
+        if (lvlBeams.length === 0) continue;
+
+        const supportedSet = getSupportedXsAtLevel(y);
+        const { components } = getBeamComponentsAtLevel(y);
+
+        components.forEach(comp => {
+          comp.sort((a, b) => a - b);
+          const xStart = comp[0];
+          const xEnd = comp[comp.length - 1];
+
+          const supports = comp.filter(cx => supportedSet.has(cx)).sort((a, b) => a - b);
+
+          if (supports.length === 0) {
+            lvlBeams.forEach(b => {
+              if (comp.includes(b.x)) {
+                const idx = beams.indexOf(b);
+                stressLevels.beams[idx] = 99.0;
+                maxBeamStress = Math.max(maxBeamStress, 99.0);
+              }
+            });
+            return;
+          }
+
+          const spans = [];
+          if (supports[0] > xStart) {
+            spans.push({ x1: xStart, x2: supports[0], type: 'cantilever' });
+          }
+          for (let i = 0; i < supports.length - 1; i++) {
+            spans.push({ x1: supports[i], x2: supports[i+1], type: 'simple' });
+          }
+          if (supports[supports.length - 1] < xEnd) {
+            spans.push({ x1: supports[supports.length - 1], x2: xEnd, type: 'cantilever' });
+          }
+
+          spans.forEach(span => {
+            const L = span.x2 - span.x1;
+            if (L <= 0.01) return;
+
+            let W = 0;
+            for (let cx = span.x1; cx <= span.x2; cx++) {
+              const factor = (cx === span.x1 || cx === span.x2) ? 0.5 : 1.0;
+              W += nodeLoadsBeforeRedist[cx][y] * factor;
+            }
+
+            const Md = (span.type === 'cantilever') ? (W * L / 2) : (W * L / 8);
+
+            lvlBeams.forEach(b => {
+              if (b.x >= span.x1 && b.x < span.x2) {
+                const idx = beams.indexOf(b);
+                const d = b.thickness / 1000.0;
+                const b_width = d * 0.4;
+
+                let capacity = 0;
+                if (b.material === 'concrete') {
+                  const fck_b = ({ M25: 25, M30: 30, M35: 35, M40: 40, M45: 45 })[b.concreteGrade] || 25;
+                  capacity = 0.138 * fck_b * 1000 * b_width * d * d;
+                } else if (b.material === 'steel') {
+                  const fy_b = ({ Fe250: 250, Fe415: 415, Fe500: 500 })[b.steelGrade] || 415;
+                  const Zp = 1.15 * (b_width * d * d / 6.0);
+                  capacity = Zp * fy_b * 1000 / 1.10;
+                } else {
+                  capacity = 0.08 * 12.0 * 1000 * b_width * d * d;
+                }
+
+                const stressRatio = Md / (capacity || 0.1);
+                stressLevels.beams[idx] = stressRatio;
+                maxBeamStress = Math.max(maxBeamStress, stressRatio);
+
+                if (stressRatio > 1.05 && !collapseTrigger) {
+                  collapseTrigger = {
+                    type: 'beam',
+                    index: idx,
+                    y: b.y,
+                    desc: `BEAM BENDING FAILURE — Floor level ${b.y}\n` +
+                          `Continuous span: ${span.x1}m to ${span.x2}m (Span Length: ${L.toFixed(1)}m, ${span.type.toUpperCase()})\n` +
+                          `Material: ${b.material.toUpperCase()} (${b.concreteGrade || b.steelGrade || 'Timber'}) | Size: ${b.thickness}mm\n` +
+                          `Factored Load on span : ${W.toFixed(1)} kN\n` +
+                          `Max Bending Moment    : ${Md.toFixed(1)} kN·m\n` +
+                          `Moment Capacity       : ${capacity.toFixed(1)} kN·m\n` +
+                          `Utilization           : ${(stressRatio * 100).toFixed(0)}%  ← EXCEEDED\n\n` +
+                          `Reason: ${span.type === 'cantilever' ? 'Excessive overhang length creating high cantilever moment.' : 'Beam span is too long for this cross-section size.'}\n` +
+                          `Fix: Increase beam depth, use stronger material, or add intermediate column supports.`
+                  };
+                }
+              }
+            });
+          });
+        });
+      }
+
+      // (c) Walls shear/comp check
+      let maxWallStress = 0;
+      walls.forEach((w, idx) => {
+        const force = wallCompressForces[idx];
+        const wThick = w.thickness / 1000.0;
+        const capacityMap = { brick: 4.0, concrete: 25.0, glass: 0.1, timber: 8.0 };
+        const capacity = wThick * 3.0 * capacityMap[w.type] * 350 * symF; // factored capacity × symmetry sides
+
+        const stressRatio = force / (capacity || 0.01);
+        stressLevels.walls[idx] = stressRatio;
+        if (stressRatio > maxWallStress) maxWallStress = stressRatio;
+
+        if (stressRatio > 1.05 && !collapseTrigger) {
+          collapseTrigger = {
+            type: 'wall',
+            index: idx,
+            y: Math.min(w.y1, w.y2),
+            desc: `Compressive wall shear collapse! The ${w.type.toUpperCase()} wall has fractured. Glass walls cannot carry structure gravity loads, consider concrete shear walls.`
+          };
+        }
+      });
+
+      // (d) Braces shear check
+      let maxBraceStress = 0;
+      braces.forEach((br, idx) => {
+        const force = braceForces[idx];
+        const area = (br.thickness / 1000.0) * (br.thickness / 1000.0);
+        let strength = 200;
+        if (br.material === 'steel') {
+          const sGrades = { Fe250: 150, Fe415: 250, Fe500: 320 };
+          strength = sGrades[br.steelGrade] || 250;
+        }
+
+        const capacity = area * strength * 450;
+        const stressRatio = force / (capacity || 0.1);
+        stressLevels.braces[idx] = stressRatio;
+        if (stressRatio > maxBraceStress) maxBraceStress = stressRatio;
+
+        if (stressRatio > 1.15 && !collapseTrigger) {
+          collapseTrigger = {
+            type: 'brace',
+            index: idx,
+            y: Math.min(br.y1, br.y2),
+            desc: `Tensile bracing snap! Steel diagonal braces failed due to excessive tension. Increase brace thickness.`
+          };
+        }
+      });
+
+      // (d2) Slabs flexural check
+      let maxSlabStress = 0;
+      slabs.forEach((s, idx) => {
+        const selfWt = calculateMemberWeight('slab', '', s.thickness, 1.0, s.type);
+        const scenarioSDL = SCENARIOS[currentLvl].SDL || 0;
+        const scenarioLL = SCENARIOS[currentLvl].liveLoad;
+        const load = selfWt + (scenarioSDL + scenarioLL) * 1.5; // factored load on this slab (kN)
+
+        const d = s.thickness / 1000.0; // slab thickness in meters
+        let capacity = 0;
+        if (s.type === 'concrete') {
+          capacity = 8000 * d * d;
+        } else if (s.type === 'steel') {
+          capacity = 15000 * d * d;
+        } else {
+          capacity = 4000 * d * d;
+        }
+
+        const stressRatio = load / (capacity || 0.1);
+        if (!stressLevels.slabs) stressLevels.slabs = [];
+        stressLevels.slabs[idx] = stressRatio;
+        if (stressRatio > maxSlabStress) maxSlabStress = stressRatio;
+
+        if (stressRatio > 1.05 && !collapseTrigger) {
+          collapseTrigger = {
+            type: 'slab',
+            index: idx,
+            y: s.y,
+            desc: `SLAB FLEXURAL FAILURE — Level ${s.y}\n` +
+                  `Slab Type: ${s.type.toUpperCase()} | Thickness: ${s.thickness}mm\n` +
+                  `Factored load : ${load.toFixed(1)} kN\n` +
+                  `Slab capacity : ${capacity.toFixed(1)} kN\n` +
+                  `Utilization   : ${(stressRatio * 100).toFixed(0)}%  ← EXCEEDED\n\n` +
+                  `Fix: Increase slab thickness or switch to a stronger material (Concrete or Composite Steel).`
+          };
+        }
+      });
+
+      // (e) Soil pressure checks
+      let maxFootStress = 0;
+      footingForces.forEach((force, colIdx) => {
+        if (force === 0) return;
+        const footing = foundations.find(f => f.x === colIdx);
+
+        if (!footing) {
+          collapseTrigger = {
+            type: 'foundation',
+            index: colIdx,
+            y: 0,
+            desc: `Settlement sinkage fail! Major column at grid ${colIdx}m connects directly to ground without a Footing block support.`
+          };
+          return;
+        }
+
+        let areaMultiplier = 1.0;
+        let bearingMult = 1.0;
+        if (footing.type === 'raft') areaMultiplier = 3.5;
+        if (footing.type === 'pile') bearingMult = 8.5; // Pile capacity transfers down to deeper stratum
+
+        const maxSoilCap = SCENARIOS[currentLvl].soilCapacity * areaMultiplier * bearingMult;
+        const stressRatio = force / maxSoilCap;
+        stressLevels.footings[colIdx] = stressRatio;
+        if (stressRatio > maxFootStress) maxFootStress = stressRatio;
+
+        if (stressRatio > 1.05 && !collapseTrigger) {
+          collapseTrigger = {
+            type: 'foundation',
+            index: colIdx,
+            y: 0,
+            desc: `Soil Bearing capacity exceeded! Foundations sank into the ${SCENARIOS[currentLvl].soil} layer. Upgrade to Raft footing or Deep Pile system.`
+          };
+        }
+      });
+
+      // (f) Lateral loads (Wind & Seismic Base Shear)
+      let lateralForce = 0;
+      if (windActive) lateralForce += SCENARIOS[currentLvl].windLoad;
+      if (seismicActive) {
+        // Earthquake Base shear V = Ah * W. Ah = 0.08, W = total structure DL
+        let totalWt = 0;
+        columns.forEach(c => totalWt += calculateMemberWeight('column', c.material, c.thickness, selectedFloorHeight / 3));
+        beams.forEach(b => totalWt += calculateMemberWeight('beam', b.material, b.thickness, 1.0));
+        walls.forEach(w => totalWt += calculateMemberWeight('wall', '', w.thickness, 1.0, w.type) * symF);
+        lateralForce += totalWt * 0.08;
+      }
+
+      if (lateralForce > 0) {
+        let lateralCapacity = 0;
+        // Braces provide diagonal shear resistance
+        braces.forEach(br => {
+          const cap = calculateMemberCost('brace', br.material, br.thickness) * 12.0;
+          lateralCapacity += cap;
+        });
+        // Concrete walls act as major shear walls (all symmetric sides contribute)
+        walls.forEach(w => {
+          if (w.type === 'concrete') lateralCapacity += 5000 * symF;
+          if (w.type === 'brick') lateralCapacity += 800 * symF;
+        });
+
+        const swayStiffness = lateralCapacity || 0.1;
+        const swayFactor = lateralForce / swayStiffness;
+        windShiftOffset = Math.min(1.5, swayFactor);
+
+        if (swayFactor > 0.65 && !collapseTrigger) {
+          collapseTrigger = {
+            type: 'wind',
+            y: 3,
+            desc: `Lateral shear collapse! The building frames collapsed horizontally. Concrete shear walls or Steel braces are required to secure stability.`
+          };
+        }
+      }
+
+      // Height requirements verify
+      let buildingH = 0;
+      columns.forEach(c => {
+        if ((c.y + 1) * (selectedFloorHeight/3) > buildingH) buildingH = (c.y + 1) * (selectedFloorHeight/3);
+      });
+      walls.forEach(w => {
+        const topY = Math.max(w.y1, w.y2);
+        if (topY * (selectedFloorHeight/3) > buildingH) buildingH = topY * (selectedFloorHeight/3);
+      });
+
+      const requiredH = SCENARIOS[currentLvl].heightNeeded;
+      if (buildingH < requiredH && !collapseTrigger) {
+        showResult(false, '❌ Insufficient Height', `The building did not reach the target height of ${requiredH}m. Your building stands at only ${buildingH}m.`);
+        testPhase = 'edit';
+        drawWorkspace();
+        return;
+      }
+
+      // Populate Analysis Tab UI
+      document.getElementById('stat-col-stress').textContent = isNaN(maxColStress) ? '—' : `${(maxColStress * 100).toFixed(0)}%`;
+      document.getElementById('stat-col-status').textContent = maxColStress > 1.0 ? 'FAIL' : 'PASS';
+      document.getElementById('stat-beam-stress').textContent = isNaN(maxBeamStress) ? '—' : `${(maxBeamStress * 100).toFixed(0)}%`;
+      document.getElementById('stat-beam-status').textContent = maxBeamStress > 1.0 ? 'FAIL' : 'PASS';
+      document.getElementById('stat-brace-stress').textContent = isNaN(maxBraceStress) ? '—' : `${(maxBraceStress * 100).toFixed(0)}%`;
+      document.getElementById('stat-brace-status').textContent = maxBraceStress > 1.0 ? 'FAIL' : 'PASS';
+      document.getElementById('stat-foot-stress').textContent = isNaN(maxFootStress) ? '—' : `${(maxFootStress * 100).toFixed(0)}%`;
+      document.getElementById('stat-foot-status').textContent = maxFootStress > 1.0 ? 'FAIL' : 'PASS';
+      document.getElementById('stat-wall-stress').textContent = isNaN(maxWallStress) ? '—' : `${(maxWallStress * 100).toFixed(0)}%`;
+      document.getElementById('stat-wall-status').textContent = maxWallStress > 1.0 ? 'FAIL' : 'PASS';
+      document.getElementById('stat-slab-stress').textContent = isNaN(maxSlabStress) ? '—' : `${(maxSlabStress * 100).toFixed(0)}%`;
+      document.getElementById('stat-slab-status').textContent = maxSlabStress > 1.0 ? 'FAIL' : 'PASS';
+
       if (collapseTrigger) {
         triggerCollapse();
       } else {
@@ -1378,13 +3956,17 @@
     function triggerCollapse() {
       testPhase = 'fail';
       collapseAnimPct = 0;
-      
+
       const stabilityEl = document.getElementById('hud-stability');
       stabilityEl.textContent = 'CRITICAL YIELD';
       stabilityEl.className = 'hud-val danger';
 
       function animCollapse() {
-        collapseAnimPct += 0.025;
+        collapseAnimPct += 0.03;
+        if (seismicActive) {
+          earthquakeShake = (1.0 - collapseAnimPct) * 12;
+        }
+
         if (collapseAnimPct >= 1.0) {
           collapseAnimPct = 1.0;
           drawWorkspace();
@@ -1399,52 +3981,143 @@
 
     function triggerSuccess() {
       testPhase = 'success';
-      const scoreSaved = totalCost;
+      const score  = totalCost;
+      const budget = SCENARIOS[currentLvl].budget;
+      const savings   = budget - score;
+      const isProfit  = savings >= 0;
+      const pct       = Math.abs(savings / budget * 100).toFixed(1);
+      const budgetLine = isProfit
+        ? `💰 PROFIT: $${savings.toLocaleString()} saved  (${pct}% under budget)`
+        : `📉 LOSS:   $${Math.abs(savings).toLocaleString()} over   (${pct}% above budget)`;
 
       const stabilityEl = document.getElementById('hud-stability');
-      stabilityEl.textContent = 'STABLE';
-      stabilityEl.className = 'hud-val good';
+      stabilityEl.textContent = isProfit ? 'STABLE + PROFIT' : 'STABLE (LOSS)';
+      stabilityEl.className   = 'hud-val good';
 
-      // Save level pb
-      const pbKey = `pb_struct_lvl_${currentLvl}`;
+      // Save personal best (lower cost = better)
+      const pbKey  = `pb_struct_lvl_${currentLvl}`;
       const prevPB = localStorage.getItem(pbKey);
-      if (!prevPB || scoreSaved < parseInt(prevPB)) {
-        localStorage.setItem(pbKey, scoreSaved);
-      }
+      if (!prevPB || score < parseInt(prevPB)) localStorage.setItem(pbKey, score);
       loadPBStats();
 
-      // Slow load testing animation
-      let loops = 0;
-      function pulseL() {
-        loops++;
+      const lvl        = SCENARIOS[currentLvl];
+      const numSlabs   = slabs.length;
+      const numPanels  = Math.max(slabs.length, beams.length);
+      const sdlTotal   = (lvl.SDL || 0) * numPanels;
+      const llTotal    = lvl.liveLoad * numPanels;
+
+      // Calculate total structural dead load weight
+      let totalDL = 0;
+      columns.forEach(c   => totalDL += calculateMemberWeight('column', c.material, c.thickness, selectedFloorHeight / 3));
+      beams.forEach(b     => totalDL += calculateMemberWeight('beam',   b.material, b.thickness, 1.0));
+      braces.forEach(br   => { const dx = Math.abs(br.x2-br.x1), dy = Math.abs(br.y2-br.y1)*(selectedFloorHeight/3); totalDL += calculateMemberWeight('brace', br.material, br.thickness, Math.sqrt(dx*dx+dy*dy)); });
+      walls.forEach(w     => { const len = w.y1===w.y2 ? Math.abs(w.x2-w.x1) : Math.abs(w.y2-w.y1)*(selectedFloorHeight/3); totalDL += calculateMemberWeight('wall','',w.thickness,len,w.type) * getSymmetryFactor(); });
+      slabs.forEach(s     => totalDL += calculateMemberWeight('slab', '', s.thickness, 1.0, s.type) * getSymmetryFactor());
+
+      const lc1  = 1.5 * totalDL;                          // 1.5×DL
+      const lc2  = 1.5 * (totalDL + sdlTotal + llTotal);   // 1.5×(DL+SDL+LL)
+      const lcW  = windActive  ? 1.2 * (totalDL + sdlTotal + llTotal + SCENARIOS[currentLvl].windLoad) : null;
+      const lcE  = seismicActive ? 1.2 * (totalDL + sdlTotal + llTotal + totalDL * 0.08) : null;
+
+      // Calculate maximum stress utilization
+      const maxStress = Math.max(
+        columns.length > 0 ? Math.max(...stressLevels.columns) : 0,
+        beams.length > 0 ? Math.max(...stressLevels.beams) : 0,
+        braces.length > 0 ? Math.max(...stressLevels.braces) : 0,
+        foundations.length > 0 ? Math.max(...stressLevels.footings.filter(f => f !== undefined)) : 0,
+        walls.length > 0 ? Math.max(...stressLevels.walls) : 0,
+        slabs.length > 0 ? Math.max(...stressLevels.slabs) : 0
+      );
+
+      let frameCount = 0;
+      function successPulse() {
+        if (testPhase !== 'success') return;
+        frameCount++;
+        if (seismicActive) earthquakeShake = Math.sin(frameCount * 0.15) * 5;
         drawWorkspace();
-        if (loops < 120) {
-          animId = requestAnimationFrame(pulseL);
-        } else {
-          showResult(true, '🎉 Structural Success!', `Excellent work! Your building sustained the dead load, live loads, and soil pressures successfully.\n\nProject Budget spent: $${scoreSaved.toLocaleString()}`);
+        
+        if (frameCount === 100) {
+          const durabilityVal = maxStress > 0.3 ? Math.max(50, Math.round(100 - (maxStress - 0.3) * 60)) : 100;
+          const budgetBonus = (savings / budget) * 40;
+          const durabilityBonus = (durabilityVal - 75) * 0.4;
+          const satisfactionVal = Math.round(Math.max(15, Math.min(100, 65 + budgetBonus + durabilityBonus + 5)));
+          const stars = '★'.repeat(Math.max(1, Math.min(5, Math.ceil(satisfactionVal / 20)))) + '☆'.repeat(5 - Math.max(1, Math.min(5, Math.ceil(satisfactionVal / 20))));
+          
+          document.getElementById('stat-modal-durability').textContent = `🛡️ ${durabilityVal}%`;
+          document.getElementById('stat-modal-satisfaction').textContent = `${stars} ${satisfactionVal}%`;
+          document.getElementById('stat-modal-money').innerHTML = savings >= 0 
+            ? `💰 Profit: <span style="color:var(--green-neon); font-weight:bold;">+$${savings.toLocaleString()}</span>` 
+            : `📉 Loss: <span style="color:var(--red-neon); font-weight:bold;">-$${Math.abs(savings).toLocaleString()}</span>`;
+
+          const lines = [
+            `━━━━━ STRUCTURAL REPORT ━━━━━`,
+            `Building: ${lvl.buildingUse || lvl.name}`,
+            ``,
+            `─ GRAVITY LOADS (unfactored) ─`,
+            `  Structural DL : ${totalDL.toFixed(2)} kN`,
+            `  SDL (${lvl.sdlDesc || lvl.SDL + ' kN/m²'}):`,
+            `         ${sdlTotal.toFixed(2)} kN  (${numPanels} panels)`,
+            `  Live Load (${lvl.liveLoadDesc || lvl.liveLoad + ' kN/m²'}):`,
+            `         ${llTotal.toFixed(2)} kN  (${numPanels} panels)`,
+            `  TOTAL unfactored: ${(totalDL + sdlTotal + llTotal).toFixed(2)} kN`,
+            ``,
+            `─ FACTORED LOAD COMBINATIONS (IS 456) ─`,
+            `  LC-1  1.5×DL              = ${lc1.toFixed(1)} kN`,
+            `  LC-2  1.5×(DL+SDL+LL)    = ${lc2.toFixed(1)} kN`,
+            lcW ? `  LC-3  1.2×(DL+SDL+LL+WL) = ${lcW.toFixed(1)} kN` : null,
+            lcE ? `  LC-4  1.2×(DL+SDL+LL+EL) = ${lcE.toFixed(1)} kN` : null,
+            ``,
+            `─ MEMBERS ─`,
+            `  Columns: ${columns.length}  Beams: ${beams.length}  Braces: ${braces.length}`,
+            `  Walls: ${walls.length * getSymmetryFactor()}${symmetricBuild ? ' (×4 sides)' : ''}  Slabs: ${numSlabs * getSymmetryFactor()}${symmetricBuild ? ' (×4)' : ''}  Footings: ${foundations.length}`,
+            ``,
+            `─ BUDGET OUTCOME ─`,
+            `  Budget : $${budget.toLocaleString()}`,
+            `  Spent  : $${score.toLocaleString()}`,
+            `  ${budgetLine}`,
+            ``,
+            isProfit
+              ? `🏆 Excellent! Safe structure and cost-efficient.`
+              : `⚠️  Structure is safe but exceeded budget.\n   Try reducing member sizes or cheaper materials.`
+          ].filter(l => l !== null).join('\n');
+
+          const title = isProfit ? '🎉 Structural Success!' : '⚠️  Stable — Over Budget';
+          showResult(isProfit, title, lines);
         }
+        
+        animId = requestAnimationFrame(successPulse);
       }
-      pulseL();
+      successPulse();
     }
 
-    // MODAL HANDLERS
     function showResult(success, title, text) {
       document.getElementById('modalIcon').textContent = success ? '🎉' : '💥';
       document.getElementById('modalTitle').textContent = title;
       document.getElementById('modalBody').textContent = text;
-      
-      const modal = document.getElementById('resultModal');
-      modal.classList.add('active');
+
+      const statsPanel = document.getElementById('modalStats');
+      const furnishBtn = document.getElementById('modalFurnishBtn');
+      if (success) {
+        statsPanel.style.display = 'block';
+        furnishBtn.style.display = 'block';
+      } else {
+        statsPanel.style.display = 'none';
+        furnishBtn.style.display = 'none';
+      }
+
+      document.getElementById('resultModal').classList.add('active');
     }
 
     function closeModal() {
       document.getElementById('resultModal').classList.remove('active');
+      document.getElementById('tab-furnish-btn').style.display = 'none';
       testPhase = 'edit';
-      stressLevels = { columns: [], beams: [], braces: [], footings: [] };
+      stressLevels = { columns: [], beams: [], braces: [], footings: [], walls: [] };
       windShiftOffset = 0;
       collapseAnimPct = 0;
       collapseTrigger = null;
-      
+      earthquakeShake = 0;
+
       const stabilityEl = document.getElementById('hud-stability');
       stabilityEl.textContent = '—';
       stabilityEl.className = 'hud-val';
@@ -1453,4 +4126,5 @@
     }
   </script>
 </body>
+
 </html>
