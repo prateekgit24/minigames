@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://prateekgit24.github.io/minigames/sitemap.xml

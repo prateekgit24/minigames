@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Privacy Policy for Mini Games Hub. Learn about how we handle local data storage and player statistics.">
+    <title>Privacy Policy — Mini Games Hub</title>
+    <link rel="icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* ── Ice (cool blues) ── */
+            --bg: #02030a;
+            --bg-soft: rgba(6, 8, 18, 0.86);
+            --panel: rgba(10, 13, 26, 0.78);
+            --panel-strong: rgba(6, 9, 20, 0.96);
+            --border: rgba(82, 140, 255, 0.14);
+            --border-strong: rgba(82, 140, 255, 0.36);
+            --text: #f2f6ff;
+            --muted: #8fa0c8;
+            --accent: #4a8fff;
+            --accent-2: #1a6aff;
+            --accent-3: #cfe1ff;
+            --accent-4: #6ec8ff;
+            /* ── Fire (oranges / reds) ── */
+            --fire: #ff6a1a;
+            --fire-2: #e63900;
+            --fire-3: #ffb347;
+            --fire-4: #ff4422;
+            --fire-glow: rgba(255, 100, 20, 0.28);
+            --fire-border: rgba(255, 100, 20, 0.32);
+            /* ── Shared ── */
+            --shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+            --radius-xl: 28px;
+            --radius-lg: 20px;
+            --radius-md: 16px;
+            --transition: 220ms ease;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background:
+                /* fire glow — bottom right */
+                radial-gradient(ellipse at 92% 88%, rgba(255, 80, 10, 0.13), transparent 38%),
+                /* fire glow — top right */
+                radial-gradient(ellipse at 88% 8%, rgba(255, 100, 20, 0.09), transparent 26%),
+                /* ice glow — top left */
+                radial-gradient(ellipse at 4% 5%, rgba(60, 140, 255, 0.18), transparent 32%),
+                /* ice glow — mid left */
+                radial-gradient(ellipse at 0% 60%, rgba(30, 100, 255, 0.08), transparent 28%),
+                linear-gradient(175deg, #03050e 0%, #060910 45%, #080510 100%);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+            background-size: 68px 68px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.38), transparent 88%);
+            opacity: 0.55;
+            z-index: 0;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .page-shell {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            background: linear-gradient(180deg, rgba(3, 5, 12, 0.97), rgba(4, 6, 14, 0.82));
+            border-bottom: 1.5px solid transparent;
+            border-image: linear-gradient(90deg, rgba(255, 90, 15, 0.55) 0%, rgba(82, 140, 255, 0.22) 45%, rgba(82, 140, 255, 0.06) 100%) 1;
+            box-shadow: 0 1px 0 0 rgba(255, 90, 15, 0.12), 0 2px 24px rgba(0, 0, 0, 0.45);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--fire), var(--fire-4), transparent);
+            border-radius: 0 2px 2px 0;
+            opacity: 0.85;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-mark {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            object-fit: cover;
+            box-shadow:
+                0 0 0 1.5px rgba(255, 100, 20, 0.35),
+                0 0 0 3px rgba(60, 130, 255, 0.18),
+                0 4px 16px rgba(255, 70, 10, 0.2);
+            transition: transform var(--transition);
+        }
+
+        .brand-link:hover .brand-mark {
+            transform: scale(1.05) rotate(-1deg);
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(100deg, var(--fire-3) 0%, var(--fire) 30%, #c8d8ff 65%, var(--accent-4) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .brand-subtitle {
+            color: var(--muted);
+            font-size: 0.78rem;
+            opacity: 0.8;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 40px;
+            padding: 0 18px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            transition: transform var(--transition), background var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+        }
+
+        .action-btn.secondary {
+            background: rgba(6, 9, 20, 0.9);
+            border: 1px solid rgba(82, 140, 255, 0.26);
+            color: var(--accent-4);
+            box-shadow: 0 0 18px rgba(60, 140, 255, 0.06);
+        }
+
+        .action-btn.secondary:hover {
+            border-color: rgba(60, 140, 255, 0.5);
+            background: rgba(60, 120, 255, 0.1);
+            color: var(--accent-4);
+            box-shadow: 0 8px 28px rgba(60, 140, 255, 0.18);
+            transform: translateY(-2px);
+        }
+
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 24px 80px;
+            width: 100%;
+        }
+
+        .document-card {
+            background: linear-gradient(160deg, rgba(10, 13, 26, 0.92), rgba(6, 8, 18, 0.97));
+            border: 1px solid rgba(255, 90, 15, 0.16);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow), 0 0 60px rgba(255, 70, 10, 0.04);
+            padding: clamp(24px, 5vw, 48px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .document-card::before {
+            content: '';
+            position: absolute;
+            inset: -40px auto auto -40px;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(60, 140, 255, 0.12), transparent 65%);
+            filter: blur(8px);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 90, 15, 0.08);
+            border: 1px solid rgba(255, 100, 20, 0.22);
+            color: var(--fire-3);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 2.75rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.05em;
+            margin-bottom: 28px;
+            background: linear-gradient(110deg, var(--text) 0%, var(--accent-4) 55%, var(--accent-3) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--accent-4);
+            margin-top: 36px;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+            border-bottom: 1px dashed rgba(82, 140, 255, 0.15);
+            padding-bottom: 8px;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.75;
+            font-size: 0.96rem;
+            margin-bottom: 18px;
+        }
+
+        ul {
+            margin-bottom: 20px;
+            list-style: none;
+        }
+
+        li {
+            color: var(--muted);
+            line-height: 1.75;
+            font-size: 0.96rem;
+            margin-bottom: 10px;
+            position: relative;
+            padding-left: 24px;
+        }
+
+        li::before {
+            content: '✦';
+            position: absolute;
+            left: 0;
+            color: var(--fire-3);
+            font-size: 0.9rem;
+        }
+
+        .highlight-box {
+            padding: 18px;
+            border-radius: var(--radius-md);
+            background: rgba(82, 140, 255, 0.05);
+            border: 1px solid rgba(82, 140, 255, 0.18);
+            margin-bottom: 20px;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .last-updated {
+            font-size: 0.84rem;
+            color: var(--muted);
+            opacity: 0.7;
+            margin-top: 40px;
+            border-top: 1px solid rgba(82, 140, 255, 0.12);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        footer {
+            margin-top: auto;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px 40px;
+        }
+
+        .footer-inner {
+            padding: 20px 28px;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(135deg, rgba(255, 70, 10, 0.05), rgba(6, 8, 18, 0.85));
+            border: 1px solid rgba(255, 90, 15, 0.14);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 0 40px rgba(255, 60, 10, 0.06);
+            font-size: 0.88rem;
+        }
+
+        .footer-inner strong {
+            background: linear-gradient(100deg, var(--fire-3), var(--fire));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        @media (max-width: 600px) {
+            .header-inner {
+                padding: 14px 16px;
+            }
+            .document-card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+            main {
+                padding: 20px 16px 60px;
+            }
+            footer {
+                padding: 0 16px 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-shell">
+        <header>
+            <div class="header-inner">
+                <a href="index.html" class="brand-link">
+                    <img src="assets/logo.png" alt="Mini Games Hub logo" class="brand-mark">
+                    <div class="brand-copy">
+                        <div class="brand-title">Mini Games Hub</div>
+                        <div class="brand-subtitle">Information policy</div>
+                    </div>
+                </a>
+                <a class="action-btn secondary" href="index.html">← Back to Hub</a>
+            </div>
+        </header>
+
+        <main>
+            <article class="document-card">
+                <span class="eyebrow">Privacy Statement</span>
+                <h1>Privacy Policy</h1>
+                <p>Mini Games Hub is committed to providing a fun, transparent, and private browser gaming space. This document details how we interact with your browser, cookies, and local data files.</p>
+
+                <div class="highlight-box">
+                    <p>⚡ Zero Registration & Zero Tracking: We do not collect names, email addresses, cookies, IP records, or player identities. The platform is entirely static and client-side.</p>
+                </div>
+
+                <h2>1. What Data is Collected?</h2>
+                <p>We do not operate a centralized backend database. No personal credentials, session identifiers, or tracking scripts are generated or kept by our host. You can play all games anonymously without creating an account.</p>
+
+                <h2>2. Client-Side Browser Storage (localStorage)</h2>
+                <p>To deliver a premium, personalized gaming environment, the website stores small snippets of text data locally within your web browser using HTML5 <code>localStorage</code>. This data remains on your machine and is never transmitted to us:</p>
+                <ul>
+                    <li><strong>Gameplay History:</strong> Tracks which games you played and when, rendering the "Last: X minutes ago" tags on game cards.</li>
+                    <li><strong>High Scores & PBs:</strong> Stores your speed values, click counts, or test completions (like in Click Counter or Word Game) to show your Personal Best records.</li>
+                    <li><strong>Simulation Budgets:</strong> Stores designed member thicknesses, foundation data, or draft saves in games like Structural Engineer.</li>
+                </ul>
+
+                <h2>3. Cookies & Analytics</h2>
+                <p>This site does not drop marketing cookies, advertising pixels, or analytics trackers (such as Google Analytics or Facebook Pixel). Some browser preferences or layout configurations may utilize local device cache files to optimize render times.</p>
+
+                <h2>4. External Services</h2>
+                <p>Our pages load static assets, fonts, and script resources from reliable external networks (e.g., Google Fonts, static CDN assets). When your browser fetches these components, the external service may register request diagnostics like your IP address, subject to their respective privacy terms.</p>
+
+                <h2>5. Clearing Your Data</h2>
+                <p>Because your games history and score records are kept inside your local web browser, you can clear them at any time by:</p>
+                <ul>
+                    <li>Clearing your web browser's cache and site data under your privacy settings.</li>
+                    <li>Pressing F12 to open developer tools, selecting the 'Application' or 'Storage' tab, choosing 'Local Storage', and clicking 'Clear All'.</li>
+                </ul>
+
+                <h2>6. Updates to this Policy</h2>
+                <p>We may make minor corrections to this statement to reflect changes in added mini-games or new storage variables. Any updates will be reflected on this page with the revision timestamp below.</p>
+
+                <div class="last-updated">
+                    <span>Last updated: June 11, 2026</span>
+                    <span>© 2026 Mini Games Hub</span>
+                </div>
+            </article>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-inner">
+                <span><strong>Mini Games Hub</strong> - built for quick play and future expansion.</span>
+                <span>2026</span>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

@@ -4,12 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Mini Games Hub - a futuristic collection of browser mini games with fast access, clean navigation, and room to grow.">
+    <meta name="description"
+        content="Mini Games Hub - a futuristic collection of browser mini games with fast access, clean navigation, and room to grow.">
     <title>Mini Games Hub</title>
     <link rel="icon" href="assets/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             /* ── Ice (cool blues) ── */
@@ -76,10 +78,10 @@
             inset: 0;
             pointer-events: none;
             background-image:
-                linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px);
+                linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
             background-size: 68px 68px;
-            mask-image: linear-gradient(180deg, rgba(0,0,0,0.38), transparent 88%);
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.38), transparent 88%);
             opacity: 0.55;
         }
 
@@ -92,14 +94,23 @@
             width: 520px;
             height: 520px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,80,10,0.07), transparent 65%);
+            background: radial-gradient(circle, rgba(255, 80, 10, 0.07), transparent 65%);
             pointer-events: none;
             animation: firePulse 6s ease-in-out infinite;
         }
 
         @keyframes firePulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50%       { transform: scale(1.18); opacity: 1; }
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: scale(1.18);
+                opacity: 1;
+            }
         }
 
         a {
@@ -123,19 +134,21 @@
             z-index: 50;
             backdrop-filter: blur(22px);
             -webkit-backdrop-filter: blur(22px);
-            background: linear-gradient(180deg, rgba(3,5,12,0.97), rgba(4,6,14,0.82));
+            background: linear-gradient(180deg, rgba(3, 5, 12, 0.97), rgba(4, 6, 14, 0.82));
             /* fire-to-ice gradient border bottom */
             border-bottom: 1.5px solid transparent;
-            border-image: linear-gradient(90deg, rgba(255,90,15,0.55) 0%, rgba(82,140,255,0.22) 45%, rgba(82,140,255,0.06) 100%) 1;
+            border-image: linear-gradient(90deg, rgba(255, 90, 15, 0.55) 0%, rgba(82, 140, 255, 0.22) 45%, rgba(82, 140, 255, 0.06) 100%) 1;
             /* fallback for browsers that don't support border-image */
-            box-shadow: 0 1px 0 0 rgba(255,90,15,0.12), 0 2px 24px rgba(0,0,0,0.45);
+            box-shadow: 0 1px 0 0 rgba(255, 90, 15, 0.12), 0 2px 24px rgba(0, 0, 0, 0.45);
         }
 
         /* Fire flare on left edge of header */
         header::before {
             content: '';
             position: absolute;
-            left: 0; top: 0; bottom: 0;
+            left: 0;
+            top: 0;
+            bottom: 0;
             width: 4px;
             background: linear-gradient(180deg, var(--fire), var(--fire-4), transparent);
             border-radius: 0 2px 2px 0;
@@ -200,8 +213,13 @@
             line-height: 1;
         }
 
-        .header-search-clear:hover { color: var(--text); }
-        .header-search-clear.visible { display: block; }
+        .header-search-clear:hover {
+            color: var(--text);
+        }
+
+        .header-search-clear.visible {
+            display: block;
+        }
 
         .header-search-results-count {
             position: absolute;
@@ -218,7 +236,9 @@
             backdrop-filter: blur(8px);
         }
 
-        .header-search-results-count.visible { display: block; }
+        .header-search-results-count.visible {
+            display: block;
+        }
 
         .header-inner {
             max-width: 1400px;
@@ -235,20 +255,20 @@
             border-radius: 18px;
             object-fit: cover;
             box-shadow:
-                0 0 0 1.5px rgba(255,100,20,0.35),
-                0 0 0 3px rgba(60,130,255,0.18),
-                0 8px 32px rgba(255,70,10,0.28),
-                0 2px 12px rgba(0,0,0,0.5);
+                0 0 0 1.5px rgba(255, 100, 20, 0.35),
+                0 0 0 3px rgba(60, 130, 255, 0.18),
+                0 8px 32px rgba(255, 70, 10, 0.28),
+                0 2px 12px rgba(0, 0, 0, 0.5);
             transition: transform var(--transition), box-shadow var(--transition);
         }
 
         .brand-mark:hover {
             transform: scale(1.05) rotate(-1deg);
             box-shadow:
-                0 0 0 2px rgba(255,120,20,0.5),
-                0 0 0 5px rgba(60,130,255,0.22),
-                0 16px 44px rgba(255,80,10,0.4),
-                0 4px 16px rgba(0,0,0,0.6);
+                0 0 0 2px rgba(255, 120, 20, 0.5),
+                0 0 0 5px rgba(60, 130, 255, 0.22),
+                0 16px 44px rgba(255, 80, 10, 0.4),
+                0 4px 16px rgba(0, 0, 0, 0.6);
         }
 
         .brand-copy {
@@ -286,13 +306,13 @@
             padding: 7px 13px;
             border: 1px solid var(--fire-border);
             border-radius: 999px;
-            background: rgba(255,80,10,0.07);
+            background: rgba(255, 80, 10, 0.07);
             color: var(--fire-3);
             font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            box-shadow: 0 0 12px rgba(255,80,10,0.12);
+            box-shadow: 0 0 12px rgba(255, 80, 10, 0.12);
         }
 
         .nav-links {
@@ -314,9 +334,9 @@
         .nav-links a:hover,
         .nav-links a:focus-visible {
             color: var(--fire-3);
-            background: rgba(255,90,15,0.07);
-            border-color: rgba(255,90,15,0.18);
-            text-shadow: 0 0 14px rgba(255,120,20,0.4);
+            background: rgba(255, 90, 15, 0.07);
+            border-color: rgba(255, 90, 15, 0.18);
+            text-shadow: 0 0 14px rgba(255, 120, 20, 0.4);
             outline: none;
         }
 
@@ -339,7 +359,7 @@
         .controls,
         .section-block,
         .insight-card {
-            background: linear-gradient(160deg, rgba(10,13,26,0.92), rgba(6,8,18,0.97));
+            background: linear-gradient(160deg, rgba(10, 13, 26, 0.92), rgba(6, 8, 18, 0.97));
             border: 1px solid var(--border);
             border-radius: var(--radius-xl);
             box-shadow: var(--shadow);
@@ -347,11 +367,11 @@
 
         /* Fire-themed hero copy panel */
         .hero-copy {
-            border-color: rgba(255,90,15,0.18);
+            border-color: rgba(255, 90, 15, 0.18);
             box-shadow:
                 var(--shadow),
-                inset 0 1px 0 rgba(255,120,20,0.08),
-                0 0 60px rgba(255,70,10,0.06);
+                inset 0 1px 0 rgba(255, 120, 20, 0.08),
+                0 0 60px rgba(255, 70, 10, 0.06);
         }
 
         .hero-copy {
@@ -365,9 +385,10 @@
             content: '';
             position: absolute;
             inset: -40px auto auto -40px;
-            width: 240px; height: 240px;
+            width: 240px;
+            height: 240px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(60,140,255,0.14), transparent 65%);
+            background: radial-gradient(circle, rgba(60, 140, 255, 0.14), transparent 65%);
             filter: blur(8px);
             pointer-events: none;
         }
@@ -377,9 +398,10 @@
             content: '';
             position: absolute;
             inset: auto -6% -22% auto;
-            width: 280px; height: 280px;
+            width: 280px;
+            height: 280px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,90,15,0.2), rgba(255,60,0,0.04) 60%, transparent 75%);
+            background: radial-gradient(circle, rgba(255, 90, 15, 0.2), rgba(255, 60, 0, 0.04) 60%, transparent 75%);
             filter: blur(8px);
             pointer-events: none;
         }
@@ -390,14 +412,14 @@
             gap: 8px;
             padding: 8px 14px;
             border-radius: 999px;
-            background: linear-gradient(135deg, rgba(255,90,15,0.1), rgba(60,140,255,0.08));
-            border: 1px solid rgba(255,100,20,0.28);
+            background: linear-gradient(135deg, rgba(255, 90, 15, 0.1), rgba(60, 140, 255, 0.08));
+            border: 1px solid rgba(255, 100, 20, 0.28);
             color: var(--fire-3);
             font-size: 0.73rem;
             font-weight: 700;
             letter-spacing: 0.18em;
             text-transform: uppercase;
-            box-shadow: 0 0 16px rgba(255,90,15,0.12), inset 0 1px 0 rgba(255,180,60,0.1);
+            box-shadow: 0 0 16px rgba(255, 90, 15, 0.12), inset 0 1px 0 rgba(255, 180, 60, 0.1);
         }
 
         .hero-title {
@@ -414,7 +436,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 18px rgba(255,80,10,0.35));
+            filter: drop-shadow(0 0 18px rgba(255, 80, 10, 0.35));
         }
 
         /* Ice accent — "Play the" and "of mini games." */
@@ -423,7 +445,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 0 14px rgba(60,160,255,0.22));
+            filter: drop-shadow(0 0 14px rgba(60, 160, 255, 0.22));
         }
 
         .hero-text {
@@ -473,8 +495,8 @@
             background-size: 200% 100%;
             background-position: 0% 50%;
             color: #fff;
-            box-shadow: 0 10px 32px rgba(255,80,10,0.32), inset 0 1px 0 rgba(255,200,80,0.2);
-            border-color: rgba(255,120,20,0.35);
+            box-shadow: 0 10px 32px rgba(255, 80, 10, 0.32), inset 0 1px 0 rgba(255, 200, 80, 0.2);
+            border-color: rgba(255, 120, 20, 0.35);
             transition:
                 transform var(--transition),
                 box-shadow 320ms ease,
@@ -487,20 +509,18 @@
            shift background-position to reveal the ice side */
         .action-btn.primary:hover,
         .action-btn.primary:focus-visible {
-            background: linear-gradient(
-                130deg,
-                var(--fire)        0%,
-                var(--fire-3)     20%,
-                #8ab4ff           50%,
-                var(--accent)     70%,
-                var(--accent-2)  100%
-            );
+            background: linear-gradient(130deg,
+                    var(--fire) 0%,
+                    var(--fire-3) 20%,
+                    #8ab4ff 50%,
+                    var(--accent) 70%,
+                    var(--accent-2) 100%);
             background-size: 200% 100%;
             background-position: 100% 50%;
-            border-color: rgba(60,140,255,0.4);
+            border-color: rgba(60, 140, 255, 0.4);
             box-shadow:
-                0 16px 44px rgba(60,140,255,0.3),
-                inset 0 1px 0 rgba(180,220,255,0.18);
+                0 16px 44px rgba(60, 140, 255, 0.3),
+                inset 0 1px 0 rgba(180, 220, 255, 0.18);
             transform: translateY(-2px);
         }
 
@@ -508,15 +528,15 @@
             background: rgba(6, 9, 20, 0.9);
             border-color: rgba(82, 140, 255, 0.26);
             color: var(--accent-4);
-            box-shadow: 0 0 18px rgba(60,140,255,0.06);
+            box-shadow: 0 0 18px rgba(60, 140, 255, 0.06);
         }
 
         .action-btn.secondary:hover,
         .action-btn.secondary:focus-visible {
-            border-color: rgba(60,140,255,0.5);
-            background: rgba(60,120,255,0.1);
+            border-color: rgba(60, 140, 255, 0.5);
+            background: rgba(60, 120, 255, 0.1);
             color: var(--accent-4);
-            box-shadow: 0 8px 28px rgba(60,140,255,0.18);
+            box-shadow: 0 8px 28px rgba(60, 140, 255, 0.18);
             transform: translateY(-2px);
         }
 
@@ -530,8 +550,8 @@
         .stat-card {
             padding: 16px 18px;
             border-radius: var(--radius-md);
-            background: rgba(6,9,20,0.86);
-            border: 1px solid rgba(82,140,255,0.1);
+            background: rgba(6, 9, 20, 0.86);
+            border: 1px solid rgba(82, 140, 255, 0.1);
             position: relative;
             overflow: hidden;
             transition: border-color var(--transition), box-shadow var(--transition);
@@ -540,15 +560,17 @@
         .stat-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 2px;
             background: linear-gradient(90deg, var(--fire), transparent);
             opacity: 0.6;
         }
 
         .stat-card:hover {
-            border-color: rgba(255,90,15,0.22);
-            box-shadow: 0 0 20px rgba(255,80,10,0.08);
+            border-color: rgba(255, 90, 15, 0.22);
+            box-shadow: 0 0 20px rgba(255, 80, 10, 0.08);
         }
 
         .stat-value {
@@ -574,8 +596,8 @@
             display: grid;
             gap: 16px;
             align-content: stretch;
-            border-color: rgba(60,140,255,0.16);
-            box-shadow: var(--shadow), inset 0 1px 0 rgba(60,140,255,0.06);
+            border-color: rgba(60, 140, 255, 0.16);
+            box-shadow: var(--shadow), inset 0 1px 0 rgba(60, 140, 255, 0.06);
         }
 
         .hero-card {
@@ -584,14 +606,14 @@
             border-radius: 22px;
             min-height: 165px;
             padding: 22px;
-            border: 1px solid rgba(82,140,255,0.14);
-            background: linear-gradient(140deg, rgba(6,8,18,0.97), rgba(12,16,30,0.86));
+            border: 1px solid rgba(82, 140, 255, 0.14);
+            background: linear-gradient(140deg, rgba(6, 8, 18, 0.97), rgba(12, 16, 30, 0.86));
             transition: border-color var(--transition), box-shadow var(--transition);
         }
 
         .hero-card:hover {
-            border-color: rgba(255,90,15,0.24);
-            box-shadow: 0 8px 32px rgba(255,70,10,0.1);
+            border-color: rgba(255, 90, 15, 0.24);
+            box-shadow: 0 8px 32px rgba(255, 70, 10, 0.1);
         }
 
         .hero-card::before,
@@ -666,7 +688,7 @@
             font-size: 1rem;
             font-weight: 800;
             letter-spacing: -0.02em;
-            text-shadow: 0 0 16px rgba(100,200,255,0.3);
+            text-shadow: 0 0 16px rgba(100, 200, 255, 0.3);
         }
 
         .insight-copy {
@@ -678,7 +700,7 @@
 
         /* Blue top-border accent on insight cards */
         .insight-card {
-            border-top: 2px solid rgba(60,140,255,0.28) !important;
+            border-top: 2px solid rgba(60, 140, 255, 0.28) !important;
         }
 
         .controls,
@@ -688,8 +710,8 @@
         }
 
         .controls {
-            border-color: rgba(255,90,15,0.14);
-            box-shadow: var(--shadow), 0 0 40px rgba(255,70,10,0.04);
+            border-color: rgba(255, 90, 15, 0.14);
+            box-shadow: var(--shadow), 0 0 40px rgba(255, 70, 10, 0.04);
         }
 
         .controls-head {
@@ -706,7 +728,7 @@
             font-weight: 700;
             letter-spacing: 0.2em;
             text-transform: uppercase;
-            text-shadow: 0 0 12px rgba(255,120,20,0.35);
+            text-shadow: 0 0 12px rgba(255, 120, 20, 0.35);
         }
 
         .section-title {
@@ -787,8 +809,8 @@
             min-height: 40px;
             padding: 0 16px;
             border-radius: 999px;
-            border: 1px solid rgba(82,140,255,0.12);
-            background: rgba(6,9,20,0.85);
+            border: 1px solid rgba(82, 140, 255, 0.12);
+            background: rgba(6, 9, 20, 0.85);
             color: var(--muted);
             cursor: pointer;
             font-size: 0.88rem;
@@ -799,18 +821,18 @@
         .filter-chip:hover,
         .filter-chip:focus-visible {
             transform: translateY(-1px);
-            border-color: rgba(255,90,15,0.3);
+            border-color: rgba(255, 90, 15, 0.3);
             color: var(--fire-3);
-            background: rgba(255,90,15,0.06);
-            box-shadow: 0 4px 14px rgba(255,70,10,0.1);
+            background: rgba(255, 90, 15, 0.06);
+            box-shadow: 0 4px 14px rgba(255, 70, 10, 0.1);
             outline: none;
         }
 
         .filter-chip.is-active {
-            background: linear-gradient(130deg, rgba(255,90,15,0.18), rgba(255,60,0,0.1));
-            border-color: rgba(255,100,20,0.42);
+            background: linear-gradient(130deg, rgba(255, 90, 15, 0.18), rgba(255, 60, 0, 0.1));
+            border-color: rgba(255, 100, 20, 0.42);
             color: var(--fire-3);
-            box-shadow: 0 0 18px rgba(255,80,10,0.15);
+            box-shadow: 0 0 18px rgba(255, 80, 10, 0.15);
         }
 
         .results-meta {
@@ -832,18 +854,20 @@
             display: flex;
             flex-direction: column;
             min-height: 100%;
-            background: linear-gradient(175deg, rgba(9,12,24,0.96), rgba(5,7,16,0.99));
-            border: 1px solid rgba(82,140,255,0.1);
+            background: linear-gradient(175deg, rgba(9, 12, 24, 0.96), rgba(5, 7, 16, 0.99));
+            border: 1px solid rgba(82, 140, 255, 0.1);
             border-radius: var(--radius-lg);
             transition: transform 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         /* Fire shimmer top-edge on hover */
         .game-card::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 2px;
             background: linear-gradient(90deg, var(--fire), var(--fire-3), transparent);
             opacity: 0;
@@ -855,15 +879,15 @@
         .game-card:focus-within {
             transform: translateY(-7px) scale(1.01);
             /* Blue-dominant border on hover */
-            border-color: rgba(60,140,255,0.45);
+            border-color: rgba(60, 140, 255, 0.45);
             box-shadow:
-                0 28px 56px rgba(0,0,0,0.44),
+                0 28px 56px rgba(0, 0, 0, 0.44),
                 /* Blue outer ring */
-                0 0 0 2px rgba(60,140,255,0.18),
+                0 0 0 2px rgba(60, 140, 255, 0.18),
                 /* Faint blue halo */
-                0 0 48px rgba(50,130,255,0.12),
+                0 0 48px rgba(50, 130, 255, 0.12),
                 /* Keep subtle fire warmth underneath */
-                0 0 20px rgba(255,70,10,0.06);
+                0 0 20px rgba(255, 70, 10, 0.06);
         }
 
         .game-card:hover::after,
@@ -886,8 +910,8 @@
             position: relative;
             aspect-ratio: 16 / 10;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(10,14,26,0.98), rgba(6,8,18,0.98));
-            border-bottom: 1px solid rgba(255,80,10,0.06);
+            background: linear-gradient(135deg, rgba(10, 14, 26, 0.98), rgba(6, 8, 18, 0.98));
+            border-bottom: 1px solid rgba(255, 80, 10, 0.06);
         }
 
         .card-media img {
@@ -915,9 +939,9 @@
             font-weight: 800;
             font-size: 0.85rem;
             background:
-                radial-gradient(ellipse at top right, rgba(255,80,10,0.18), transparent 50%),
-                radial-gradient(ellipse at bottom left, rgba(60,130,255,0.14), transparent 50%),
-                linear-gradient(135deg, rgba(7,9,18,0.96), rgba(14,18,32,0.94));
+                radial-gradient(ellipse at top right, rgba(255, 80, 10, 0.18), transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(60, 130, 255, 0.14), transparent 50%),
+                linear-gradient(135deg, rgba(7, 9, 18, 0.96), rgba(14, 18, 32, 0.94));
         }
 
         .card-badge {
@@ -930,15 +954,15 @@
             gap: 6px;
             padding: 6px 11px;
             border-radius: 999px;
-            background: rgba(255,70,10,0.12);
-            border: 1px solid rgba(255,100,20,0.3);
+            background: rgba(255, 70, 10, 0.12);
+            border: 1px solid rgba(255, 100, 20, 0.3);
             color: var(--fire-3);
             font-size: 0.68rem;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
             backdrop-filter: blur(6px);
-            box-shadow: 0 2px 10px rgba(255,70,10,0.14);
+            box-shadow: 0 2px 10px rgba(255, 70, 10, 0.14);
         }
 
         .card-content {
@@ -1008,20 +1032,18 @@
             padding: 0 16px;
             border-radius: 999px;
             /* Orange default — uses a gradient background that we animate */
-            background: linear-gradient(
-                110deg,
-                var(--fire)  0%,
-                var(--fire-3) 50%,
-                var(--accent) 100%
-            );
+            background: linear-gradient(110deg,
+                    var(--fire) 0%,
+                    var(--fire-3) 50%,
+                    var(--accent) 100%);
             background-size: 220% 100%;
             background-position: 0% 50%;
-            border: 1px solid rgba(255,100,20,0.32);
+            border: 1px solid rgba(255, 100, 20, 0.32);
             color: #fff;
             font-size: 0.86rem;
             font-weight: 700;
             transition:
-                background-position 480ms cubic-bezier(0.4,0,0.2,1),
+                background-position 480ms cubic-bezier(0.4, 0, 0.2, 1),
                 border-color 320ms ease,
                 box-shadow 320ms ease,
                 transform 200ms ease;
@@ -1031,17 +1053,17 @@
         .game-card:hover .card-play-btn,
         .game-card:focus-within .card-play-btn {
             background-position: 100% 50%;
-            border-color: rgba(60,140,255,0.5);
+            border-color: rgba(60, 140, 255, 0.5);
             transform: translateY(-2px);
             box-shadow:
-                0 6px 22px rgba(60,140,255,0.32),
-                inset 0 1px 0 rgba(180,220,255,0.15);
+                0 6px 22px rgba(60, 140, 255, 0.32),
+                inset 0 1px 0 rgba(180, 220, 255, 0.15);
         }
 
         .section-divider {
             height: 1px;
             margin: 32px 0;
-            background: linear-gradient(90deg, transparent, var(--fire) 25%, rgba(200,220,255,0.3) 50%, var(--accent-4) 75%, transparent);
+            background: linear-gradient(90deg, transparent, var(--fire) 25%, rgba(200, 220, 255, 0.3) 50%, var(--accent-4) 75%, transparent);
             opacity: 0.4;
             position: relative;
         }
@@ -1051,7 +1073,7 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            transform: translate(-50%,-50%);
+            transform: translate(-50%, -50%);
             font-size: 18px;
             background: var(--bg);
             padding: 0 10px;
@@ -1076,15 +1098,15 @@
             margin-top: 24px;
             padding: 20px 28px;
             border-radius: var(--radius-xl);
-            background: linear-gradient(135deg, rgba(255,70,10,0.05), rgba(6,8,18,0.85));
-            border: 1px solid rgba(255,90,15,0.14);
+            background: linear-gradient(135deg, rgba(255, 70, 10, 0.05), rgba(6, 8, 18, 0.85));
+            border: 1px solid rgba(255, 90, 15, 0.14);
             color: var(--muted);
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
             flex-wrap: wrap;
-            box-shadow: 0 0 40px rgba(255,60,10,0.06);
+            box-shadow: 0 0 40px rgba(255, 60, 10, 0.06);
         }
 
         .footer-inner strong {
@@ -1094,23 +1116,39 @@
             background-clip: text;
         }
 
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            transition: color var(--transition), text-shadow var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--fire-3);
+            text-shadow: 0 0 10px rgba(255, 120, 20, 0.35);
+        }
+
+
         /* Search wrapper — upgrade */
         .search-wrap::before {
             content: '🔍';
         }
 
         .search-input {
-            border-color: rgba(255,90,15,0.14);
+            border-color: rgba(255, 90, 15, 0.14);
         }
 
         .search-input:focus {
-            border-color: rgba(255,100,20,0.44);
-            box-shadow: 0 0 0 4px rgba(255,80,10,0.08);
+            border-color: rgba(255, 100, 20, 0.44);
+            box-shadow: 0 0 0 4px rgba(255, 80, 10, 0.08);
         }
 
         /* Tags */
         .tag {
-            border-color: rgba(255,80,10,0.12);
+            border-color: rgba(255, 80, 10, 0.12);
             color: var(--fire-3);
             opacity: 0.7;
         }
@@ -1242,15 +1280,10 @@
                         <a href="#coming-soon">Coming Soon</a>
                     </nav>
                     <div class="header-search-wrap">
-                        <input
-                            class="header-search-input"
-                            id="header-search"
-                            type="search"
-                            placeholder="Quick search games…"
-                            autocomplete="off"
-                            aria-label="Quick search games"
-                        >
-                        <button class="header-search-clear" id="header-search-clear" aria-label="Clear search" title="Clear">✕</button>
+                        <input class="header-search-input" id="header-search" type="search"
+                            placeholder="Quick search games…" autocomplete="off" aria-label="Quick search games">
+                        <button class="header-search-clear" id="header-search-clear" aria-label="Clear search"
+                            title="Clear">✕</button>
                         <div class="header-search-results-count" id="header-search-count"></div>
                     </div>
                 </div>
@@ -1261,10 +1294,12 @@
             <section class="hero" aria-labelledby="hero-title">
                 <div class="hero-copy">
                     <div class="eyebrow">Futuristic Arcade Hub</div>
-                    <h1 class="hero-title" id="hero-title"><span class="hero-ice">Play the </span><span>next wave</span><span class="hero-ice"> of mini games.</span></h1>
+                    <h1 class="hero-title" id="hero-title"><span class="hero-ice">Play the </span><span>next
+                            wave</span><span class="hero-ice"> of mini games.</span></h1>
                     <p class="hero-text">
                         A sharper, faster home for your game collection. Built to showcase current titles and
-                        scale cleanly as you add more <strong>puzzles</strong>, <strong>reaction games</strong>, strategy experiments, and <strong>browser challenges</strong>.
+                        scale cleanly as you add more <strong>puzzles</strong>, <strong>reaction games</strong>,
+                        strategy experiments, and <strong>browser challenges</strong>.
                     </p>
                     <div class="hero-actions">
                         <a class="action-btn primary" href="#featured-games">Browse games</a>
@@ -1289,7 +1324,8 @@
                 <div class="hero-panel">
                     <article class="hero-card">
                         <h2>Built for expansion</h2>
-                        <p>One catalog, one search bar, one card system. Add a new game by dropping in a single object.</p>
+                        <p>One catalog, one search bar, one card system. Add a new game by dropping in a single object.
+                        </p>
                         <div class="hero-meta">
                             <span>Searchable</span>
                             <span>Filterable</span>
@@ -1300,11 +1336,13 @@
                     <div class="insight-grid">
                         <article class="insight-card">
                             <div class="insight-title">Cleaner discovery</div>
-                            <p class="insight-copy">Players can jump straight to a favorite style with chips, counts, and quick scanning.</p>
+                            <p class="insight-copy">Players can jump straight to a favorite style with chips, counts,
+                                and quick scanning.</p>
                         </article>
                         <article class="insight-card">
                             <div class="insight-title">Better visual hierarchy</div>
-                            <p class="insight-copy">Hero, library, and coming-soon sections now read like a product page instead of a raw list.</p>
+                            <p class="insight-copy">Hero, library, and coming-soon sections now read like a product page
+                                instead of a raw list.</p>
                         </article>
                     </div>
                 </div>
@@ -1316,7 +1354,8 @@
                         <div class="section-kicker">Game Library</div>
                         <h2 class="section-title" id="game-library-heading">Find the right game faster</h2>
                         <p class="section-copy">
-                            Search by name or filter by category. This keeps the homepage usable even when the collection grows much larger.
+                            Search by name or filter by category. This keeps the homepage usable even when the
+                            collection grows much larger.
                         </p>
                     </div>
                     <div class="filter-bar" id="filter-bar" aria-label="Category filters"></div>
@@ -1324,7 +1363,8 @@
 
                 <div class="controls-row">
                     <label class="search-wrap" for="game-search">
-                        <input class="search-input" id="game-search" type="search" placeholder="Search games, genres, or keywords" autocomplete="off">
+                        <input class="search-input" id="game-search" type="search"
+                            placeholder="Search games, genres, or keywords" autocomplete="off">
                     </label>
                     <div class="results-meta" id="results-meta">Loading games...</div>
                 </div>
@@ -1334,7 +1374,8 @@
                 <div class="section-kicker">Featured</div>
                 <h2 class="section-title" id="featured-title">Available Games</h2>
                 <p class="section-copy">
-                    These are the playable titles on the homepage right now. The grid is rendered from a single data list, so future additions stay simple.
+                    These are the playable titles on the homepage right now. The grid is rendered from a single data
+                    list, so future additions stay simple.
                 </p>
                 <div class="games-grid" id="active-games"></div>
             </section>
@@ -1354,6 +1395,12 @@
         <footer class="footer">
             <div class="footer-inner">
                 <span><strong>Mini Games Hub</strong> - built for quick play and future expansion.</span>
+                <nav class="footer-links" aria-label="Footer links">
+                    <a href="help.html">Help & FAQ</a>
+                    <a href="contact.html">Contact Us</a>
+                    <a href="terms.html">Terms & Conditions</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </nav>
                 <span>2026</span>
             </div>
         </footer>
